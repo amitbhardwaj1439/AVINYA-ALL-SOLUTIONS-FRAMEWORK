@@ -1,0 +1,123 @@
+
+
+##################### Eutran Frequency Relation Correction Commands CHN_BB1_VILSI9 ####################
+
+set EUtranCellFDD=CH_E_F8_OM_VILSI9A_A,EUtranFreqRelation=390$ a5Thr2RsrpFreqOffset 4
+set EUtranCellFDD=CH_E_F8_OM_VILSI9B_B,EUtranFreqRelation=390$ a5Thr2RsrpFreqOffset 4
+set EUtranCellFDD=CH_E_F8_OM_VILSI9C_C,EUtranFreqRelation=390$ a5Thr2RsrpFreqOffset 4
+set EUtranCellFDD=CH_E_F8_OM_VILSI9A_A,EUtranFreqRelation=1615$ lbA5Thr1RsrpFreqOffset 97
+set EUtranCellFDD=CH_E_F8_OM_VILSI9A_A,EUtranFreqRelation=39151$ lbA5Thr1RsrpFreqOffset 0
+set EUtranCellFDD=CH_E_F8_OM_VILSI9A_A,EUtranFreqRelation=39295$ lbA5Thr1RsrpFreqOffset 0
+set EUtranCellFDD=CH_E_F8_OM_VILSI9B_B,EUtranFreqRelation=1615$ lbA5Thr1RsrpFreqOffset 97
+set EUtranCellFDD=CH_E_F8_OM_VILSI9C_C,EUtranFreqRelation=1615$ lbA5Thr1RsrpFreqOffset 97
+set EUtranCellFDD=CH_E_F8_OM_VILSI9C_C,EUtranFreqRelation=39295$ lbA5Thr1RsrpFreqOffset 0
+set EUtranCellFDD=CH_E_F8_OM_VILSI9A_A,EUtranFreqRelation=3710$ lbBnrPolicy 0
+set EUtranCellFDD=CH_E_F8_OM_VILSI9A_A,EUtranFreqRelation=39150$ lbBnrPolicy 3
+set EUtranCellFDD=CH_E_F8_OM_VILSI9A_A,EUtranFreqRelation=39151$ lbBnrPolicy 1
+set EUtranCellFDD=CH_E_F8_OM_VILSI9A_A,EUtranFreqRelation=39294$ lbBnrPolicy 3
+set EUtranCellFDD=CH_E_F8_OM_VILSI9A_A,EUtranFreqRelation=39295$ lbBnrPolicy 1
+set EUtranCellFDD=CH_E_F8_OM_VILSI9B_B,EUtranFreqRelation=3710$ lbBnrPolicy 0
+set EUtranCellFDD=CH_E_F8_OM_VILSI9B_B,EUtranFreqRelation=39150$ lbBnrPolicy 3
+set EUtranCellFDD=CH_E_F8_OM_VILSI9B_B,EUtranFreqRelation=39294$ lbBnrPolicy 3
+set EUtranCellFDD=CH_E_F8_OM_VILSI9C_C,EUtranFreqRelation=3710$ lbBnrPolicy 0
+set EUtranCellFDD=CH_E_F8_OM_VILSI9C_C,EUtranFreqRelation=39150$ lbBnrPolicy 3
+set EUtranCellFDD=CH_E_F8_OM_VILSI9C_C,EUtranFreqRelation=39294$ lbBnrPolicy 3
+set EUtranCellFDD=CH_E_F8_OM_VILSI9C_C,EUtranFreqRelation=39295$ lbBnrPolicy 1
+set EUtranCellFDD=CH_E_F8_OM_VILSI9A_A,EUtranFreqRelation=1615$ threshXHigh 14
+set EUtranCellFDD=CH_E_F8_OM_VILSI9A_A,EUtranFreqRelation=3710$ threshXHigh 12
+set EUtranCellFDD=CH_E_F8_OM_VILSI9A_A,EUtranFreqRelation=390$ threshXHigh 16
+set EUtranCellFDD=CH_E_F8_OM_VILSI9A_A,EUtranFreqRelation=39150$ threshXHigh 12
+set EUtranCellFDD=CH_E_F8_OM_VILSI9A_A,EUtranFreqRelation=39151$ threshXHigh 12
+set EUtranCellFDD=CH_E_F8_OM_VILSI9A_A,EUtranFreqRelation=39294$ threshXHigh 12
+set EUtranCellFDD=CH_E_F8_OM_VILSI9A_A,EUtranFreqRelation=39295$ threshXHigh 12
+set EUtranCellFDD=CH_E_F8_OM_VILSI9B_B,EUtranFreqRelation=1615$ threshXHigh 14
+set EUtranCellFDD=CH_E_F8_OM_VILSI9B_B,EUtranFreqRelation=3710$ threshXHigh 12
+set EUtranCellFDD=CH_E_F8_OM_VILSI9B_B,EUtranFreqRelation=390$ threshXHigh 16
+set EUtranCellFDD=CH_E_F8_OM_VILSI9B_B,EUtranFreqRelation=39150$ threshXHigh 12
+set EUtranCellFDD=CH_E_F8_OM_VILSI9B_B,EUtranFreqRelation=39151$ threshXHigh 12
+set EUtranCellFDD=CH_E_F8_OM_VILSI9B_B,EUtranFreqRelation=39294$ threshXHigh 12
+set EUtranCellFDD=CH_E_F8_OM_VILSI9B_B,EUtranFreqRelation=39295$ threshXHigh 12
+set EUtranCellFDD=CH_E_F8_OM_VILSI9C_C,EUtranFreqRelation=1615$ threshXHigh 14
+set EUtranCellFDD=CH_E_F8_OM_VILSI9C_C,EUtranFreqRelation=3710$ threshXHigh 12
+set EUtranCellFDD=CH_E_F8_OM_VILSI9C_C,EUtranFreqRelation=390$ threshXHigh 16
+set EUtranCellFDD=CH_E_F8_OM_VILSI9C_C,EUtranFreqRelation=39150$ threshXHigh 12
+set EUtranCellFDD=CH_E_F8_OM_VILSI9C_C,EUtranFreqRelation=39151$ threshXHigh 12
+set EUtranCellFDD=CH_E_F8_OM_VILSI9C_C,EUtranFreqRelation=39294$ threshXHigh 12
+set EUtranCellFDD=CH_E_F8_OM_VILSI9C_C,EUtranFreqRelation=39295$ threshXHigh 12
+set EUtranCellFDD=CH_E_F8_OM_VILSI9A_A,EUtranFreqRelation=3710$ a5Thr1RsrpFreqQciOffset 0
+set EUtranCellFDD=CH_E_F8_OM_VILSI9B_B,EUtranFreqRelation=3710$ a5Thr1RsrpFreqQciOffset 0
+set EUtranCellFDD=CH_E_F8_OM_VILSI9C_C,EUtranFreqRelation=3710$ a5Thr1RsrpFreqQciOffset 0
+set EUtranCellFDD=CH_E_F8_OM_VILSI9A_A,EUtranFreqRelation=1615$ a5Thr2RsrpFreqQciOffset 0
+set EUtranCellFDD=CH_E_F8_OM_VILSI9A_A,EUtranFreqRelation=390$ a5Thr2RsrpFreqQciOffset 0
+set EUtranCellFDD=CH_E_F8_OM_VILSI9A_A,EUtranFreqRelation=39150$ a5Thr2RsrpFreqQciOffset 62
+set EUtranCellFDD=CH_E_F8_OM_VILSI9A_A,EUtranFreqRelation=39151$ a5Thr2RsrpFreqQciOffset 10
+set EUtranCellFDD=CH_E_F8_OM_VILSI9A_A,EUtranFreqRelation=39294$ a5Thr2RsrpFreqQciOffset 62
+set EUtranCellFDD=CH_E_F8_OM_VILSI9A_A,EUtranFreqRelation=39295$ a5Thr2RsrpFreqQciOffset 10
+set EUtranCellFDD=CH_E_F8_OM_VILSI9B_B,EUtranFreqRelation=1615$ a5Thr2RsrpFreqQciOffset 0
+set EUtranCellFDD=CH_E_F8_OM_VILSI9B_B,EUtranFreqRelation=390$ a5Thr2RsrpFreqQciOffset 0
+set EUtranCellFDD=CH_E_F8_OM_VILSI9B_B,EUtranFreqRelation=39150$ a5Thr2RsrpFreqQciOffset 62
+set EUtranCellFDD=CH_E_F8_OM_VILSI9B_B,EUtranFreqRelation=39151$ a5Thr2RsrpFreqQciOffset 10
+set EUtranCellFDD=CH_E_F8_OM_VILSI9B_B,EUtranFreqRelation=39294$ a5Thr2RsrpFreqQciOffset 62
+set EUtranCellFDD=CH_E_F8_OM_VILSI9B_B,EUtranFreqRelation=39295$ a5Thr2RsrpFreqQciOffset 10
+set EUtranCellFDD=CH_E_F8_OM_VILSI9C_C,EUtranFreqRelation=1615$ a5Thr2RsrpFreqQciOffset 0
+set EUtranCellFDD=CH_E_F8_OM_VILSI9C_C,EUtranFreqRelation=390$ a5Thr2RsrpFreqQciOffset 0
+set EUtranCellFDD=CH_E_F8_OM_VILSI9C_C,EUtranFreqRelation=39150$ a5Thr2RsrpFreqQciOffset 62
+set EUtranCellFDD=CH_E_F8_OM_VILSI9C_C,EUtranFreqRelation=39151$ a5Thr2RsrpFreqQciOffset 10
+set EUtranCellFDD=CH_E_F8_OM_VILSI9C_C,EUtranFreqRelation=39294$ a5Thr2RsrpFreqQciOffset 62
+set EUtranCellFDD=CH_E_F8_OM_VILSI9C_C,EUtranFreqRelation=39295$ a5Thr2RsrpFreqQciOffset 10
+set EUtranCellFDD=CH_E_F8_OM_VILSI9A_A,EUtranFreqRelation=1615$ pMax 26
+set EUtranCellFDD=CH_E_F8_OM_VILSI9A_A,EUtranFreqRelation=3710$ pMax 26
+set EUtranCellFDD=CH_E_F8_OM_VILSI9A_A,EUtranFreqRelation=390$ pMax 26
+set EUtranCellFDD=CH_E_F8_OM_VILSI9A_A,EUtranFreqRelation=39150$ pMax 26
+set EUtranCellFDD=CH_E_F8_OM_VILSI9A_A,EUtranFreqRelation=39151$ pMax 26
+set EUtranCellFDD=CH_E_F8_OM_VILSI9A_A,EUtranFreqRelation=39294$ pMax 26
+set EUtranCellFDD=CH_E_F8_OM_VILSI9A_A,EUtranFreqRelation=39295$ pMax 26
+set EUtranCellFDD=CH_E_F8_OM_VILSI9B_B,EUtranFreqRelation=1615$ pMax 26
+set EUtranCellFDD=CH_E_F8_OM_VILSI9B_B,EUtranFreqRelation=3710$ pMax 26
+set EUtranCellFDD=CH_E_F8_OM_VILSI9B_B,EUtranFreqRelation=390$ pMax 26
+set EUtranCellFDD=CH_E_F8_OM_VILSI9B_B,EUtranFreqRelation=39150$ pMax 26
+set EUtranCellFDD=CH_E_F8_OM_VILSI9B_B,EUtranFreqRelation=39151$ pMax 26
+set EUtranCellFDD=CH_E_F8_OM_VILSI9B_B,EUtranFreqRelation=39294$ pMax 26
+set EUtranCellFDD=CH_E_F8_OM_VILSI9B_B,EUtranFreqRelation=39295$ pMax 26
+set EUtranCellFDD=CH_E_F8_OM_VILSI9C_C,EUtranFreqRelation=1615$ pMax 26
+set EUtranCellFDD=CH_E_F8_OM_VILSI9C_C,EUtranFreqRelation=3710$ pMax 26
+set EUtranCellFDD=CH_E_F8_OM_VILSI9C_C,EUtranFreqRelation=390$ pMax 26
+set EUtranCellFDD=CH_E_F8_OM_VILSI9C_C,EUtranFreqRelation=39150$ pMax 26
+set EUtranCellFDD=CH_E_F8_OM_VILSI9C_C,EUtranFreqRelation=39151$ pMax 26
+set EUtranCellFDD=CH_E_F8_OM_VILSI9C_C,EUtranFreqRelation=39294$ pMax 26
+set EUtranCellFDD=CH_E_F8_OM_VILSI9C_C,EUtranFreqRelation=39295$ pMax 26
+
+
+##################### NR Frequency Relation Correction Commands {node} ####################
+
+
+
+##################### Creating Eutran Frequency Relation Missing Commands CHN_BB1_VILSI9 ####################
+
+
+
+######################################################## Cell Relation CHN_BB1_VILSI9 ####################################################
+
+set EUtranCellFDD=CH_E_F8_OM_VILSI9C_C,EUtranFreqRelation=3710,EUtranCellRelation=40440-771275-80$ cellIndividualOffsetEUtran 2
+set EUtranCellFDD=CH_E_F8_OM_VILSI9C_C,EUtranFreqRelation=3710,EUtranCellRelation=40440-771275-81$ cellIndividualOffsetEUtran 2
+set EUtranCellFDD=CH_E_F8_OM_VILSI9C_C,EUtranFreqRelation=3710,EUtranCellRelation=40440-771275-80$ coverageIndicator 0
+set EUtranCellFDD=CH_E_F8_OM_VILSI9C_C,EUtranFreqRelation=3710,EUtranCellRelation=40440-771275-81$ coverageIndicator 0
+set EUtranCellFDD=CH_E_F8_OM_VILSI9C_C,EUtranFreqRelation=3710,EUtranCellRelation=40440-771275-80$ loadBalancing 0
+set EUtranCellFDD=CH_E_F8_OM_VILSI9C_C,EUtranFreqRelation=3710,EUtranCellRelation=40440-771275-81$ loadBalancing 0
+set EUtranCellFDD=CH_E_F8_OM_VILSI9C_C,EUtranFreqRelation=3710,EUtranCellRelation=40440-771275-80$ qOffsetCellEUtran -2
+set EUtranCellFDD=CH_E_F8_OM_VILSI9C_C,EUtranFreqRelation=3710,EUtranCellRelation=40440-771275-81$ qOffsetCellEUtran -2
+set EUtranCellFDD=CH_E_F8_OM_VILSI9C_C,EUtranFreqRelation=3710,EUtranCellRelation=40440-771275-80$ reportDlActivity 1
+set EUtranCellFDD=CH_E_F8_OM_VILSI9C_C,EUtranFreqRelation=3710,EUtranCellRelation=40440-771275-81$ reportDlActivity 1
+set EUtranCellFDD=CH_E_F8_OM_VILSI9C_C,EUtranFreqRelation=3710,EUtranCellRelation=40440-771275-80$ sCellCandidate 2
+set EUtranCellFDD=CH_E_F8_OM_VILSI9C_C,EUtranFreqRelation=3710,EUtranCellRelation=40440-771275-81$ sCellCandidate 2
+set EUtranCellFDD=CH_E_F8_OM_VILSI9C_C,EUtranFreqRelation=3710,EUtranCellRelation=40440-771275-80$ sCellPriority 7
+set EUtranCellFDD=CH_E_F8_OM_VILSI9C_C,EUtranFreqRelation=3710,EUtranCellRelation=40440-771275-81$ sCellPriority 7
+set EUtranCellFDD=CH_E_F8_OM_VILSI9C_C,EUtranFreqRelation=3710,EUtranCellRelation=40440-771275-80$ sleepModeCovCellCandidate 2
+set EUtranCellFDD=CH_E_F8_OM_VILSI9C_C,EUtranFreqRelation=3710,EUtranCellRelation=40440-771275-81$ sleepModeCovCellCandidate 2
+
+
+###############################################CELL RELATION MISSING CHN_BB1_VILSI9 #########################################################
+
+crn EUtranCellFDD=CH_E_F8_OM_VILSI9B_B,EUtranFreqRelation=3710,EUtranCellRelation=40440-771275-80,EUtranCellRelation
+neighborCellRef EUtranCellFDD=CH_E_F8_OM_VILSI9A_A
+end
