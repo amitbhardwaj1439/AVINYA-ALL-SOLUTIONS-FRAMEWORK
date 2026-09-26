@@ -8126,3 +8126,2167 @@ end
 
 """
 
+
+
+#################################################----JK_SA_cUCP5qiTable_XML (NR_5G 04 script)---#################################################
+JK_SA_cUCP5qiTable_XML = """<?xml version="1.0" encoding="UTF-8"?>
+<hello xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+  <capabilities>
+    <capability>urn:ietf:params:netconf:base:1.0</capability>
+  </capabilities>
+</hello>
+]]>]]>
+<rpc message-id="1" xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+  <edit-config>
+    <target>
+      <running />
+    </target>
+    <config xmlns:xc="urn:ietf:params:xml:ns:netconf:base:1.0">
+      <ManagedElement xmlns="urn:com:ericsson:ecim:ComTop">
+        <managedElementId>1</managedElementId>
+        <GNBCUCPFunction xmlns="urn:com:ericsson:ecim:GNBCUCP">
+          <gNBCUCPFunctionId>1</gNBCUCPFunctionId>
+          <CUCP5qiTable>
+            <cUCP5qiTableId>1</cUCP5qiTableId>
+            <default5qiTable>true</default5qiTable>
+            <CUCP5qi>
+              <cUCP5qiId>5qi1</cUCP5qiId>
+              <pdcpSnSize>12</pdcpSnSize>
+              <profile5qi>1</profile5qi>
+              <rlcMode>UM</rlcMode>
+              <tPdcpDiscard>150</tPdcpDiscard>
+              <tReorderingDl>60</tReorderingDl>
+              <tReorderingUl>60</tReorderingUl>
+            </CUCP5qi>
+            <CUCP5qi>
+              <cUCP5qiId>5qi2</cUCP5qiId>
+              <pdcpSnSize>12</pdcpSnSize>
+              <profile5qi>2</profile5qi>
+              <rlcMode>UM</rlcMode>
+              <tPdcpDiscard>200</tPdcpDiscard>
+              <tReorderingDl>200</tReorderingDl>
+              <tReorderingUl>20</tReorderingUl>
+            </CUCP5qi>
+            <CUCP5qi>
+              <cUCP5qiId>5qi3</cUCP5qiId>
+              <pdcpSnSize>12</pdcpSnSize>
+              <profile5qi>3</profile5qi>
+              <rlcMode>AM</rlcMode>
+              <tPdcpDiscard>200</tPdcpDiscard>
+              <tReorderingDl>200</tReorderingDl>
+              <tReorderingUl>20</tReorderingUl>
+            </CUCP5qi>
+            <CUCP5qi>
+              <cUCP5qiId>5qi4</cUCP5qiId>
+              <pdcpSnSize>12</pdcpSnSize>
+              <profile5qi>4</profile5qi>
+              <rlcMode>AM</rlcMode>
+              <tPdcpDiscard>200</tPdcpDiscard>
+              <tReorderingDl>200</tReorderingDl>
+              <tReorderingUl>20</tReorderingUl>
+            </CUCP5qi>
+            <CUCP5qi>
+              <cUCP5qiId>5qi5</cUCP5qiId>
+              <pdcpSnSize>12</pdcpSnSize>
+              <profile5qi>5</profile5qi>
+              <rlcMode>AM</rlcMode>
+              <tPdcpDiscard>2147483646</tPdcpDiscard>
+              <tReorderingDl>200</tReorderingDl>
+              <tReorderingUl>20</tReorderingUl>
+            </CUCP5qi>
+            <CUCP5qi>
+              <cUCP5qiId>5qi6</cUCP5qiId>
+              <pdcpSnSize>12</pdcpSnSize>
+              <profile5qi>6</profile5qi>
+              <rlcMode>AM</rlcMode>
+              <tPdcpDiscard>1500</tPdcpDiscard>
+              <tReorderingDl>200</tReorderingDl>
+              <tReorderingUl>200</tReorderingUl>
+            </CUCP5qi>
+            <CUCP5qi>
+              <cUCP5qiId>5qi7</cUCP5qiId>
+              <pdcpSnSize>12</pdcpSnSize>
+              <profile5qi>7</profile5qi>
+              <rlcMode>AM</rlcMode>
+              <tPdcpDiscard>1500</tPdcpDiscard>
+              <tReorderingDl>200</tReorderingDl>
+              <tReorderingUl>20</tReorderingUl>
+            </CUCP5qi>
+            <CUCP5qi>
+              <cUCP5qiId>5qi8</cUCP5qiId>
+              <pdcpSnSize>18</pdcpSnSize>
+              <profile5qi>8</profile5qi>
+              <rlcMode>AM</rlcMode>
+              <tPdcpDiscard>1500</tPdcpDiscard>
+              <tReorderingDl>200</tReorderingDl>
+              <tReorderingUl>20</tReorderingUl>
+            </CUCP5qi>
+            <CUCP5qi>
+              <cUCP5qiId>5qi9</cUCP5qiId>
+              <pdcpSnSize>18</pdcpSnSize>
+              <profile5qi>9</profile5qi>
+              <rlcMode>AM</rlcMode>
+              <tPdcpDiscard>1500</tPdcpDiscard>
+              <tReorderingDl>200</tReorderingDl>
+              <tReorderingUl>20</tReorderingUl>
+            </CUCP5qi>
+          </CUCP5qiTable>
+        </GNBCUCPFunction>
+        <GNBCUUPFunction xmlns="urn:com:ericsson:ecim:GNBCUUP">
+          <gNBCUUPFunctionId>1</gNBCUUPFunctionId>
+          <CUUP5qiTable>
+            <cUUP5qiTableId>1</cUUP5qiTableId>
+            <default5qiTable>true</default5qiTable>
+            <CUUP5qi>
+              <cUUP5qiId>5qi1</cUUP5qiId>
+              <aqmMode>MODE2</aqmMode>
+              <counterActiveMode>false</counterActiveMode>
+              <dcDlPdcpAggrPrioCg>EQUAL_PRIO</dcDlPdcpAggrPrioCg>
+              <dcDlPdcpAggrTimeDiffCg>YOUNGEST_CG</dcDlPdcpAggrTimeDiffCg>
+              <dcDlPdcpAggrTimeDiffProhibit>200</dcDlPdcpAggrTimeDiffProhibit>
+              <dcDlPdcpAggrTimeDiffThresh>150</dcDlPdcpAggrTimeDiffThresh>
+              <dscp>34</dscp>
+              <estimatedE2ERTT>0</estimatedE2ERTT>
+              <packetDelayBudget>80</packetDelayBudget>
+              <packetDelayBudgetOffset>50</packetDelayBudgetOffset>
+              <profile5qi>1</profile5qi>
+              <tOooUlDelivery>150</tOooUlDelivery>
+            </CUUP5qi>
+            <CUUP5qi>
+              <cUUP5qiId>5qi2</cUUP5qiId>
+              <aqmMode>MODE2</aqmMode>
+              <counterActiveMode>false</counterActiveMode>
+              <dcDlPdcpAggrPrioCg>EQUAL_PRIO</dcDlPdcpAggrPrioCg>
+              <dcDlPdcpAggrTimeDiffCg>YOUNGEST_CG</dcDlPdcpAggrTimeDiffCg>
+              <dcDlPdcpAggrTimeDiffProhibit>200</dcDlPdcpAggrTimeDiffProhibit>
+              <dcDlPdcpAggrTimeDiffThresh>150</dcDlPdcpAggrTimeDiffThresh>
+			  <dscp>12</dscp>
+              <estimatedE2ERTT>0</estimatedE2ERTT>
+              <packetDelayBudget>130</packetDelayBudget>
+              <packetDelayBudgetOffset>0</packetDelayBudgetOffset>
+              <profile5qi>2</profile5qi>
+              <tOooUlDelivery>150</tOooUlDelivery>
+            </CUUP5qi>
+            <CUUP5qi>
+              <cUUP5qiId>5qi3</cUUP5qiId>
+              <aqmMode>MODE2</aqmMode>
+              <counterActiveMode>false</counterActiveMode>
+              <dcDlPdcpAggrPrioCg>EQUAL_PRIO</dcDlPdcpAggrPrioCg>
+              <dcDlPdcpAggrTimeDiffCg>YOUNGEST_CG</dcDlPdcpAggrTimeDiffCg>
+              <dcDlPdcpAggrTimeDiffProhibit>200</dcDlPdcpAggrTimeDiffProhibit>
+              <dcDlPdcpAggrTimeDiffThresh>150</dcDlPdcpAggrTimeDiffThresh>
+			  <dscp>12</dscp>
+              <estimatedE2ERTT>0</estimatedE2ERTT>
+              <packetDelayBudget>30</packetDelayBudget>
+              <packetDelayBudgetOffset>0</packetDelayBudgetOffset>
+              <profile5qi>3</profile5qi>
+              <tOooUlDelivery>150</tOooUlDelivery>
+            </CUUP5qi>
+            <CUUP5qi>
+              <cUUP5qiId>5qi4</cUUP5qiId>
+              <aqmMode>MODE2</aqmMode>
+              <counterActiveMode>false</counterActiveMode>
+              <dcDlPdcpAggrPrioCg>EQUAL_PRIO</dcDlPdcpAggrPrioCg>
+              <dcDlPdcpAggrTimeDiffCg>YOUNGEST_CG</dcDlPdcpAggrTimeDiffCg>
+              <dcDlPdcpAggrTimeDiffProhibit>200</dcDlPdcpAggrTimeDiffProhibit>
+              <dcDlPdcpAggrTimeDiffThresh>150</dcDlPdcpAggrTimeDiffThresh>
+			  <dscp>12</dscp>
+              <estimatedE2ERTT>0</estimatedE2ERTT>
+              <packetDelayBudget>280</packetDelayBudget>
+              <packetDelayBudgetOffset>0</packetDelayBudgetOffset>
+              <profile5qi>4</profile5qi>
+              <tOooUlDelivery>150</tOooUlDelivery>
+            </CUUP5qi>
+            <CUUP5qi>
+              <cUUP5qiId>5qi5</cUUP5qiId>
+              <aqmMode>OFF</aqmMode>
+              <counterActiveMode>false</counterActiveMode>
+              <dcDlPdcpAggrPrioCg>EQUAL_PRIO</dcDlPdcpAggrPrioCg>
+              <dcDlPdcpAggrTimeDiffCg>YOUNGEST_CG</dcDlPdcpAggrTimeDiffCg>
+              <dcDlPdcpAggrTimeDiffProhibit>200</dcDlPdcpAggrTimeDiffProhibit>
+              <dcDlPdcpAggrTimeDiffThresh>150</dcDlPdcpAggrTimeDiffThresh>
+              <dscp>46</dscp>
+              <estimatedE2ERTT>0</estimatedE2ERTT>
+              <packetDelayBudget>80</packetDelayBudget>
+              <packetDelayBudgetOffset>0</packetDelayBudgetOffset>
+              <profile5qi>5</profile5qi>
+              <tOooUlDelivery>150</tOooUlDelivery>
+            </CUUP5qi>
+            <CUUP5qi>
+              <cUUP5qiId>5qi6</cUUP5qiId>
+              <aqmMode>MODE1</aqmMode>
+              <counterActiveMode>false</counterActiveMode>
+              <dcDlPdcpAggrPrioCg>EQUAL_PRIO</dcDlPdcpAggrPrioCg>
+              <dcDlPdcpAggrTimeDiffCg>YOUNGEST_CG</dcDlPdcpAggrTimeDiffCg>
+              <dcDlPdcpAggrTimeDiffProhibit>200</dcDlPdcpAggrTimeDiffProhibit>
+              <dcDlPdcpAggrTimeDiffThresh>150</dcDlPdcpAggrTimeDiffThresh>
+              <dscp>32</dscp>
+              <estimatedE2ERTT>50</estimatedE2ERTT>
+              <packetDelayBudget>280</packetDelayBudget>
+              <packetDelayBudgetOffset>0</packetDelayBudgetOffset>
+              <profile5qi>6</profile5qi>
+              <tOooUlDelivery>150</tOooUlDelivery>
+            </CUUP5qi>
+            <CUUP5qi>
+              <cUUP5qiId>5qi7</cUUP5qiId>
+              <aqmMode>MODE1</aqmMode>
+              <counterActiveMode>false</counterActiveMode>
+              <dcDlPdcpAggrPrioCg>EQUAL_PRIO</dcDlPdcpAggrPrioCg>
+              <dcDlPdcpAggrTimeDiffCg>YOUNGEST_CG</dcDlPdcpAggrTimeDiffCg>
+              <dcDlPdcpAggrTimeDiffProhibit>200</dcDlPdcpAggrTimeDiffProhibit>
+              <dcDlPdcpAggrTimeDiffThresh>150</dcDlPdcpAggrTimeDiffThresh>
+              <dscp>40</dscp>
+              <estimatedE2ERTT>50</estimatedE2ERTT>
+              <packetDelayBudget>80</packetDelayBudget>
+              <packetDelayBudgetOffset>0</packetDelayBudgetOffset>
+              <profile5qi>7</profile5qi>
+              <tOooUlDelivery>150</tOooUlDelivery>
+            </CUUP5qi>
+            <CUUP5qi>
+              <cUUP5qiId>5qi8</cUUP5qiId>
+              <aqmMode>MODE1</aqmMode>
+              <counterActiveMode>false</counterActiveMode>
+              <dcDlPdcpAggrPrioCg>EQUAL_PRIO</dcDlPdcpAggrPrioCg>
+              <dcDlPdcpAggrTimeDiffCg>YOUNGEST_CG</dcDlPdcpAggrTimeDiffCg>
+              <dcDlPdcpAggrTimeDiffProhibit>200</dcDlPdcpAggrTimeDiffProhibit>
+              <dcDlPdcpAggrTimeDiffThresh>150</dcDlPdcpAggrTimeDiffThresh>
+              <dscp>30</dscp>
+              <estimatedE2ERTT>50</estimatedE2ERTT>
+              <packetDelayBudget>280</packetDelayBudget>
+              <packetDelayBudgetOffset>0</packetDelayBudgetOffset>
+              <profile5qi>8</profile5qi>
+              <tOooUlDelivery>150</tOooUlDelivery>
+            </CUUP5qi>
+            <CUUP5qi>
+              <cUUP5qiId>5qi9</cUUP5qiId>
+              <aqmMode>MODE1</aqmMode>
+              <counterActiveMode>false</counterActiveMode>
+              <dcDlPdcpAggrPrioCg>EQUAL_PRIO</dcDlPdcpAggrPrioCg>
+              <dcDlPdcpAggrTimeDiffCg>YOUNGEST_CG</dcDlPdcpAggrTimeDiffCg>
+              <dcDlPdcpAggrTimeDiffProhibit>200</dcDlPdcpAggrTimeDiffProhibit>
+              <dcDlPdcpAggrTimeDiffThresh>150</dcDlPdcpAggrTimeDiffThresh>
+              <dscp>26</dscp>
+              <estimatedE2ERTT>50</estimatedE2ERTT>
+              <packetDelayBudget>280</packetDelayBudget>
+              <packetDelayBudgetOffset>0</packetDelayBudgetOffset>
+              <profile5qi>9</profile5qi>
+              <tOooUlDelivery>150</tOooUlDelivery>
+            </CUUP5qi>
+          </CUUP5qiTable>
+        </GNBCUUPFunction>
+      </ManagedElement>
+    </config>
+  </edit-config>
+</rpc>
+]]>]]>
+<rpc message-id="Closing" xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+  <close-session></close-session>
+</rpc>
+]]>]]>
+"""
+
+#################################################----JK_SA_dU5qiTable_XML (NR_5G 05 script)---#################################################
+JK_SA_dU5qiTable_XML = """<?xml version="1.0" encoding="UTF-8"?>
+<hello xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+  <capabilities>
+    <capability>urn:ietf:params:netconf:base:1.0</capability>
+  </capabilities>
+</hello>
+]]>]]>
+<rpc message-id="1" xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+  <edit-config>
+    <target>
+      <running />
+    </target>
+    <config xmlns:xc="urn:ietf:params:xml:ns:netconf:base:1.0">
+      <ManagedElement xmlns="urn:com:ericsson:ecim:ComTop">
+        <managedElementId>1</managedElementId>
+        <GNBDUFunction xmlns="urn:com:ericsson:ecim:GNBDU">
+          <gNBDUFunctionId>1</gNBDUFunctionId>
+          <DU5qiTable>
+            <dU5qiTableId>1</dU5qiTableId>
+            <default5qiTable>true</default5qiTable>
+            <DU5qi>
+              <dU5qiId>1</dU5qiId>
+              <aqmMode>MODE2</aqmMode>
+              <dscp>34</dscp>
+              <estimatedE2ERTT>50</estimatedE2ERTT>
+              <logicalChannelGroupId>1</logicalChannelGroupId>
+              <packetDelayBudget>120</packetDelayBudget>
+              <packetDelayBudgetOffset>50</packetDelayBudgetOffset>
+              <priorityLevel>20</priorityLevel>
+              <profile5qi>1</profile5qi>
+              <puschRepRef>ManagedElement=I-HP-DRMS-ENB-0026,GNBDUFunction=1,UeCC=1,PuschRep=Default</puschRepRef>
+              <rlcSNLength>12</rlcSNLength>
+              <srHandlingRef>ManagedElement=I-HP-DRMS-ENB-0026,GNBDUFunction=1,UeCC=1,SrHandling=Default</srHandlingRef>
+              <tReassemblyDl>65</tReassemblyDl>
+              <tReassemblyUl>65</tReassemblyUl>
+            </DU5qi>
+            <DU5qi>
+              <dU5qiId>2</dU5qiId>
+              <aqmMode>MODE2</aqmMode>
+              <dscp>12</dscp>
+              <estimatedE2ERTT>50</estimatedE2ERTT>
+              <logicalChannelGroupId>1</logicalChannelGroupId>
+              <packetDelayBudget>200</packetDelayBudget>
+              <packetDelayBudgetOffset>0</packetDelayBudgetOffset>
+              <priorityLevel>40</priorityLevel>
+              <profile5qi>2</profile5qi>
+              <puschRepRef>ManagedElement=I-HP-DRMS-ENB-0026,GNBDUFunction=1,UeCC=1,PuschRep=Default</puschRepRef>
+              <rlcSNLength>12</rlcSNLength>
+              <srHandlingRef>ManagedElement=I-HP-DRMS-ENB-0026,GNBDUFunction=1,UeCC=1,SrHandling=Default</srHandlingRef>
+              <tReassemblyDl>35</tReassemblyDl>
+              <tReassemblyUl>35</tReassemblyUl>
+            </DU5qi>
+            <DU5qi>
+              <dU5qiId>3</dU5qiId>
+              <aqmMode>MODE2</aqmMode>
+              <dscp>12</dscp>
+              <estimatedE2ERTT>50</estimatedE2ERTT>
+              <logicalChannelGroupId>2</logicalChannelGroupId>
+              <packetDelayBudget>50</packetDelayBudget>
+              <packetDelayBudgetOffset>0</packetDelayBudgetOffset>
+              <priorityLevel>30</priorityLevel>
+              <profile5qi>3</profile5qi>
+              <puschRepRef>ManagedElement=I-HP-DRMS-ENB-0026,GNBDUFunction=1,UeCC=1,PuschRep=Default</puschRepRef>
+              <rlcSNLength>12</rlcSNLength>
+              <srHandlingRef>ManagedElement=I-HP-DRMS-ENB-0026,GNBDUFunction=1,UeCC=1,SrHandling=Default</srHandlingRef>
+              <tReassemblyDl>25</tReassemblyDl>
+              <tReassemblyUl>25</tReassemblyUl>
+            </DU5qi>
+            <DU5qi>
+              <dU5qiId>4</dU5qiId>
+              <aqmMode>MODE2</aqmMode>
+              <dscp>12</dscp>
+              <estimatedE2ERTT>50</estimatedE2ERTT>
+              <logicalChannelGroupId>2</logicalChannelGroupId>
+              <packetDelayBudget>420</packetDelayBudget>
+              <packetDelayBudgetOffset>0</packetDelayBudgetOffset>
+              <priorityLevel>50</priorityLevel>
+              <profile5qi>4</profile5qi>
+              <puschRepRef>ManagedElement=I-HP-DRMS-ENB-0026,GNBDUFunction=1,UeCC=1,PuschRep=Default</puschRepRef>
+              <rlcSNLength>12</rlcSNLength>
+              <srHandlingRef>ManagedElement=I-HP-DRMS-ENB-0026,GNBDUFunction=1,UeCC=1,SrHandling=Default</srHandlingRef>
+              <tReassemblyDl>25</tReassemblyDl>
+              <tReassemblyUl>25</tReassemblyUl>
+            </DU5qi>
+            <DU5qi>
+              <dU5qiId>5</dU5qiId>
+              <aqmMode>OFF</aqmMode>
+              <dscp>46</dscp>
+              <estimatedE2ERTT>50</estimatedE2ERTT>
+              <logicalChannelGroupId>3</logicalChannelGroupId>
+              <packetDelayBudget>120</packetDelayBudget>
+              <packetDelayBudgetOffset>0</packetDelayBudgetOffset>
+              <priorityLevel>10</priorityLevel>
+              <profile5qi>5</profile5qi>
+              <puschRepRef>ManagedElement=I-HP-DRMS-ENB-0026,GNBDUFunction=1,UeCC=1,PuschRep=Default</puschRepRef>
+              <rlcSNLength>12</rlcSNLength>
+              <srHandlingRef>ManagedElement=I-HP-DRMS-ENB-0026,GNBDUFunction=1,UeCC=1,SrHandling=Default</srHandlingRef>
+              <tReassemblyDl>25</tReassemblyDl>
+              <tReassemblyUl>25</tReassemblyUl>
+            </DU5qi>
+            <DU5qi>
+              <dU5qiId>6</dU5qiId>
+              <aqmMode>MODE1</aqmMode>
+              <dscp>32</dscp>
+              <estimatedE2ERTT>50</estimatedE2ERTT>
+              <logicalChannelGroupId>5</logicalChannelGroupId>
+              <packetDelayBudget>420</packetDelayBudget>
+              <packetDelayBudgetOffset>0</packetDelayBudgetOffset>
+              <priorityLevel>60</priorityLevel>
+              <profile5qi>6</profile5qi>
+              <puschRepRef>ManagedElement=I-HP-DRMS-ENB-0026,GNBDUFunction=1,UeCC=1,PuschRep=Default</puschRepRef>
+              <rlcSNLength>18</rlcSNLength>
+              <srHandlingRef>ManagedElement=I-HP-DRMS-ENB-0026,GNBDUFunction=1,UeCC=1,SrHandling=Default</srHandlingRef>
+              <tReassemblyDl>25</tReassemblyDl>
+              <tReassemblyUl>25</tReassemblyUl>
+            </DU5qi>
+            <DU5qi>
+              <dU5qiId>7</dU5qiId>
+              <aqmMode>MODE1</aqmMode>
+              <dscp>40</dscp>
+              <estimatedE2ERTT>50</estimatedE2ERTT>
+              <logicalChannelGroupId>5</logicalChannelGroupId>
+              <packetDelayBudget>120</packetDelayBudget>
+              <packetDelayBudgetOffset>0</packetDelayBudgetOffset>
+              <priorityLevel>70</priorityLevel>
+              <profile5qi>7</profile5qi>
+              <puschRepRef>ManagedElement=I-HP-DRMS-ENB-0026,GNBDUFunction=1,UeCC=1,PuschRep=Default</puschRepRef>
+              <rlcSNLength>18</rlcSNLength>
+              <srHandlingRef>ManagedElement=I-HP-DRMS-ENB-0026,GNBDUFunction=1,UeCC=1,SrHandling=Default</srHandlingRef>
+              <tReassemblyDl>25</tReassemblyDl>
+              <tReassemblyUl>25</tReassemblyUl>
+            </DU5qi>
+            <DU5qi>
+              <dU5qiId>8</dU5qiId>
+              <aqmMode>MODE1</aqmMode>
+              <dscp>30</dscp>
+              <estimatedE2ERTT>50</estimatedE2ERTT>
+              <logicalChannelGroupId>5</logicalChannelGroupId>
+              <packetDelayBudget>420</packetDelayBudget>
+              <packetDelayBudgetOffset>0</packetDelayBudgetOffset>
+              <priorityLevel>80</priorityLevel>
+              <profile5qi>8</profile5qi>
+              <puschRepRef>ManagedElement=I-HP-DRMS-ENB-0026,GNBDUFunction=1,UeCC=1,PuschRep=Default</puschRepRef>
+              <rlcSNLength>18</rlcSNLength>
+              <srHandlingRef>ManagedElement=I-HP-DRMS-ENB-0026,GNBDUFunction=1,UeCC=1,SrHandling=Default</srHandlingRef>
+              <tReassemblyDl>25</tReassemblyDl>
+              <tReassemblyUl>25</tReassemblyUl>
+            </DU5qi>
+            <DU5qi>
+              <dU5qiId>9</dU5qiId>
+              <aqmMode>MODE1</aqmMode>
+              <dscp>26</dscp>
+              <estimatedE2ERTT>50</estimatedE2ERTT>
+              <logicalChannelGroupId>5</logicalChannelGroupId>
+              <packetDelayBudget>420</packetDelayBudget>
+              <packetDelayBudgetOffset>0</packetDelayBudgetOffset>
+              <priorityLevel>90</priorityLevel>
+              <profile5qi>9</profile5qi>
+              <puschRepRef>ManagedElement=I-HP-DRMS-ENB-0026,GNBDUFunction=1,UeCC=1,PuschRep=Default</puschRepRef>
+              <rlcSNLength>18</rlcSNLength>
+              <srHandlingRef>ManagedElement=I-HP-DRMS-ENB-0026,GNBDUFunction=1,UeCC=1,SrHandling=Default</srHandlingRef>
+              <tReassemblyDl>25</tReassemblyDl>
+              <tReassemblyUl>25</tReassemblyUl>
+            </DU5qi>
+          </DU5qiTable>
+        </GNBDUFunction>
+      </ManagedElement>
+    </config>
+  </edit-config>
+</rpc>
+]]>]]>
+<rpc message-id="Closing" xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+  <close-session></close-session>
+</rpc>
+]]>]]>
+"""
+
+#################################################----JK_SA_AMF_RIM_CONFIG (NR_5G 06 script)---#################################################
+# Must keep the three 'RIM Feature Activation Script_1_Sector / _2_Sectors / _3_Sectors' header lines: the generator splits on them.
+JK_SA_AMF_RIM_CONFIG = """lt all
+
+
+#################NSA to SA Conversion#######################
+
+
+
+$date = `date +%y%m%d_%H%M`
+cvms Pre_SA_$date
+
+confb+
+gs+
+
+
+gs+
+
+
+crn GNBCUCPFunction=1,TermPointToAmf=2                                                                                                                       
+administrativeState 1                                                                                                                                        
+defaultAmf true                                                                                                                                              
+domainName                                                                                                                                                   
+ipv6Address1 2401:4900:c0:1::3013                                                                                                                            
+ipv6Address2 2401:4900:c0:1::3015                                                                                                                            
+operatorPLMNId                                                                                                                                               
+pwsRestartHandling 0                                                                                                                                         
+end                                                                                                                                                          
+
+crn GNBCUCPFunction=1,TermPointToAmf=3                                                                                                                       
+administrativeState 1                                                                                                                                        
+defaultAmf true                                                                                                                                              
+domainName                                                                                                                                                   
+ipv6Address1 2401:4900:c0:1::3263                                                                                                                            
+ipv6Address2 2401:4900:c0:1::3265                                                                                                                            
+operatorPLMNId                                                                                                                                               
+pwsRestartHandling 0                                                                                                                                         
+end 
+
+crn GNBCUCPFunction=1,TermPointToAmf=4                                                                                                                      
+administrativeState 1                                                                                                                                        
+defaultAmf true                                                                                                                                              
+domainName                                                                                                                                                   
+ipv6Address1 2401:4900:c0:1::3273                                                                                                                            
+ipv6Address2 2401:4900:c0:1::3275                                                                                                                            
+operatorPLMNId                                                                                                                                               
+pwsRestartHandling 0                                                                                                                                         
+end
+
+
+deb TermPointToAmf=[1-4]
+get TermPointToAmf=.*
+
+bl NRCELLDU=.*
+bl NRSectorCarrier=S.*_N11
+
+eset1 ^NRCellDU sNSSAIList sd=1,sst=1
+
+
+#################3. change below parameters on NR############
+
+
+set . secondaryCellOnly false
+set GNBDUFunction=1,Rrc=1 t310 2000
+set . transmitSib2 true
+
+set GNBCUCPFunction=1,AnrFunction=1,AnrFunctionNR=1 anrCgiMeasIntraFreqEnabled true
+set GNBCUCPFunction=1,AnrFunction=1,AnrFunctionNR=1 anrCgiMeasInterFreqMode 1
+set GNBCUCPFunction=1 nasInactivityTime 10
+
+
+##################################################################
+
+Relations in SA
+
+ARFCN:L1800-1301
+L2100: 240
+
+get . earfcn
+
+lt all
+st cell
+
+
+gs+
+crn GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=1301
+arfcnValueEUtranDl 1301
+userLabel 
+end
+gs-
+
+gs+
+crn GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=240
+arfcnValueEUtranDl 240
+userLabel 
+end
+gs-
+
+gs+
+crn GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=3672
+arfcnValueEUtranDl 3672
+userLabel 
+end
+gs-
+
+gs+
+crn GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=39126
+arfcnValueEUtranDl 39126
+userLabel 
+end
+gs-
+
+gs+
+crn GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=39276
+arfcnValueEUtranDl 39276
+userLabel 
+end
+gs-
+
+gs+
+crn GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=39125
+arfcnValueEUtranDl 39125
+userLabel 
+end
+gs-
+
+gs+
+crn GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=39275
+arfcnValueEUtranDl 39275
+userLabel 
+end
+gs-
+
+
+
+
+gs+
+ma nrcell GNBDUFunction=1,NRCellDU=
+for $mo in nrcell
+$mordn = rdn($mo)
+$mordn = $mordn -s NRCellDU= -r NRCellCU=
+crn GNBCUCPFunction=1,$mordn,EUtranFreqRelation=1301
+allowedMeasBandwidth 100
+allowedPlmnList 
+cellReselectionPriority 6
+eUtranFallbackPrioEc 6
+eUtranFrequencyRef GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=1301
+mcpcPCellEUtranFreqRelProfileRef 
+pMaxEUtra 23
+presenceAntennaPort1 false
+qQualMin -34
+qRxLevMin -128
+tReselectionEUtra 2
+tReselectionEutraSfHigh 
+tReselectionEutraSfMedium 
+threshXHighP 62
+threshXHighQ 
+threshXLowP 0
+threshXLowQ 
+ueMCEUtranFreqRelProfileRef 
+userLabel 
+voicePrio 0
+end
+gs-
+done
+
+gs+
+ma nrcell GNBDUFunction=1,NRCellDU=
+for $mo in nrcell
+$mordn = rdn($mo)
+$mordn = $mordn -s NRCellDU= -r NRCellCU=
+crn GNBCUCPFunction=1,$mordn,EUtranFreqRelation=240
+allowedMeasBandwidth 50
+allowedPlmnList 
+cellReselectionPriority 5
+eUtranFallbackPrioEc 5
+eUtranFrequencyRef GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=240
+mcpcPCellEUtranFreqRelProfileRef 
+pMaxEUtra 23
+presenceAntennaPort1 false
+qQualMin -34
+qRxLevMin -128
+tReselectionEUtra 2
+tReselectionEutraSfHigh 
+tReselectionEutraSfMedium 
+threshXHighP 62
+threshXHighQ 
+threshXLowP 0
+threshXLowQ 
+ueMCEUtranFreqRelProfileRef 
+userLabel 
+voicePrio 0
+end
+gs-
+done
+
+gs-
+
+
+
+gs+
+ma nrcell GNBDUFunction=1,NRCellDU=
+for $mo in nrcell
+$mordn = rdn($mo)
+$mordn = $mordn -s NRCellDU= -r NRCellCU=
+crn GNBCUCPFunction=1,$mordn,EUtranFreqRelation=3672
+allowedMeasBandwidth 25
+allowedPlmnList 
+cellReselectionPriority 3
+eUtranFallbackPrioEc 4
+eUtranFrequencyRef GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=3672
+mcpcPCellEUtranFreqRelProfileRef 
+pMaxEUtra 23
+presenceAntennaPort1 false
+qQualMin -34
+qRxLevMin -128
+tReselectionEUtra 2
+tReselectionEutraSfHigh 
+tReselectionEutraSfMedium 
+threshXHighP 62
+threshXHighQ 
+threshXLowP 0
+threshXLowQ 
+ueMCEUtranFreqRelProfileRef 
+userLabel 
+voicePrio 0
+end
+gs-
+done
+
+
+
+
+gs+
+ma nrcell GNBDUFunction=1,NRCellDU=
+for $mo in nrcell
+$mordn = rdn($mo)
+$mordn = $mordn -s NRCellDU= -r NRCellCU=
+crn GNBCUCPFunction=1,$mordn,EUtranFreqRelation=39126
+allowedMeasBandwidth 75
+allowedPlmnList 
+cellReselectionPriority 6
+eUtranFallbackPrioEc 3
+eUtranFrequencyRef GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=39126
+mcpcPCellEUtranFreqRelProfileRef 
+pMaxEUtra 23
+presenceAntennaPort1 false
+qQualMin -34
+qRxLevMin -128
+tReselectionEUtra 2
+tReselectionEutraSfHigh 
+tReselectionEutraSfMedium 
+threshXHighP 62
+threshXHighQ 
+threshXLowP 0
+threshXLowQ 
+ueMCEUtranFreqRelProfileRef 
+userLabel 
+voicePrio 0
+end
+gs-
+done
+
+gs+
+ma nrcell GNBDUFunction=1,NRCellDU=
+for $mo in nrcell
+$mordn = rdn($mo)
+$mordn = $mordn -s NRCellDU= -r NRCellCU=
+crn GNBCUCPFunction=1,$mordn,EUtranFreqRelation=39276
+allowedMeasBandwidth 75
+allowedPlmnList 
+cellReselectionPriority 6
+eUtranFallbackPrioEc 0
+eUtranFrequencyRef GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=39276
+mcpcPCellEUtranFreqRelProfileRef 
+pMaxEUtra 23
+presenceAntennaPort1 false
+qQualMin -34
+qRxLevMin -128
+tReselectionEUtra 2
+tReselectionEutraSfHigh 
+tReselectionEutraSfMedium 
+threshXHighP 62
+threshXHighQ 
+threshXLowP 0
+threshXLowQ 
+ueMCEUtranFreqRelProfileRef 
+userLabel 
+voicePrio 0
+end
+gs-
+done
+
+gs+
+ma nrcell GNBDUFunction=1,NRCellDU=
+for $mo in nrcell
+$mordn = rdn($mo)
+$mordn = $mordn -s NRCellDU= -r NRCellCU=
+crn GNBCUCPFunction=1,$mordn,EUtranFreqRelation=39275
+allowedMeasBandwidth 75
+allowedPlmnList 
+cellReselectionPriority 4
+eUtranFallbackPrioEc -1
+eUtranFrequencyRef GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=39275
+mcpcPCellEUtranFreqRelProfileRef 
+pMaxEUtra 23
+presenceAntennaPort1 false
+qQualMin -34
+qRxLevMin -128
+tReselectionEUtra 2
+tReselectionEutraSfHigh 
+tReselectionEutraSfMedium 
+threshXHighP 62
+threshXHighQ 
+threshXLowP 0
+threshXLowQ 
+ueMCEUtranFreqRelProfileRef 
+userLabel 
+voicePrio 0
+end
+gs-
+done
+
+gs+
+ma nrcell GNBDUFunction=1,NRCellDU=
+for $mo in nrcell
+$mordn = rdn($mo)
+$mordn = $mordn -s NRCellDU= -r NRCellCU=
+crn GNBCUCPFunction=1,$mordn,EUtranFreqRelation=39125
+allowedMeasBandwidth 75
+allowedPlmnList 
+cellReselectionPriority 4
+eUtranFallbackPrioEc -1
+eUtranFrequencyRef GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=39125
+mcpcPCellEUtranFreqRelProfileRef 
+pMaxEUtra 23
+presenceAntennaPort1 false
+qQualMin -34
+qRxLevMin -128
+tReselectionEUtra 2
+tReselectionEutraSfHigh 
+tReselectionEutraSfMedium 
+threshXHighP 62
+threshXHighQ 
+threshXLowP 0
+threshXLowQ 
+ueMCEUtranFreqRelProfileRef 
+userLabel 
+voicePrio 0
+end
+gs-
+done
+
+
+set GNBCUCPFunction=1,NRCellCU=.*,EUtranFreqRelation=.* anrMeasOn true 
+
+
+#################################Create Xn Interface###############################
+
+
+crn Transport=1,SctpEndpoint=XN
+dtls 
+dtlsNodeCredential 
+dtlsSctpSecurityMode 0
+dtlsTrustCategory 
+localIpAddress Transport=1,Router=LTE_NR,InterfaceIPv6=NR,AddressIPv6=NR_S1U_OAM
+portNumber 38422
+sctpProfile SctpProfile=1
+userLabel 
+end
+gs-
+
+
+gs+
+ 
+crn GNBCUCPFunction=1,EndpointResource=1,LocalSctpEndpoint=4
+interfaceUsed 6
+sctpEndpointRef SctpEndpoint=XN
+end
+gs-
+gs+
+set . transmitSib5 true
+
+deb NRCELLDU=.*
+deb NRSectorCarrier=S.*_N11
+
+
+
+confb+
+set CUUP5qiTable=1,CUUP5qi=5qi1                             dscp              34
+set CUUP5qiTable=1,CUUP5qi=5qi2                             dscp              34
+set CUUP5qiTable=1,CUUP5qi=5qi3                             dscp              12
+set CUUP5qiTable=1,CUUP5qi=5qi4                             dscp              12
+set CUUP5qiTable=1,CUUP5qi=5qi5                             dscp              46
+set CUUP5qiTable=1,CUUP5qi=5qi6                             dscp              32
+set CUUP5qiTable=1,CUUP5qi=5qi7                             dscp              40
+set CUUP5qiTable=1,CUUP5qi=5qi8                             dscp              30
+set CUUP5qiTable=1,CUUP5qi=5qi9                             dscp              26
+
+set DU5qiTable=1,DU5qi=1                                    dscp              34
+set DU5qiTable=1,DU5qi=2                                    dscp              34
+set DU5qiTable=1,DU5qi=3                                    dscp              12
+set DU5qiTable=1,DU5qi=4                                    dscp              12
+set DU5qiTable=1,DU5qi=5                                    dscp              46
+set DU5qiTable=1,DU5qi=6                                    dscp              32
+set DU5qiTable=1,DU5qi=7                                    dscp              40
+set DU5qiTable=1,DU5qi=8                                    dscp              30
+set DU5qiTable=1,DU5qi=9                                    dscp              26
+
+lt all
+
+confb-
+
+
+lt all
+
+
+confbd+
+
+lbl nrcell
+
+hget CXC4012493|CXC4012534|CXC4012538|CXC4012549|CXC4012550|CXC4012591|CXC4012592|CXC4012637|CXC4012607|CXC4012475|CXC4012548|CXC4012724|CXC4012680|CXC4012688|CXC4012601|CXC4012330|CXC4012406|CXC4012510|CXC4012562|CXC4012593|CXC4012638|CXC4012590|CXC4012218 featurestate|description|licensestate
+
+set CXC4012493|CXC4012534|CXC4012538|CXC4012549|CXC4012550|CXC4012591|CXC4012592|CXC4012637|CXC4012607|CXC4012475|CXC4012548|CXC4012724|CXC4012680|CXC4012688|CXC4012601|CXC4012330|CXC4012406|CXC4012510|CXC4012562|CXC4012593|CXC4012638|CXC4012590|CXC4012218 featurestate 1
+
+
+set NRCellDU=.* secondaryCellOnly false
+set GNBDUFunction=1,Rrc=1    t300 1500
+set GNBDUFunction=1,Rrc=1    t301 600
+set GNBDUFunction=1,Rrc=1    t310 2000
+set GNBDUFunction=1,Rrc=1    t311 3000
+set GNBDUFunction=1,Rrc=1    t319 400
+set GNBDUFunction=1,RadioBearerTable=1,SignalingRadioBearer=1 dlMaxRetxThreshold 32
+set GNBDUFunction=1,RadioBearerTable=1,SignalingRadioBearer=1 ulMaxRetxThreshold 32
+set GNBDUFunction=1,RadioBearerTable=1,SignalingRadioBearer=1 tPollRetransmitUl 80
+set GNBDUFunction=1,RadioBearerTable=1,SignalingRadioBearer=1 tPollRetransmitDl 80
+
+set GNBCUCPFunction=1,AnrFunction=1,AnrFunctionNR=1 anrAutoCreateXnForEndc true
+set GNBCUCPFunction=1,AnrFunction=1,AnrFunctionNR=1         anrCgiMeasIntraFreqEnabled true
+set GNBCUCPFunction=1,AnrFunction=1  promoteCellRelMobAttThresh  50
+set GNBCUCPFunction=1,AnrFunction=1  demoteCellRelMobAttThresh  10
+set GNBCUCPFunction=1,AnrFunction=1,AnrFunctionNR=1 anrCgiMeasInterFreqMode 1
+set GNBCUCPFunction=1,AnrFunction=1,AnrFunctionNR=1  anrEndcX2Enabled  true
+set GNBCUCPFunction=1,AnrFunction=1,AnrFunctionNR=1  ecgiDuringEpsFbEnabled true
+set GNBCUCPFunction=1,AnrFunction=1,AnrFunctionEUtran=1     anrCgiMeasIntraFreqEnabled true
+
+cr GNBCUCPFunction=1,AnrFunction=1,AnrFunctionEUtran=1
+lt all
+set GNBCUCPFunction=1,AnrFunction=1,AnrFunctionEUtran=1 anrCgiMeasEUtranEnabled true
+
+cr GNBCUCPFunction=1,AnrFunction=1,AnrFunctionEUtran=1,AnrFunctionEutranUeCfg=Base
+lt all
+set GNBCUCPFunction=1,AnrFunction=1,AnrFunctionEUtran=1,AnrFunctionEutranUeCfg=Base ecgiDuringEpsFbEnabled true
+
+
+set GNBDUFunction=1,UeCC=1,RadioLinkControl=1,UeAdaptiveRlc=1,UeAdaptiveRlcUeCfg=Base ueAdaptiveRlcRetxMode 0
+set GNBCUCPFunction=1,SecurityHandling=1    cipheringAlgoPrio 1,2,0
+set GNBCUCPFunction=1,SecurityHandling=1    integrityProtectAlgoPrio 2,1
+set GNBDUFunction=1,UeCC=1,RadioLinkControl=1,DrbRlc=Default,DrbRlcUeCfg=Base tStatusProhibitDl 10
+
+set GNBDUFunction=1,Paging=1   defaultPagingCycle 128 
+set GNBDUFunction=1,Paging=1 n 0
+set GNBDUFunction=1,Paging=1 nS 1 
+set GNBDUFunction=1,Paging=1 pagingDiscardTimer 3
+set NRCellDU=.*   noOfCbraPreambles 16
+set NRCellDU=.*   cfraEnabled true
+set GNBDUFunction=1,UeCC=1,Rach=Default,RachUeCfg=Base      cfraEnabled  true 
+set GNBCUCPFunction=1 maxCommonProcTime 30
+set GNBCUCPFunction=1 maxNgRetryTime    30
+set GNBCUCPFunction=1 nasInactivityTime 10
+set GNBCUCPFunction=1 ngcDedProcTime    5
+set NRCellCU=.* transmitSib2 true
+set NRCellCU=.* transmitSib4 true
+set NRCellCU=.* transmitSib5 true
+set NRCellDU=.* sibType2 siBroadcastStatus=0
+set NRCellDU=.* sibType4 siBroadcastStatus=0
+set NRCellDU=.* sibType5 siBroadcastStatus=0
+set NRCellDU=.* sibType6 siBroadcastStatus=0
+set NRCellDU=.* sibType7 siBroadcastStatus=0
+set NRCellDU=.* sibType8 siBroadcastStatus=0
+set NRCellDU=.* sibType2 siPeriodicity=64
+set NRCellDU=.* sibType4 siPeriodicity=64
+set NRCellDU=.* sibType5 siPeriodicity=64
+set NRCellDU=.* sibType6 siPeriodicity=64
+set NRCellDU=.* sibType7 siPeriodicity=64
+set NRCellDU=.* sibType8 siPeriodicity=64
+set  NRCellDU=.*  cellBarred  1
+set  NRCellDU=.* cellReservedForOperator 1
+set NRCellDU=.*   siWindowLength    20
+set GNBCUCPFunction=1   xnIpAddrViaNgActive true
+set GNBCUCPFunction=1   rrcReestSupportType 2
+set NRCellDU=.* srsHoppingBandwidth 1
+
+cr GNBCUUPFunction=1,GtpuSupervision=1								  
+crn GNBCUUPFunction=1,GtpuSupervision=1,GtpuSupervisionProfile=XN
+gtpuEchoEnabled true
+gtpuEchoDscp 32
+interfaceList 6
+end
+
+
+crn GNBCUUPFunction=1,GtpuSupervision=1,GtpuSupervisionProfile=NG
+gtpuEchoEnabled true
+gtpuEchoDscp 32
+interfaceList 4
+end
+
+
+
+
+#################LMS
+
+set GNBCUUPFunction=1,UeCC=1,DcDlCfg=Default                dcDlAggAllowed true
+set GNBCUUPFunction=1,UeCC=1,UserPlaneProfile=Default,UserPlaneProfileUeCfg=Base dcDlAggCgPrio 2
+set GNBCUUPFunction=1,UeCC=1,UserPlaneProfile=Default,UserPlaneProfileUeCfg=Base dcDlAggActTime 1
+set GNBCUUPFunction=1,UeCC=1,UserPlaneProfile=Default,UserPlaneProfileUeCfg=Base dcDlAggExpiryTimer 100
+set GNBCUUPFunction=1,UeCC=1,UserPlaneProfile=Default,UserPlaneProfileUeCfg=Base dlPdcpMcgInitialRate 20
+set GNBCUUPFunction=1,UeCC=1,UserPlaneProfile=Default,UserPlaneProfileUeCfg=Base dlPdcpScgInitialRate 100
+
+
+set NRCellDU=.*   qRxLevMin -110
+set NRCellDU=.*   qRxLevMinOffset
+set NRCellDU=.*   qQualMin -43
+set NRCellDU=.*   qQualMinOffset
+set NRCellCU=.*   sNonIntraSearchP 6
+set NRCellCU=.*   sNonIntraSearchQ
+set NRCellCU=.*   threshServingLowP 4
+set NRCellCU=.*   qHyst 4
+set NRNetwork=1,NRFrequency=627936-.* arfcnValueNRDl 627936
+set NRNetwork=1,NRFrequency=627936-.* gscn 7811
+set NRNetwork=1,NRFrequency=627936-.* smtcDuration
+set NRNetwork=1,NRFrequency=627936-.* smtcDuration 1
+set NRNetwork=1,NRFrequency=627936-.* smtcScs  30
+set NRNetwork=1,NRFrequency=627936-.* smtcPeriodicity 20
+set NRNetwork=1,NRFrequency=627936-.* smtcOffset 0
+set NRCellCU=.*,NRFreqRelation=627936 qOffsetFreq 0
+set NRCellCU=.*,NRFreqRelation=627936 sIntraSearchP 40
+set NRCellCU=.*,NRFreqRelation=627936 sIntraSearchQ 0
+set NRCellCU=.*,NRFreqRelation=627936 threshXHighP  0
+set NRCellCU=.*,NRFreqRelation=627936 tReselectionNR 2
+set NRCellCU=.*,NRFreqRelation=627936 cellReselectionPriority 7
+set NRCellCU=.*,NRFreqRelation=627936 pMax  26
+set NRCellCU=.*,NRFreqRelation=627936 qRxLevMin  -110
+set NRCellCU=.* nRFrequencyRef NRNetwork=1,NRFrequency=627936-30
+
+set NRCellCU=.*,NRFreqRelation=.* mcpcPCellNrFreqRelProfileRef Mcpc=1,McpcPCellNrFreqRelProfile=Default
+set Mcpc=1,McpcPCellEUtranFreqRelProfile=Default,McpcPCellEUtranFreqRelProfileUeCfg=Base inhibitMeasForCellCandidate False
+set Mcpc=1,McpcPCellNrFreqRelProfile=Default,McpcPCellNrFreqRelProfileUeCfg=Base rsrpCandidateA5Offsets threshold1Offset=0,threshold2Offset=0
+set Mcpc=1,McpcPSCellNrFreqRelProfile=Default,McpcPSCellNrFreqRelProfileUeCfg=Base rsrpCandidateA5Offsets threshold1Offset=0,threshold2Offset=0
+set Mcpc=1,McpcPCellEUtranFreqRelProfile=Default,McpcPCellEUtranFreqRelProfileUeCfg=Base inhibitMeasForCellCandidate false
+set Mcpc=1,McpcPCellEUtranFreqRelProfile=Default,McpcPCellEUtranFreqRelProfileUeCfg=Base rsrpCandidateB2Offsets threshold1Offset=0,threshold2EUtraOffset=0
+set NRCellCU=.*,NRCellRelation=40445-.* isHoAllowed   true 
+set NRCellCU=.*,EUtranFreqRelation=240 cellReselectionPriority 5
+set NRCellCU=.*,EUtranFreqRelation=3672 cellReselectionPriority 3
+set NRCellCU=.*,EUtranFreqRelation=1301 cellReselectionPriority 6
+set NRCellCU=.*,EUtranFreqRelation=39125 cellReselectionPriority 4
+set NRCellCU=.*,EUtranFreqRelation=39126 cellReselectionPriority 6
+set NRCellCU=.*,EUtranFreqRelation=39275 cellReselectionPriority 4
+set NRCellCU=.*,EUtranFreqRelation=39276 cellReselectionPriority 6
+
+set NRCellCU=.*,EUtranFreqRelation=240 eUtranFallbackPrioEc  5
+set NRCellCU=.*,EUtranFreqRelation=3672 eUtranFallbackPrioEc  4
+set NRCellCU=.*,EUtranFreqRelation=1301 eUtranFallbackPrioEc  6
+set NRCellCU=.*,EUtranFreqRelation=39125 eUtranFallbackPrioEc  -1
+set NRCellCU=.*,EUtranFreqRelation=39126 eUtranFallbackPrioEc  3
+set NRCellCU=.*,EUtranFreqRelation=39275 eUtranFallbackPrioEc  -1
+set NRCellCU=.*,EUtranFreqRelation=39276 eUtranFallbackPrioEc  3
+
+set NRCellCU=.*,EUtranFreqRelation=.* tReselectionEUtra 2
+set NRCellCU=.*,EUtranFreqRelation=.* threshXHighP 62
+set NRCellCU=.*,EUtranFreqRelation=.* threshXLowP 16
+
+set NRCellCU=.*,EUtranFreqRelation=3672 voicePrio 4
+set NRCellCU=.*,EUtranFreqRelation=240 voicePrio 5
+set NRCellCU=.*,EUtranFreqRelation=1301 voicePrio 6
+set NRCellCU=.*,EUtranFreqRelation=39125 voicePrio -1
+set NRCellCU=.*,EUtranFreqRelation=39126 voicePrio 3
+set NRCellCU=.*,EUtranFreqRelation=39275 voicePrio -1
+set NRCellCU=.*,EUtranFreqRelation=39276 voicePrio 3
+
+
+set NRCellCU=.*,EUtranFreqRelation=.* qRxLevMin  -128
+set NRCellCU=.*,EUtranFreqRelation=.* anrMeasOn true
+
+set NRCellCU=.*,EUtranFreqRelation=1301 eUtranFrequencyRef GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=1301
+set NRCellCU=.*,EUtranFreqRelation=240 eUtranFrequencyRef GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=240
+set NRCellCU=.*,EUtranFreqRelation=3672 eUtranFrequencyRef GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=3672
+set NRCellCU=.*,EUtranFreqRelation=39... eUtranFrequencyRef GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=39...
+
+set NRCellCU=.*,EUtranFreqRelation=.* trStSaEUtranFreqRelProfileRef TrafficSteering=1,TrStSaEUtranFreqRelProfile=Default
+set TrafficSteering=1,TrStSaEUtranFreqRelProfile=Default,TrStSaEUtranFreqRelProfileUeCfg=Base rsrpPCellCandidateB1Offset 0
+set NRCellCU=.*,EUtranCellRelation=40445-.* isHoAllowed   true
+
+
+
+
+set NRCellCU=.* ueMCCellProfileRef UeMC=1,UeMCCellProfile=Default
+set UeMC=1,UeMCCellProfile=Default  sMeasure
+
+
+crn GNBCUCPFunction=1,Mcpc=1,McpcPCellProfile=MidBand
+end 
+
+lt all
+
+set NRCellCU=TN_5_EE_T1_.* mcpcPCellProfileRef Mcpc=1,McpcPCellProfile=MidBand
+set GNBCUCPFunction=1,Mcpc=1,McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=Base rsrpCandidateA5 threshold1=-105,threshold2=-113,timeToTrigger=640,hysteresis=10 
+set GNBCUCPFunction=1,Mcpc=1,McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=Base rsrpCandidateB2 threshold1=-107,threshold2EUtra=-113,hysteresis=10,timeToTrigger=640
+set GNBCUCPFunction=1,Mcpc=1,McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=Base rsrpSearchZone threshold=-105,hysteresis=10,timeToTrigger=320
+set GNBCUCPFunction=1,Mcpc=1,McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=Base rsrpSearchTimeRestriction -1
+set GNBCUCPFunction=1,Mcpc=1,McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=Base rsrpCriticalEnabled  true
+set GNBCUCPFunction=1,Mcpc=1,McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=Base rsrpCritical threshold=-113,hysteresis=10,timeToTrigger=320
+set GNBCUCPFunction=1,Mcpc=1,McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=Base mcpcQuantityList 0
+set NRCellCU=.* mcpcPCellEnabled True
+
+
+cr GNBCUCPFunction=1,UeMC=1,UeMCNrFreqRelProfile=Midband
+lt all
+
+set  GNBCUCPFunction=1,UeMC=1,UeMCNrFreqRelProfile=Midband,UeMCNrFreqRelProfileUeCfg=Base connModePrioPCell 7
+set  GNBCUCPFunction=1,UeMC=1,UeMCNrFreqRelProfile=Midband,UeMCNrFreqRelProfileUeCfg=Base connModeAllowedPCell True
+
+set NRCellCU=.*,NRFreqRelation=.* ueMCNrFreqRelProfileRef UeMC=1,UeMCNrFreqRelProfile=Midband
+
+cr GNBCUCPFunction=1,Mcpc=1,McpcPCellEUtranFreqRelProfile=HO
+
+
+lt all
+
+set  NRCellCU=.*,EUtranFreqRelation=3672 mcpcPCellEUtranFreqRelProfileRef Mcpc=1,McpcPCellEUtranFreqRelProfile=HO
+set  NRCellCU=.*,EUtranFreqRelation=240 mcpcPCellEUtranFreqRelProfileRef Mcpc=1,McpcPCellEUtranFreqRelProfile=HO
+set  NRCellCU=.*,EUtranFreqRelation=1301 mcpcPCellEUtranFreqRelProfileRef Mcpc=1,McpcPCellEUtranFreqRelProfile=HO
+set  NRCellCU=.*,EUtranFreqRelation=39... mcpcPCellEUtranFreqRelProfileRef Mcpc=1,McpcPCellEUtranFreqRelProfile=HO
+set GNBCUCPFunction=1,Mcpc=1,McpcPCellEUtranFreqRelProfile=HO,McpcPCellEUtranFreqRelProfileUeCfg=Base inhibitMeasForCellCandidate False
+set GNBCUCPFunction=1,Mcpc=1,McpcPCellEUtranFreqRelProfile=HO,McpcPCellEUtranFreqRelProfileUeCfg=Base  rsrpCandidateB2Offsets threshold1Offset=0,threshold2EUtraOffset=0
+
+cr GNBCUCPFunction=1,Mcpc=1,McpcPCellEUtranFreqRelProfile=NOHO
+
+lt all
+
+set GNBCUCPFunction=1,Mcpc=1,McpcPCellEUtranFreqRelProfile=NOHO,McpcPCellEUtranFreqRelProfileUeCfg=Base inhibitMeasForCellCandidate  True
+set GNBCUCPFunction=1,Mcpc=1,McpcPCellEUtranFreqRelProfile=NOHO,McpcPCellEUtranFreqRelProfileUeCfg=Base  rsrpCandidateB2Offsets threshold1Offset=0,threshold2EUtraOffset=0
+
+cr GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L2100
+lt all
+set GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L2100,UeMCEUtranFreqRelProfileUeCfg=Base blindRwrAllowed False
+set GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L2100,UeMCEUtranFreqRelProfileUeCfg=Base connModeAllowedPCell true
+set GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L2100,UeMCEUtranFreqRelProfileUeCfg=Base  connModePrioPCell 4
+
+cr GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L1800
+lt all
+set GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L1800,UeMCEUtranFreqRelProfileUeCfg=Base blindRwrAllowed False
+set GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L1800,UeMCEUtranFreqRelProfileUeCfg=Base connModeAllowedPCell true
+set GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L1800,UeMCEUtranFreqRelProfileUeCfg=Base  connModePrioPCell 6
+
+cr GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L900
+lt all
+set GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L900,UeMCEUtranFreqRelProfileUeCfg=Base blindRwrAllowed False
+set GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L900,UeMCEUtranFreqRelProfileUeCfg=Base connModeAllowedPCell true
+set GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L900,UeMCEUtranFreqRelProfileUeCfg=Base  connModePrioPCell 3
+
+cr GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L2300_15_2
+lt all
+set GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L2300_15_2,UeMCEUtranFreqRelProfileUeCfg=Base blindRwrAllowed False
+set GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L2300_15_2,UeMCEUtranFreqRelProfileUeCfg=Base connModeAllowedPCell true
+set GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L2300_15_2,UeMCEUtranFreqRelProfileUeCfg=Base  connModePrioPCell 5
+
+cr GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L2300_15_1
+lt all
+set GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L2300_15_1,UeMCEUtranFreqRelProfileUeCfg=Base blindRwrAllowed False
+set GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L2300_15_1,UeMCEUtranFreqRelProfileUeCfg=Base connModeAllowedPCell true
+set GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L2300_15_1,UeMCEUtranFreqRelProfileUeCfg=Base  connModePrioPCell 5
+
+cr GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L2300_15_1_ULS
+lt all
+set GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L2300_15_1_ULS,UeMCEUtranFreqRelProfileUeCfg=Base blindRwrAllowed False
+set GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L2300_15_1_ULS,UeMCEUtranFreqRelProfileUeCfg=Base connModeAllowedPCell true
+set GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L2300_15_1_ULS,UeMCEUtranFreqRelProfileUeCfg=Base  connModePrioPCell 5
+
+cr GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L2300_15_2_ULS
+lt all
+set GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L2300_15_2_ULS,UeMCEUtranFreqRelProfileUeCfg=Base blindRwrAllowed False
+set GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L2300_15_2_ULS,UeMCEUtranFreqRelProfileUeCfg=Base connModeAllowedPCell true
+set GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L2300_15_2_ULS,UeMCEUtranFreqRelProfileUeCfg=Base  connModePrioPCell 5
+
+
+set NRCellCU=.*,EUtranFreqRelation=240 ueMCEUtranFreqRelProfileRef UeMC=1,UeMCEUtranFreqRelProfile=L2100
+set NRCellCU=.*,EUtranFreqRelation=1301 ueMCEUtranFreqRelProfileRef UeMC=1,UeMCEUtranFreqRelProfile=L1800
+set NRCellCU=.*,EUtranFreqRelation=3672 ueMCEUtranFreqRelProfileRef UeMC=1,UeMCEUtranFreqRelProfile=L900
+set NRCellCU=.*,EUtranFreqRelation=39125 ueMCEUtranFreqRelProfileRef UeMC=1,UeMCEUtranFreqRelProfile=L2300_15_2
+set NRCellCU=.*,EUtranFreqRelation=39275 ueMCEUtranFreqRelProfileRef UeMC=1,UeMCEUtranFreqRelProfile=L2300_15_1
+set NRCellCU=.*,EUtranFreqRelation=39126 ueMCEUtranFreqRelProfileRef UeMC=1,UeMCEUtranFreqRelProfile=L2300_15_2_ULS
+set NRCellCU=.*,EUtranFreqRelation=39276 ueMCEUtranFreqRelProfileRef UeMC=1,UeMCEUtranFreqRelProfile=L2300_15_1_ULS
+
+
+
+set GNBDUFunction=1,UeCC=1,DrxProfile=Default,DrxProfileUeCfg=Base ueGroupList
+
+set GNBCUCPFunction=1,UeCC=1,InactivityProfile=Default,InactivityProfileUeCfg=Base tInactivityTimer 10
+
+
+cr GNBCUCPFunction=1,Mcfb=1
+cr GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1
+
+lt all
+
+set NRCellCU=.*  mcfbCellProfileRef Mcfb=1,McfbCellProfile=1
+set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFallbackOperationEm 1
+set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFbTargetSearchTimer 500
+set  Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFbAtSessionSetup 1
+set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFallbackOperation 1                 
+set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base rejectVoiceIncHoAtEpsFb false
+set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base triggerQuantity 0
+set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base rsrpCriticalCoverage threshold=-109,hysteresis=10,timeToTrigger=160 
+set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base rsrpCellCandidate threshold=-104,hysteresis=10,timeToTrigger=40
+set  Mcfb=1  voiceEpsFbPossible true
+
+set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=.*,McfbCellProfileUeCfg=Base epsFallbackOperation 1                 
+
+cr GNBCUCPFunction=1,UeGroupSelection=1
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,UeGroupSelectionProfile=5QI6
+selectionCriteria 5qi==6
+ueGroupId 66
+ueGroupPriority 65533
+end
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,UeGroupSelectionProfile=qci6
+selectionCriteria qci==6
+ueGroupId 6
+ueGroupPriority 65534
+end
+
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,UeServiceGroupDefinition=5QI6
+selectionCriteria 5qi==6
+ueServiceGroupId 66
+ueServiceGroupPriority 65533
+end
+
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,UeServiceGroupDefinition=qci6
+selectionCriteria qci==6
+ueServiceGroupId 6
+ueServiceGroupPriority 65534
+end
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,PrefUeGroupSelectionProfile=qci6
+prefUeGroupId 6
+prefUeGroupPriority 65534
+selectionCriteria qci==6
+end
+
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,PrefUeGroupSelectionProfile=5QI6
+prefUeGroupId 66
+prefUeGroupPriority 65533
+selectionCriteria 5qi==6
+end
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,UeMobilityGroupDefinition=5QI6
+ueMobilityGroupId 66
+ueMobilityGroupPriority  65533
+selectionCriteria 5qi==6
+end
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,UeMobilityGroupDefinition=qci6
+ueMobilityGroupId 6
+ueMobilityGroupPriority  65534
+selectionCriteria qci==6
+end
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,UeGroupSelectionProfile=5QI7
+selectionCriteria 5qi==7
+ueGroupId 77
+ueGroupPriority 999
+end
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,UeGroupSelectionProfile=qci7
+selectionCriteria qci==7
+ueGroupId 7
+ueGroupPriority 1000
+end
+
+
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,UeServiceGroupDefinition=5QI7
+selectionCriteria 5qi==7
+ueServiceGroupId 77
+ueServiceGroupPriority 999
+end
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,UeServiceGroupDefinition=qci7
+selectionCriteria qci==7
+ueServiceGroupId 7
+ueServiceGroupPriority 1000
+end
+
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,PrefUeGroupSelectionProfile=5QI7
+prefUeGroupId 77
+prefUeGroupPriority 999
+selectionCriteria 5qi==7
+end
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,PrefUeGroupSelectionProfile=qci7
+prefUeGroupId 7
+prefUeGroupPriority 1000
+selectionCriteria qci==7
+end
+
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,UeMobilityGroupDefinition=5QI7
+ueMobilityGroupId 77
+ueMobilityGroupPriority  999
+selectionCriteria 5qi==7
+end
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,UeMobilityGroupDefinition=qci7
+ueMobilityGroupId 7
+ueMobilityGroupPriority  1000
+selectionCriteria qci==7
+end
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,UeGroupSelectionProfile=5QI9
+selectionCriteria 5qi==9
+ueGroupId 99
+ueGroupPriority 899
+end
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,UeGroupSelectionProfile=qci9
+selectionCriteria qci==9
+ueGroupId 9
+ueGroupPriority 900
+end
+
+
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,UeServiceGroupDefinition=5QI9
+selectionCriteria 5qi==9
+ueServiceGroupId 99
+ueServiceGroupPriority 899
+end
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,UeServiceGroupDefinition=qci9
+selectionCriteria qci==9
+ueServiceGroupId 9
+ueServiceGroupPriority 900
+end
+
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,PrefUeGroupSelectionProfile=5QI9
+prefUeGroupId 99
+prefUeGroupPriority 899
+selectionCriteria 5qi==9
+end
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,PrefUeGroupSelectionProfile=qci9
+prefUeGroupId 9
+prefUeGroupPriority 900
+selectionCriteria qci==9
+end
+
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,UeMobilityGroupDefinition=5QI9
+ueMobilityGroupId 99
+ueMobilityGroupPriority  899
+selectionCriteria 5qi==9
+end
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,UeMobilityGroupDefinition=qci9
+ueMobilityGroupId 9
+ueMobilityGroupPriority  900
+selectionCriteria qci==9
+end
+
+
+crn GNBCUCPFunction=1,UeCC=1,RrcInactiveProfile=Default,RrcInactiveProfileUeCfg=5QI6
+ueConfGroupList 66
+ueGroupList 66
+end
+
+
+crn GNBCUCPFunction=1,UeCC=1,RrcInactiveProfile=Default,RrcInactiveProfileUeCfg=5QI7
+ueConfGroupList 77
+ueGroupList 77
+end
+
+crn GNBCUCPFunction=1,UeCC=1,RrcInactiveProfile=Default,RrcInactiveProfileUeCfg=5QI9
+ueConfGroupList 99
+ueGroupList 99
+end
+
+
+set GNBCUCPFunction=1,UeCC=1,RrcInactiveProfile=Default,RrcInactiveProfileUeCfg=5QI6 rrcInactiveStateSupport true
+set GNBCUCPFunction=1,UeCC=1,RrcInactiveProfile=Default,RrcInactiveProfileUeCfg=5QI6 periodicRnaUpdateTimer 30
+set GNBCUCPFunction=1,UeCC=1,RrcInactiveProfile=Default,RrcInactiveProfileUeCfg=5QI6 periodicRnaUpdateCount 1
+
+set GNBCUCPFunction=1,UeCC=1,RrcInactiveProfile=Default,RrcInactiveProfileUeCfg=5QI7 rrcInactiveStateSupport true
+set GNBCUCPFunction=1,UeCC=1,RrcInactiveProfile=Default,RrcInactiveProfileUeCfg=5QI7 periodicRnaUpdateTimer 30
+set GNBCUCPFunction=1,UeCC=1,RrcInactiveProfile=Default,RrcInactiveProfileUeCfg=5QI7 periodicRnaUpdateCount 1
+
+
+set GNBCUCPFunction=1,UeCC=1,RrcInactiveProfile=Default,RrcInactiveProfileUeCfg=5QI9 rrcInactiveStateSupport true
+set GNBCUCPFunction=1,UeCC=1,RrcInactiveProfile=Default,RrcInactiveProfileUeCfg=5QI9 periodicRnaUpdateTimer 30
+set GNBCUCPFunction=1,UeCC=1,RrcInactiveProfile=Default,RrcInactiveProfileUeCfg=5QI9 periodicRnaUpdateCount 1
+
+
+
+
+crn GNBDUFunction=1,UeCC=1,UeBb=1,UeBbProfile=Default,UeBbProfileUeCfg=MBB
+ueConfGroupList 1
+ueGroupList 66,77
+end
+lt all
+set GNBDUFunction=1,UeCC=1,UeBb=1,UeBbProfile=Default,UeBbProfileUeCfg=MBB bsrUeCfgRef GNBDUFunction=1,UeCC=1,Bsr=1,BsrUeCfg=Base
+set GNBDUFunction=1,UeCC=1,UeBb=1,UeBbProfile=Default,UeBbProfileUeCfg=MBB linkAdaptationUeCfgRef GNBDUFunction=1,UeCC=1,LinkAdaptation=1,LinkAdaptationUeCfg=Base
+set GNBDUFunction=1,UeCC=1,UeBb=1,UeBbProfile=Default,UeBbProfileUeCfg=MBB harqUeCfgRef GNBDUFunction=1,UeCC=1,Harq=1,HarqUeCfg=Base
+
+
+set GNBCUCPFunction=1,UeCovMeas=1,UcmCellProfile=Default ucmEnabled true
+set GNBCUCPFunction=1,UeCovMeas=1,UcmCellProfile=Default ucmSelectionProbability 100
+set GNBCUCPFunction=1,UeCovMeas=1,UcmCellProfile=Default ucmCellTargetIntensity 10
+set NBCUCPFunction=1,UeCovMeas=1,UcmCellProfile=Default,UcmCellProfileUeCfg=Base ucmMaxFreqLayerToMeas 7
+set GNBCUCPFunction=1,UeCovMeas=1,UcmNrFreqRelProfile=Default ucmTargetFactor 1
+set GNBCUCPFunction=1,UeCovMeas=1,UcmNrFreqRelProfile=Default reportConfigPeriodical includeBeamMeas=false
+set GNBCUCPFunction=1,UeCovMeas=1,UcmNrFreqRelProfile=Default reportConfigPeriodical maxNoOfRsIndexesToReport=1
+set GNBCUCPFunction=1,UeCovMeas=1,UcmNrFreqRelProfile=Default reportConfigPeriodical maxReportCells=8
+set GNBCUCPFunction=1,UeCovMeas=1,UcmNrFreqRelProfile=Default reportConfigPeriodical reportAddNeighMeas=true
+set GNBCUCPFunction=1,UeCovMeas=1,UcmNrFreqRelProfile=Default reportConfigPeriodical reportAmounT=1
+set GNBCUCPFunction=1,UeCovMeas=1,UcmNrFreqRelProfile=Default reportConfigPeriodical reportInterval=2
+set GNBCUCPFunction=1,UeCovMeas=1,UcmNrFreqRelProfile=Default reportConfigPeriodical reportQuantityCell=6 
+set GNBCUCPFunction=1,UeCovMeas=1,UcmNrFreqRelProfile=Default reportConfigPeriodical reportQuantityRsIndex=6
+
+############################################!LTE#############################################
+
+set CXC4012578|CXC4012385|CXC4012371|CXC4010620 featurestate 1
+set CXC4012324|CXC4012580 featurestate 0
+
+set ENodeBFunction=1,EUtranCell.DD=.*,GUtranFreqRelation=.* anrMeasOn true
+set ENodeBFunction=1,AnrFunction=1,AnrFunctionNR=1          anrStateNR  1
+set UePolicyOptimization=1               zzzTemporary1  1
+set ENodeBFunction=1,EUtranCell.DD=.*,UeMeasControl=1,ReportConfigB1NR=1 triggerQuantityB1NR 0
+set ENodeBFunction=1,EUtranCell.DD=.*,UeMeasControl=1,ReportConfigB1NR=1 b1ThresholdRsrp -107
+set ENodeBFunction=1,EUtranCell.DD=.*,UeMeasControl=1,ReportConfigB1NR=1 hysteresisB1 2
+set ENodeBFunction=1,EUtranCell.DD=.*,UeMeasControl=1,ReportConfigB1NR=1 timeToTriggerB1 640
+
+set ^EUtranCell.DD= changeNotification changeNotificationSIB1=true,changeNotificationSIB13=true,changeNotificationSIB15=true,changeNotificationSIB16=true,changeNotificationSIB2=true,changeNotificationSIB24=true,changeNotificationSIB3=true,changeNotificationSIB4=true,changeNotificationSIB5=true,changeNotificationSIB6=true,changeNotificationSIB7=true,changeNotificationSIB8=true
+set EUtranCell.DD=.*  mappingInfo  mappingInfoSIB24=1 
+set EUtranCell.DD=.*,GUtranFreqRelation=627936 connectedModeMobilityPrio 7
+set EUtranCell.DD=.*,GUtranFreqRelation=627936 cellReselectionPriority 7
+set EUtranCell.DD=.*,GUtranFreqRelation=627936 qRxLevMin         -110
+set EUtranCell.DD=.*,GUtranFreqRelation=627936 threshXHigh 4
+set EUtranCell.DD=.*,GUtranFreqRelation=627936 pMaxNR 33
+set EUtranCell.DD=.*,GUtranFreqRelation=627936 anrMeasOn true
+
+set EUtranCell.DD=.*  sib1AltSchInfo   false
+set . rwrToNRAllowed true
+set . nrB1MeasEnabled true
+set . nrB1MeasAtEndcEnabled True
+
+
+set EUtranCell.DD=.*,UeMeasControl=1  waitForStartNRMeas 6000
+set EUtranCell.DD=.*,UeMeasControl=1  waitForResumeNRMeas 6000
+set EUtranCell.DD=.*,UeMeasControl=1  nrB1MobilityTimerLessTtt 600
+set ENodeBFunction=1,EUtranCell.DD=.*,UeMeasControl=1 sMeasure 0
+set EUtranCell.DD=.*,UeMeasControl=1  nrB1MeasEnabled true
+
+#############################################################################################
+
+lt all
+
+set CUUP5qiTable=1,CUUP5qi=5qi1                             dscp              34
+set CUUP5qiTable=1,CUUP5qi=5qi2                             dscp              34
+set CUUP5qiTable=1,CUUP5qi=5qi3                             dscp              12
+set CUUP5qiTable=1,CUUP5qi=5qi4                             dscp              12
+set CUUP5qiTable=1,CUUP5qi=5qi5                             dscp              46
+set CUUP5qiTable=1,CUUP5qi=5qi6                             dscp              32
+set CUUP5qiTable=1,CUUP5qi=5qi7                             dscp              40
+set CUUP5qiTable=1,CUUP5qi=5qi8                             dscp              30
+set CUUP5qiTable=1,CUUP5qi=5qi9                             dscp              26
+
+set DU5qiTable=1,DU5qi=1                                    dscp              34
+set DU5qiTable=1,DU5qi=2                                    dscp              34
+set DU5qiTable=1,DU5qi=3                                    dscp              12
+set DU5qiTable=1,DU5qi=4                                    dscp              12
+set DU5qiTable=1,DU5qi=5                                    dscp              46
+set DU5qiTable=1,DU5qi=6                                    dscp              32
+set DU5qiTable=1,DU5qi=7                                    dscp              40
+set DU5qiTable=1,DU5qi=8                                    dscp              30
+set DU5qiTable=1,DU5qi=9                                    dscp              26
+
+
+set GNBDUFunction=1,DU5qiTable=1,DU5qi=1 packetDelayBudget  80
+set GNBDUFunction=1,DU5qiTable=1,DU5qi=2 packetDelayBudget  80
+set GNBDUFunction=1,DU5qiTable=1,DU5qi=5 packetDelayBudget 80
+set GNBDUFunction=1,DU5qiTable=1,DU5qi=6 packetDelayBudget  280
+set GNBDUFunction=1,DU5qiTable=1,DU5qi=7 packetDelayBudget 280
+set GNBDUFunction=1,DU5qiTable=1,DU5qi=8 packetDelayBudget  280
+set GNBDUFunction=1,DU5qiTable=1,DU5qi=9 packetDelayBudget  280
+set GNBDUFunction=1,DU5qiTable=1,DU5qi=2 packetDelayBudgetOffset 50
+set GNBDUFunction=1,DU5qiTable=1,DU5qi=2 priorityLevel 30
+set GNBDUFunction=1,DU5qiTable=1,DU5qi=9 priorityLevel 80
+
+cr GNBDUFunction=1,bwp=Init_DL_100
+cr GNBDUFunction=1,bwp=Init_UL_100
+cr GNBDUFunction=1,bwp=DenseSS_DL_100
+cr GNBDUFunction=1,bwp=DenseSS_UL_100
+cr GNBDUFunction=1,bwp=SparseSS_DL_100
+cr GNBDUFunction=1,bwp=SparseSS_UL_100
+
+set bwp numberOfRBs 273
+set GNBDUFunction=1,bwp=Init_UL_100 bwpContext 1
+set GNBDUFunction=1,bwp=DenseSS_UL_100 bwpContext 1
+set GNBDUFunction=1,bwp=SparseSS_UL_100 bwpContext 1
+set GNBDUFunction=1,bwp=Init_DL_100 bwpContext 0
+set GNBDUFunction=1,bwp=DenseSS_DL_100 bwpContext 0
+set GNBDUFunction=1,bwp=SparseSS_DL_100 bwpContext 0
+set GNBDUFunction=1,bwp=DenseSS_DL_100 isInitialBwp false
+set GNBDUFunction=1,bwp=DenseSS_UL_100 isInitialBwp false
+set GNBDUFunction=1,bwp=SparseSS_DL_100 isInitialBwp false
+set GNBDUFunction=1,bwp=SparseSS_UL_100 isInitialBwp false
+
+set CXC4012607 featurestate 1
+set NRCellDU=TN_5_EE_T1_.* bwpref GNBDUFunction=1,bwp=Init_DL_100 GNBDUFunction=1,bwp=Init_UL_100
+set NRCellDU=TN_5_EE_T1_.* bWPSetRef GNBDUFunction=1,BWPSet=100
+
+crn1x GNBDUFunction=1,BWPSet=100
+allBWPRegularRef GNBDUFunction=1,bwp=DenseSS_DL_100 GNBDUFunction=1,bwp=DenseSS_UL_100 GNBDUFunction=1,bwp=SparseSS_DL_100 GNBDUFunction=1,bwp=SparseSS_UL_100
+startBWPDlRef GNBDUFunction=1,bwp=DenseSS_DL_100
+startBWPUlRef GNBDUFunction=1,bwp=DenseSS_UL_100
+end
+
+crn1x GNBDUFunction=1,BWPSet=100,BWPSetUeCfg=1
+prefUeGroupList 
+ueConfGroupList 
+ueGroupList 
+userLabel 
+end
+
+crn1x GNBDUFunction=1,BWPSet=100,BWPSetUeCfg=1,BWPSetCfg=0
+bWPDlRef GNBDUFunction=1,bwp=DenseSS_DL_100
+bWPUlRef GNBDUFunction=1,bwp=DenseSS_UL_100
+userLabel 
+end
+
+cr1x BWPSet=100,DynPowerOpt=1
+
+crn1x GNBDUFunction=1,BWPSet=100,BWPSetUeCfg=1,BWPSetCfg=1
+bWPDlRef GNBDUFunction=1,bwp=SparseSS_DL_100
+bWPUlRef GNBDUFunction=1,bwp=SparseSS_UL_100
+dynPowerOptRef BWPSet=100,DynPowerOpt=1
+userLabel 
+end
+commit
+
+set NRCellDU=TN_5_EE_T1_.* bWPSetRef GNBDUFunction=1,BWPSet=100
+
+setm GNBDUFunction=1,BWPSet=100,DynPowerOpt=1 downDlThreshold 200 downUlThreshold 200 upDlThreshold 300 upUlThreshold 300
+
+ldeb carrier
+ldeb nrcelldu
+
+confbd-
+
+
+lt all
+
+
+
+
+confb+
+
+
+set CXC4012592 featurestate 1
+set CXC4012538 featurestate 1
+
+crn GNBCUCPFunction=1,Mcpc=1,McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=VONR
+ueConfGroupList 5
+ueGroupList 5
+end
+
+lt all
+
+set GNBCUCPFunction=1,Mcpc=1,McpcPCellProfile=Midband,McpcPCellProfileUeCfg=VONR mcpcQuantityList 0
+set GNBCUCPFunction=1,Mcpc=1,McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=VONR rsrpSearchZone threshold=-99,hysteresis=10,timeToTrigger=320
+set GNBCUCPFunction=1,Mcpc=1,McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=VONR rsrpCandidateA5 threshold1=-99,threshold2=-101,timeToTrigger=640,hysteresis=10
+set GNBCUCPFunction=1,Mcpc=1,McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=VONR rsrpCandidateB2 threshold1=-99,threshold2EUtra=-113,hysteresis=10,timeToTrigger=640
+set GNBCUCPFunction=1,Mcpc=1,McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=VONR rsrpCritical threshold=-111,hysteresis=10,timeToTrigger=320
+set Mcpc=1,McpcPCellProfile=Midband,McpcPCellProfileUeCfg=VONR rsrpCriticalEnabled False
+set Mcpc=1,McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=VONR rsrpSearchTimeRestriction -1
+set Mcpc=1,McpcPCellProfile=Midband,McpcPCellProfileUeCfg=VONR ueGroupList 1
+
+
+cr GNBCUCPFunction=1,Mcfb=1
+cr GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1
+
+wait 5
+
+
+lt all
+
+set NRCellCU=.*  mcfbCellProfileRef Mcfb=1,McfbCellProfile=1
+set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFallbackOperationEm 1
+set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFbTargetSearchTimer 500
+set  Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base      epsFbAtSessionSetup 1
+set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFallbackOperation 1               
+set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base rejectVoiceIncHoAtEpsFb false
+set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base triggerQuantity 0
+set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base rsrpCriticalCoverage threshold=-109,hysteresis=10,timeToTrigger=160 
+set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base rsrpCellCandidate threshold=-104,hysteresis=10,timeToTrigger=40
+set Mcfb=1  voiceEpsFbPossible true
+
+set GNBCUCPFunction=1,UeCC=1,Rohc=1,RohcUeCfg=Base rohc5qiList 1
+
+cr GNBDUFunction=1,QosPriorityMapping=1
+cr GNBDUFunction=1,QosPriorityMapping=1,PriorityDomainMapping=1
+set QosPriorityMapping=1,PriorityDomainMapping=1            priorityDomain 16
+
+cr GNBDUFunction=1,UeCC=1,SrHandling=5QI_5
+
+wait 5
+
+lt all
+set GNBDUFunction=1,UeCC=1,SrHandling=5QI_5,SrHandlingUeCfg=Base srHandlingMode  1
+set GNBDUFunction=1,UeCC=1,SrHandling=5QI_5,SrHandlingUeCfg=Base conditional5qi  1
+set GNBDUFunction=1,DU5qiTable=1,DU5qi=5 srHandlingRef GNBDUFunction=1,UeCC=1,SrHandling=5QI_5
+set DU5qiTable=1,DU5qi=1                                    drbRlcInDu5qiEnabled false
+
+
+crn GNBDUFunction=1,UeCC=1,RadioLinkControl=1,DrbRlc=Default,DrbRlcUeCfg=VoNR
+tReassemblyDl 65
+tReassemblyUl 65
+rlcSNLength 12
+ueConfGroupList 1
+ueGroupList 1
+end 
+
+
+
+cr GNBCUCPFunction=1,EmCall=1
+
+wait 5
+
+lt all
+
+set GNBCUCPFunction=1,EmCall=1 arpPrioEm5qi1List 1
+set GNBCUCPFunction=1,EmCall=1 arpPrioEm5qi5List 1
+
+set NRCellDU=.* drxProfileRef GNBDUFunction=1,UeCC=1,DrxProfile=Default
+set NRCellDU=.* drxProfileEnabled true
+set NRCellDU=.* imsEmSupportEnabled true
+
+
+
+crn GNBDUFunction=1,UeCC=1,DrxProfile=Default,DrxProfileUeCfg=VoNR
+drxEnabled true
+drxInactivityTimer 5
+drxLongCycle 4
+drxOnDurationTimer 36
+drxRetransmissionTimerDl 6
+drxRetransmissionTimerUl 6
+prefUeGroupList
+ueGroupList 1
+userLabel
+end
+gs-
+
+
+crn GNBCUCPFunction=1,UeCC=1,InactivityProfile=Default,InactivityProfileUeCfg=VoNR 
+tInactivityTimer 15
+tInactivityTimerEndcSn 10 
+tInactivityTimerNrdcSn 10
+ueGroupList 1
+end
+
+
+
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,UeGroupSelectionProfile=VoNR
+selectionCriteria 5qi==1
+ueGroupId 1
+ueGroupPriority 65535
+end
+
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,UeServiceGroupDefinition=VoNR
+selectionCriteria 5qi==1
+ueServiceGroupId 1
+ueServiceGroupPriority 65535
+end
+
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,PrefUeGroupSelectionProfile=VoNR
+prefUeGroupId 1
+prefUeGroupPriority 65535
+selectionCriteria 5qi==1
+end
+
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,UeMobilityGroupDefinition=VoNR
+ueMobilityGroupId 1
+ueMobilityGroupPriority  65535
+selectionCriteria 5qi==1
+end
+
+
+
+lbl nrcelldu
+
+
+# BWP - Define VoNR-specific BWP Settings - 
+crn1x bwpset=100,bwpsetuecfg=vonr
+ueConfGroupList 1
+bwpSwitchingFilterRelaxation false
+end
+crn1x bwpset=100,BWPSetUeCfg=vonr,bwpsetcfg=0
+bWPDlRef BWP=DenseSS_DL_100
+bWPUlRef BWP=DenseSS_UL_100
+end
+cr1x BWPSet=100,DynPowerOpt=vonr
+crn1x bwpset=100,BWPSetUeCfg=vonr,bwpsetcfg=1
+bWPDlRef BWP=SparseSS_DL_100
+bWPUlRef BWP=SparseSS_UL_100
+dynPowerOptRef BWPSet=100,DynPowerOpt=vonr
+end
+commit
+ 
+# BWP - Change threshold for BWP
+setm GNBDUFunction=1,BWPSet=100,DynPowerOpt=vonr downDlThreshold 10 downUlThreshold 10 upDlThreshold 30 upUlThreshold 30
+ 
+
+ldeb nrcelldu
+
+confb-
+
+
+lt all
+
+
+
+confb+
+
+
+set CXC4012578|CXC4012385|CXC4012371|CXC4010620 featurestate 1
+set CXC4012324|CXC4012580 featurestate 0
+
+
+set ENodeBFunction=1,EUtranCell.DD=.*,GUtranFreqRelation=.* anrMeasOn true
+set ENodeBFunction=1,AnrFunction=1,AnrFunctionNR=1          anrStateNR  1
+set UePolicyOptimization=1               zzzTemporary1  1
+set ENodeBFunction=1,EUtranCell.DD=.*,UeMeasControl=1,ReportConfigB1NR=1 triggerQuantityB1NR 0
+set ENodeBFunction=1,EUtranCell.DD=.*,UeMeasControl=1,ReportConfigB1NR=1 b1ThresholdRsrp -107
+set ENodeBFunction=1,EUtranCell.DD=.*,UeMeasControl=1,ReportConfigB1NR=1 hysteresisB1 2
+set ENodeBFunction=1,EUtranCell.DD=.*,UeMeasControl=1,ReportConfigB1NR=1 timeToTriggerB1 640
+
+set ^EUtranCell.DD= changeNotification changeNotificationSIB1=true,changeNotificationSIB13=true,changeNotificationSIB15=true,changeNotificationSIB16=true,changeNotificationSIB2=true,changeNotificationSIB24=true,changeNotificationSIB3=true,changeNotificationSIB4=true,changeNotificationSIB5=true,changeNotificationSIB6=true,changeNotificationSIB7=true,changeNotificationSIB8=true
+set EUtranCell.DD=.*  mappingInfo  mappingInfoSIB24=1 
+set EUtranCell.DD=.*,GUtranFreqRelation=627936 connectedModeMobilityPrio 7
+set EUtranCell.DD=.*,GUtranFreqRelation=627936 cellReselectionPriority 7
+set EUtranCell.DD=.*,GUtranFreqRelation=627936 qRxLevMin         -110
+set EUtranCell.DD=.*,GUtranFreqRelation=627936 threshXHigh 4
+set EUtranCell.DD=.*,GUtranFreqRelation=627936 pMaxNR 33
+set EUtranCell.DD=.*,GUtranFreqRelation=627936 anrMeasOn true
+
+set EUtranCell.DD=.*  sib1AltSchInfo   false
+set . rwrToNRAllowed true
+set . nrB1MeasEnabled true
+set . nrB1MeasAtEndcEnabled True
+
+
+set EUtranCell.DD=.*,UeMeasControl=1  waitForStartNRMeas 6000
+set EUtranCell.DD=.*,UeMeasControl=1  waitForResumeNRMeas 6000
+set EUtranCell.DD=.*,UeMeasControl=1  nrB1MobilityTimerLessTtt 600
+set ENodeBFunction=1,EUtranCell.DD=.*,UeMeasControl=1 sMeasure 0
+set EUtranCell.DD=.*,UeMeasControl=1  nrB1MeasEnabled true
+
+confb-
+
+
+
+
+get GNBCUUPFunction=1 gNBId$ > $gnbid
+
+mr nrgroupsub
+ma nrgroupsub ^NRCellCU=KK_5_EE_T1
+
+func Relation_NRCELLREL
+for $mo in nrgroupsub 
+$mordnsub = rdn($mo)
+if $mordnsub != $mordnmain
+get $mordnmain ^cellLocalId$ > $cellLocalId
+crn $mordnsub,NRCellRelation=40445-$gnbid-$cellLocalId
+cellIndividualOffsetNR 0
+colocationIndicator 0
+coverageIndicator 1
+isHoAllowed true
+isRemoveAllowed false
+nRCellRef $mordnmain
+nRFreqRelationRef $mordnsub,NRFreqRelation=627936
+sCellCandidate 1
+end
+fi
+done
+endfunc
+
+mr nrgroupmain
+ma nrgroupmain ^NRCellCU=KK_5_EE_T1
+
+func NRRelation_final
+for $mo in nrgroupmain 
+$mordnmain = rdn($mo)
+Relation_NRCELLREL
+done
+endfunc
+NRRelation_final
+
+confb+
+ 
+eset1 ^NRCellDU sNSSAIList sd=1,sst=1;sd=2,sst=1;sd=3,sst=1;sd=4,sst=1
+eset1 ^GNBCUUPFunction=1 sNSSAIList sd=1,sst=1;sd=2,sst=1;sd=3,sst=1;sd=4,sst=1
+set NRCellDU=.* nrrrpenabled true
+
+
+lset CXC4012559 featurestate 1
+lset CXC4012379 featurestate 1
+lset CXC4012475 featurestate 1
+lset CXC4012531 featurestate 1
+lset CXC4012659 featurestate 1
+lset CXC4012729 featurestate 1
+
+
+$date = `date +%y%m%d_%H%M`
+cvms Post_SA_$date
+
+
+#########################################RIM Feature Activation Script_1_Sector###################################################################################
+
+cvms Pre_Rim
+
+get NRCellDU=.*_A userlabel > $Acell
+
+
+
+
+confbd+
+gs+
+st cell
+set RimRSGlobal=1 frequencyDomainPara rimRSBandwidth=48,rimRSCommonCarrierRefPoint=3430920,rimRSStartingFreqOffsetIdList=0 48
+set RimRSGlobal=1 sequenceDomainPara enableEnoughNotEnoughIndication=0,rimRSScrambleIdListofRS1=1 2 3 4 5 6 7 8,rimRSScrambleIdListofRS2=1 2 3 4 5 6 7 8,rimRSScrambleTimerMultiplier=1,rimRSScrambleTimerOffset=0
+set RimRSGlobal=1 timeDomainPara dlUlSwitchingPeriod1=8,enablenearfarIndicationRS1=1,enablenearfarIndicationRS2=1,farSymbolOffsetRS1=26,farSymbolOffsetRS2=26,nearOrOnlySymbolOffsetRS1=6,nearOrOnlySymbolOffsetRS2=6,nrofConsecutiveRIMRS1=2,nrofConsecutiveRIMRS2=2,symbolOffsetOfReferencePoint1=52,totalNrOfSetIdOfRS1=262144,totalNrOfSetIdOfRS2=262144
+confbd-
+gs-
+
+confbd+
+gs+
+bl nr
+set NRCellDU=.*                   rimPdschSlotBlankMode 0
+set CXC4012635                    featureState 1
+set NRCellDU=.*                   raResponseWindow 20
+set GNBDUFunction=1                                         setIdAllocation 1
+set NRCellDU=.*                   rimDetectionEnabled true 
+confbd-
+gs-
+
+confbd+
+gs+
+cr RimRSGlobal=1,RimRSSet=1
+1
+
+
+cr RimRSGlobal=1,RimRSSet=7
+7
+
+
+
+set RimRSGlobal=1,RimRSSet=7                                setType           2
+
+set NRCellDU=$Acell                   rimAggressorRSSetRef RimRSGlobal=1,RimRSSet=7
+
+
+set NRCellDU=$Acell rimVictimRSSetRef RimRSGlobal=1,RimRSSet=1
+
+
+set RimRSGlobal=1,RimRSSet=1                                setId $setID_A
+
+set RimRSGlobal=1,RimRSSet=7                                setId $setID_A
+
+
+set CXC4012635 featureState 1
+set NRCellDU=.* raResponseWindow 20
+set NRCellDU=.* rimDetectionEnabled TRUE
+set NRCellDU=.* setIdAllocation 1
+set NRCellDU=.* rimBgNoiseThresh -110
+set NRCellDU=.* rimCNMitChangeSymThresh 60
+set NRCellDU=.* rimCNMitChangeTime 2
+set NRCellDU=.* rimHighIpnThresh -105
+set NRCellDU=.* rimLocationEnabled TRUE
+set NRCellDU=.* rimMaxNoReportedSequences 50
+set NRCellDU=.* rimNotEnoughPortionThresh 20
+set NRCellDU=.* rimOffloadEnabled FALSE
+set NRCellDU=.* rimOffloadHighIpNThresh -105
+set NRCellDU=.* rimPdschSlotBlankCNOffset 0
+set NRCellDU=.* rimPdschSlotBlankCNSsThresh -105
+set NRCellDU=.* rimPdschSlotBlankSsThresh -105
+set NRCellDU=.* rimPdschSlotBlankStopThresh -111
+set NRCellDU=.* rimPdschSlotBlankTimer 1260
+set NRCellDU=.* rimRSDetectionThresholdOffset 10
+set NRCellDU=.* rimRSDetectionTime 3
+set NRCellDU=.* rimRSReportInterval 1000
+set NRCellDU=.* rimRS1FarThresh 30
+set NRCellDU=.* rimRS1NotEnoughDetectedThresh 2
+set NRCellDU=.* rimRS1PortionStartCNMitThresh 50
+set NRCellDU=.* rimRS1PortionStopCNMitThresh 20
+set NRCellDU=.* rimRS1DetectedThresh 2
+set NRCellDU=.* rimRS2DetectedThresh 2
+set NRCellDU=.* rimRS2TransEnabled TRUE
+set NRCellDU=.* rimSlopeFrontSymIndex SS_LAST_UL
+set NRCellDU=.* rimSlopeDetectPeriod 10
+set NRCellDU=.* rimSlopePwrDiffThresh 3
+set NRCellDU=.*                   rimLocationEnabled true
+set NRCellDU=.*                   rimPdschSlotBlankMode 4
+
+deb nr
+get , rimLocationEnabled
+get , rimPdschSlotBlankMode 4
+
+
+eset1 ^NRCellDU sNSSAIList sd=1,sst=1;sd=2,sst=1;sd=3,sst=1;sd=4,sst=1
+eset1 ^GNBCUUPFunction=1 sNSSAIList sd=1,sst=1;sd=2,sst=1;sd=3,sst=1;sd=4,sst=1
+set NRCellDU=.* nrrrpenabled true
+
+set CXC4012559 featurestate 1
+set CXC4012379 featurestate 1
+set CXC4012475 featurestate 1
+set CXC4012531 featurestate 1
+set CXC4012659 featurestate 1
+set CXC4012729 featurestate 1
+
+get Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFallbackOperation
+get . nrB1MeasEnabled
+get . nrB1MeasAtEndcEnabled
+
+set . nrB1MeasEnabled true
+set . nrB1MeasAtEndcEnabled true
+set Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFallbackOperation 5
+
+cvms Post_Rim
+
+accn =4 restartunit 0 0 0
+accn =du restartunit 0 0 0
+accn =BB-1 restartunit 0 0 0
+confbd-
+gs-
+
+
+
+
+
+#########################################RIM Feature Activation Script_2_Sectors###################################################################################
+
+cvms Pre_Rim
+
+get NRCellDU=.*_A userlabel > $Acell
+get NRCellDU=.*_B userlabel > $Bcell
+
+
+
+confbd+
+gs+
+st cell
+set RimRSGlobal=1 frequencyDomainPara rimRSBandwidth=48,rimRSCommonCarrierRefPoint=3430920,rimRSStartingFreqOffsetIdList=0 48
+set RimRSGlobal=1 sequenceDomainPara enableEnoughNotEnoughIndication=0,rimRSScrambleIdListofRS1=1 2 3 4 5 6 7 8,rimRSScrambleIdListofRS2=1 2 3 4 5 6 7 8,rimRSScrambleTimerMultiplier=1,rimRSScrambleTimerOffset=0
+set RimRSGlobal=1 timeDomainPara dlUlSwitchingPeriod1=8,enablenearfarIndicationRS1=1,enablenearfarIndicationRS2=1,farSymbolOffsetRS1=26,farSymbolOffsetRS2=26,nearOrOnlySymbolOffsetRS1=6,nearOrOnlySymbolOffsetRS2=6,nrofConsecutiveRIMRS1=2,nrofConsecutiveRIMRS2=2,symbolOffsetOfReferencePoint1=52,totalNrOfSetIdOfRS1=262144,totalNrOfSetIdOfRS2=262144
+confbd-
+gs-
+
+confbd+
+gs+
+bl nr
+set NRCellDU=.*                   rimPdschSlotBlankMode 0
+set CXC4012635                    featureState 1
+set NRCellDU=.*                   raResponseWindow 20
+set GNBDUFunction=1                                         setIdAllocation 1
+set NRCellDU=.*                   rimDetectionEnabled true 
+confbd-
+gs-
+
+confbd+
+gs+
+cr RimRSGlobal=1,RimRSSet=1
+1
+cr RimRSGlobal=1,RimRSSet=2
+2
+
+cr RimRSGlobal=1,RimRSSet=7
+7
+cr RimRSGlobal=1,RimRSSet=8
+8
+
+
+set RimRSGlobal=1,RimRSSet=7                                setType           2
+set RimRSGlobal=1,RimRSSet=8                                setType           2
+
+set NRCellDU=$Acell                   rimAggressorRSSetRef RimRSGlobal=1,RimRSSet=7
+set NRCellDU=$Bcell                   rimAggressorRSSetRef RimRSGlobal=1,RimRSSet=8
+
+
+set NRCellDU=$Acell rimVictimRSSetRef RimRSGlobal=1,RimRSSet=1
+set NRCellDU=$Bcell rimVictimRSSetRef RimRSGlobal=1,RimRSSet=2
+
+
+set RimRSGlobal=1,RimRSSet=1                                setId $setID_A
+set RimRSGlobal=1,RimRSSet=2                                setId $setID_B
+
+set RimRSGlobal=1,RimRSSet=7                                setId $setID_A
+set RimRSGlobal=1,RimRSSet=8                                setId $setID_B
+
+
+set CXC4012635 featureState 1
+set NRCellDU=.* raResponseWindow 20
+set NRCellDU=.* rimDetectionEnabled TRUE
+set NRCellDU=.* setIdAllocation 1
+set NRCellDU=.* rimBgNoiseThresh -110
+set NRCellDU=.* rimCNMitChangeSymThresh 60
+set NRCellDU=.* rimCNMitChangeTime 2
+set NRCellDU=.* rimHighIpnThresh -105
+set NRCellDU=.* rimLocationEnabled TRUE
+set NRCellDU=.* rimMaxNoReportedSequences 50
+set NRCellDU=.* rimNotEnoughPortionThresh 20
+set NRCellDU=.* rimOffloadEnabled FALSE
+set NRCellDU=.* rimOffloadHighIpNThresh -105
+set NRCellDU=.* rimPdschSlotBlankCNOffset 0
+set NRCellDU=.* rimPdschSlotBlankCNSsThresh -105
+set NRCellDU=.* rimPdschSlotBlankSsThresh -105
+set NRCellDU=.* rimPdschSlotBlankStopThresh -111
+set NRCellDU=.* rimPdschSlotBlankTimer 1260
+set NRCellDU=.* rimRSDetectionThresholdOffset 10
+set NRCellDU=.* rimRSDetectionTime 3
+set NRCellDU=.* rimRSReportInterval 1000
+set NRCellDU=.* rimRS1FarThresh 30
+set NRCellDU=.* rimRS1NotEnoughDetectedThresh 2
+set NRCellDU=.* rimRS1PortionStartCNMitThresh 50
+set NRCellDU=.* rimRS1PortionStopCNMitThresh 20
+set NRCellDU=.* rimRS1DetectedThresh 2
+set NRCellDU=.* rimRS2DetectedThresh 2
+set NRCellDU=.* rimRS2TransEnabled TRUE
+set NRCellDU=.* rimSlopeFrontSymIndex SS_LAST_UL
+set NRCellDU=.* rimSlopeDetectPeriod 10
+set NRCellDU=.* rimSlopePwrDiffThresh 3
+set NRCellDU=.*                   rimLocationEnabled true
+set NRCellDU=.*                   rimPdschSlotBlankMode 4
+
+deb nr
+get , rimLocationEnabled
+get , rimPdschSlotBlankMode 4
+
+
+eset1 ^NRCellDU sNSSAIList sd=1,sst=1;sd=2,sst=1;sd=3,sst=1;sd=4,sst=1
+eset1 ^GNBCUUPFunction=1 sNSSAIList sd=1,sst=1;sd=2,sst=1;sd=3,sst=1;sd=4,sst=1
+set NRCellDU=.* nrrrpenabled true
+
+set CXC4012559 featurestate 1
+set CXC4012379 featurestate 1
+set CXC4012475 featurestate 1
+set CXC4012531 featurestate 1
+set CXC4012659 featurestate 1
+set CXC4012729 featurestate 1
+
+get Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFallbackOperation
+get . nrB1MeasEnabled
+get . nrB1MeasAtEndcEnabled
+
+set . nrB1MeasEnabled true
+set . nrB1MeasAtEndcEnabled true
+set Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFallbackOperation 5
+
+cvms Post_Rim
+
+accn =4 restartunit 0 0 0
+accn =du restartunit 0 0 0
+accn =BB-1 restartunit 0 0 0
+confbd-
+gs-
+
+
+
+
+#########################################RIM Feature Activation Script_3_Sectors###################################################################################
+
+cvms Pre_Rim
+
+get NRCellDU=.*_A userlabel > $Acell
+get NRCellDU=.*_B userlabel > $Bcell
+get NRCellDU=.*_C userlabel > $Ccell
+
+
+
+confbd+
+gs+
+st cell
+set RimRSGlobal=1 frequencyDomainPara rimRSBandwidth=48,rimRSCommonCarrierRefPoint=3430920,rimRSStartingFreqOffsetIdList=0 48
+set RimRSGlobal=1 sequenceDomainPara enableEnoughNotEnoughIndication=0,rimRSScrambleIdListofRS1=1 2 3 4 5 6 7 8,rimRSScrambleIdListofRS2=1 2 3 4 5 6 7 8,rimRSScrambleTimerMultiplier=1,rimRSScrambleTimerOffset=0
+set RimRSGlobal=1 timeDomainPara dlUlSwitchingPeriod1=8,enablenearfarIndicationRS1=1,enablenearfarIndicationRS2=1,farSymbolOffsetRS1=26,farSymbolOffsetRS2=26,nearOrOnlySymbolOffsetRS1=6,nearOrOnlySymbolOffsetRS2=6,nrofConsecutiveRIMRS1=2,nrofConsecutiveRIMRS2=2,symbolOffsetOfReferencePoint1=52,totalNrOfSetIdOfRS1=262144,totalNrOfSetIdOfRS2=262144
+confbd-
+gs-
+
+confbd+
+gs+
+bl nr
+set NRCellDU=.*                   rimPdschSlotBlankMode 0
+set CXC4012635                    featureState 1
+set NRCellDU=.*                   raResponseWindow 20
+set GNBDUFunction=1                                         setIdAllocation 1
+set NRCellDU=.*                   rimDetectionEnabled true 
+confbd-
+gs-
+
+confbd+
+gs+
+cr RimRSGlobal=1,RimRSSet=1
+1
+cr RimRSGlobal=1,RimRSSet=2
+2
+cr RimRSGlobal=1,RimRSSet=3
+3
+
+cr RimRSGlobal=1,RimRSSet=7
+7
+cr RimRSGlobal=1,RimRSSet=8
+8
+cr RimRSGlobal=1,RimRSSet=9
+9
+
+
+set RimRSGlobal=1,RimRSSet=7                                setType           2
+set RimRSGlobal=1,RimRSSet=8                                setType           2
+set RimRSGlobal=1,RimRSSet=9                                setType           2
+
+set NRCellDU=$Acell                   rimAggressorRSSetRef RimRSGlobal=1,RimRSSet=7
+set NRCellDU=$Bcell                   rimAggressorRSSetRef RimRSGlobal=1,RimRSSet=8
+set NRCellDU=$Ccell                   rimAggressorRSSetRef RimRSGlobal=1,RimRSSet=9
+
+
+set NRCellDU=$Acell rimVictimRSSetRef RimRSGlobal=1,RimRSSet=1
+set NRCellDU=$Bcell rimVictimRSSetRef RimRSGlobal=1,RimRSSet=2
+set NRCellDU=$Ccell rimVictimRSSetRef RimRSGlobal=1,RimRSSet=3
+
+
+set RimRSGlobal=1,RimRSSet=1                                setId $setID_A
+set RimRSGlobal=1,RimRSSet=2                                setId $setID_B
+set RimRSGlobal=1,RimRSSet=3                                setId $setID_C
+
+set RimRSGlobal=1,RimRSSet=7                                setId $setID_A
+set RimRSGlobal=1,RimRSSet=8                                setId $setID_B
+set RimRSGlobal=1,RimRSSet=9                                setId $setID_C
+
+
+set CXC4012635 featureState 1
+set NRCellDU=.* raResponseWindow 20
+set NRCellDU=.* rimDetectionEnabled TRUE
+set NRCellDU=.* setIdAllocation 1
+set NRCellDU=.* rimBgNoiseThresh -110
+set NRCellDU=.* rimCNMitChangeSymThresh 60
+set NRCellDU=.* rimCNMitChangeTime 2
+set NRCellDU=.* rimHighIpnThresh -105
+set NRCellDU=.* rimLocationEnabled TRUE
+set NRCellDU=.* rimMaxNoReportedSequences 50
+set NRCellDU=.* rimNotEnoughPortionThresh 20
+set NRCellDU=.* rimOffloadEnabled FALSE
+set NRCellDU=.* rimOffloadHighIpNThresh -105
+set NRCellDU=.* rimPdschSlotBlankCNOffset 0
+set NRCellDU=.* rimPdschSlotBlankCNSsThresh -105
+set NRCellDU=.* rimPdschSlotBlankSsThresh -105
+set NRCellDU=.* rimPdschSlotBlankStopThresh -111
+set NRCellDU=.* rimPdschSlotBlankTimer 1260
+set NRCellDU=.* rimRSDetectionThresholdOffset 10
+set NRCellDU=.* rimRSDetectionTime 3
+set NRCellDU=.* rimRSReportInterval 1000
+set NRCellDU=.* rimRS1FarThresh 30
+set NRCellDU=.* rimRS1NotEnoughDetectedThresh 2
+set NRCellDU=.* rimRS1PortionStartCNMitThresh 50
+set NRCellDU=.* rimRS1PortionStopCNMitThresh 20
+set NRCellDU=.* rimRS1DetectedThresh 2
+set NRCellDU=.* rimRS2DetectedThresh 2
+set NRCellDU=.* rimRS2TransEnabled TRUE
+set NRCellDU=.* rimSlopeFrontSymIndex SS_LAST_UL
+set NRCellDU=.* rimSlopeDetectPeriod 10
+set NRCellDU=.* rimSlopePwrDiffThresh 3
+set NRCellDU=.*                   rimLocationEnabled true
+set NRCellDU=.*                   rimPdschSlotBlankMode 4
+
+deb nr
+get , rimLocationEnabled
+get , rimPdschSlotBlankMode 4
+
+
+eset1 ^NRCellDU sNSSAIList sd=1,sst=1;sd=2,sst=1;sd=3,sst=1;sd=4,sst=1
+eset1 ^GNBCUUPFunction=1 sNSSAIList sd=1,sst=1;sd=2,sst=1;sd=3,sst=1;sd=4,sst=1
+set NRCellDU=.* nrrrpenabled true
+
+set CXC4012559 featurestate 1
+set CXC4012379 featurestate 1
+set CXC4012475 featurestate 1
+set CXC4012531 featurestate 1
+set CXC4012659 featurestate 1
+set CXC4012729 featurestate 1
+
+get Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFallbackOperation
+get . nrB1MeasEnabled
+get . nrB1MeasAtEndcEnabled
+
+set . nrB1MeasEnabled true
+set . nrB1MeasAtEndcEnabled true
+set Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFallbackOperation 5
+
+cvms Post_Rim
+
+accn =4 restartunit 0 0 0
+accn =du restartunit 0 0 0
+accn =BB-1 restartunit 0 0 0
+confbd-
+gs-
+
+
+
+"""
