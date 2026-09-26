@@ -20,8 +20,11 @@ import pandas as pd
 import stat
 import zipfile
 from tools.lte.circles.KK.KK_INTEGRATION_SCRIPT import (
+    KK_SA_cUCP5qiTable_XML,
+    KK_SA_dU5qiTable_XML,
+    KK_SA_AMF_RIM_CONFIG,
     kk_GPL_LMS_script,
-    kk_GPS_MMS_script,
+    kk_GPS_MME_script,
     kk_TN_script_text,
     NR_CELL_CREATION_AND_SCTP_5G_ENDPOINT_CREATION,
     NR_GPL_LMS,
@@ -66,6 +69,9 @@ from tools.lte.universal_SCRIPTS.UNIVERSAL_SCRIPTS import (
     ABIS_Site_Basic_script,
 )
 from tools.lte.circles.TN.TN_INTEGRATION_SCRIPT import (
+    TN_SA_cUCP5qiTable_XML,
+    TN_SA_dU5qiTable_XML,
+    TN_SA_AMF_RIM_CONFIG,
     TN_Termpoint_GUtranFreqRelation,
     TN_05_5G_LMS_GPL_ROTN,
     TN_s1_FOR_TN_IDL_B_PORT,
@@ -84,6 +90,9 @@ from tools.lte.circles.TN.TN_COMISSIONING_SCRIPT import (
 )
 
 from tools.lte.circles.RJ.RJ_INTEGRATION_SCRIPT import (
+    RJ_SA_cUCP5qiTable_XML,
+    RJ_SA_dU5qiTable_XML,
+    RJ_SA_AMF_RIM_CONFIG,
     RJ_Route_4G_GPL_LMS,
     RJ_TN_RN_GPS_MME,
     CISCO_MME_SCRIPT,
@@ -112,6 +121,9 @@ from tools.lte.circles.RJ.RJ_COMISSION_SCRIPT import (
 )
 
 from tools.lte.circles.AP.AP_INTEGRATION_SCRIPT import (
+    AP_SA_cUCP5qiTable_XML,
+    AP_SA_dU5qiTable_XML,
+    AP_SA_AMF_RIM_CONFIG,
     AP_Route_4G_GPL_LMS,
     AP_TN_RN_GPS_MME,
     CISCO_MME_AP,
@@ -138,6 +150,9 @@ from tools.lte.circles.AP.AP_COMISSION_SCRIPT import (
 )
 
 from tools.lte.circles.NE.NE_INTEGRATION_SCRIPT import (
+    NE_SA_cUCP5qiTable_XML,
+    NE_SA_dU5qiTable_XML,
+    NE_SA_AMF_RIM_CONFIG,
     NE_5G_Cell_creation_Sctp_Endpoint_Creation,
     NE_CGSWITCH_SCRIPT,
     NE_GNBCUCPFunction,
@@ -165,6 +180,9 @@ from tools.lte.circles.NE.NE_COMISSION_SCRIPT import (
 
 
 from tools.lte.circles.AS.AS_INTEGRATION_SCRIPT import (
+    AS_SA_cUCP5qiTable_XML,
+    AS_SA_dU5qiTable_XML,
+    AS_SA_AMF_RIM_CONFIG,
     AS_GPL_LMS_DST_SCRIPT,
     AS_TN_RN_GPS_MME_SCRIPT,
     AS_5G_Cell_creation_Sctp_Endpoint_Creation,
@@ -192,6 +210,9 @@ from tools.lte.circles.AS.AS_COMISSIONING_SCRIPT import (
 )
 
 from tools.lte.circles.DEL.DEL_INTEGRATION_SCRIPT import (
+    DEL_SA_cUCP5qiTable_XML,
+    DEL_SA_dU5qiTable_XML,
+    DEL_SA_AMF_RIM_CONFIG,
     DEL_GPL_LMS_DST_SCRIPT,
     DEL_TN_RN_GPS_MME_SCRIPT,
     DEL_5G_Cell_creation_Sctp_Endpoint_Creation,
@@ -274,6 +295,9 @@ from tools.lte.circles.MAG_Vi.MAG_Vi_COMISSIONING_SCRIPT import (
 )
 
 from tools.lte.circles.UPW.UPW_INTEGRATION_SCRIPT import (
+    UPW_SA_cUCP5qiTable_XML,
+    UPW_SA_dU5qiTable_XML,
+    UPW_SA_AMF_RIM_CONFIG,
     UPW_GPL_LMS_DST_SCRIPT,
     UPW_TN_RN_GPS_MME_SCRIPT,
     UPW_5G_Cell_creation_Sctp_Endpoint_Creation,
@@ -301,6 +325,9 @@ from tools.lte.circles.UPW.UPW_COMISSIONING_SCRIPT import (
 )
 
 from tools.lte.circles.HR.HR_INTEGRATION_SCRIPT import (
+    HR_SA_cUCP5qiTable_XML,
+    HR_SA_dU5qiTable_XML,
+    HR_SA_AMF_RIM_CONFIG,
     HR_Route_4G_GPL_LMS,
     HR_TN_RN_GPS_MME,
     CISCO_MME_SCRIPT_HR,
@@ -329,6 +356,9 @@ from tools.lte.circles.HR.HR_COMISSIONING_SCRIPT import (
 )   
 
 from tools.lte.circles.CHN.CHN_INTEGRATION_SCRIPT import (
+    CHN_SA_cUCP5qiTable_XML,
+    CHN_SA_dU5qiTable_XML,
+    CHN_SA_AMF_RIM_CONFIG,
     CHN_Termpoint_GUtranFreqRelation,
     CHN_05_5G_LMS_GPL_CHN,
     CHN_s1_FOR_TN_IDL_B_PORT,
@@ -347,6 +377,9 @@ from tools.lte.circles.CHN.CHN_COMISSIONING_SCRIPT import (
 )
 
 from tools.lte.circles.JK.JK_INTEGRATION_SCRIPT import (
+    JK_SA_cUCP5qiTable_XML,
+    JK_SA_dU5qiTable_XML,
+    JK_SA_AMF_RIM_CONFIG,
     JK_GPL_LMS_DST_SCRIPT,
     JK_TN_RN_GPS_MME_SCRIPT,
     JK_5G_Cell_creation_Sctp_Endpoint_Creation,
@@ -425,6 +458,33 @@ def is_vi_circle(circle):
     the Vi cell templates as soon as its branch exists.
     """
     return str(circle or "").strip().upper().endswith("_VI")
+
+
+RIM_SECTION_HEADERS = {
+    1: "RIM Feature Activation Script_1_Sector",
+    2: "RIM Feature Activation Script_2_Sectors",
+    3: "RIM Feature Activation Script_3_Sectors",
+}
+
+
+def write_sa_scripts(nr_dir, node, current_time, node_nr_df, cucp_5qi_xml, du_5qi_xml, amf_rim_config):
+    # 06 = circle's AMF part + only the RIM block matching the gNodeB's sector (NR cell) count: 1, 2, or 3+
+    starts = {k: amf_rim_config.rfind("\n", 0, amf_rim_config.index(h)) + 1 for k, h in RIM_SECTION_HEADERS.items()}
+    sectors = min(max(len(node_nr_df), 1), 3)
+    rim_script = amf_rim_config[starts[sectors]: starts[sectors + 1] if sectors < 3 else len(amf_rim_config)]
+    for _, row in node_nr_df.iterrows():
+        sector = str(row["gUtranCell"]).strip()[-1:].upper()
+        set_id = row.get("SetID")
+        if sector in ("A", "B", "C") and pd.notna(set_id):
+            rim_script = rim_script.replace(f"$setID_{sector}", str(int(set_id)))
+    sa_scripts = {
+        f"04_{node}_SA_cUCP5qiTable_{current_time}.xml": cucp_5qi_xml,
+        f"05_{node}_SA_dU5qiTable_{current_time}.xml": du_5qi_xml,
+        f"06_{node}_SA_AMF_RIM_CONFIG_{current_time}.txt": amf_rim_config[: starts[1]] + rim_script,
+    }
+    for name, text in sa_scripts.items():
+        with open(os.path.join(nr_dir, name), "w") as file:
+            file.write(text)
 
 
 def rbs_summary_script(circle):
@@ -694,7 +754,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
     site_id_name = _derive_site_id(lte_df, nr_cell_df, site_basic_df)
 
     for node_name in unique_nodes:
-        current_time = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+        current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         node_dir = create_script_paths(base_path_url, node_name)["lte"]
 
         node_dir_5g = create_script_paths(base_path_url, node_name)["nr"]
@@ -713,7 +773,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
     }
     #---------------------------------------------------------------- KK Circle-specific Script Generation -----------------------------------------------------------------------
     if circle == "KK":
-        current_time = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+        current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
         for idx, row in site_basic_df.iterrows():
             print(site_basic_df)
@@ -735,7 +795,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                         node_dir, f"01_{node_name}_TN_RN_GPS_MME_{current_time}.txt"
                     )
                     with open(script_path, "a") as file:
-                        file.write(formatted_text + "\n" + kk_GPS_MMS_script.format(Phy_SiteID_Userlabel = row["Phy SiteID/Userlabel"]))
+                        file.write(formatted_text + "\n" + kk_GPS_MME_script.format(Phy_SiteID_Userlabel = row["Phy SiteID/Userlabel"]))
 
                 elif any(tech in "".join(cell_ids) for tech in ["_T1_", "_T2_"]):
                     formatted_text = kk_TN_script_text.format(
@@ -745,21 +805,20 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                         node_dir, f"01_{node_name}_TN_RN_GPS_MME_{current_time}.txt"
                     )
                     with open(script_path, "a") as file:
-                        file.write(formatted_text + "\n" + kk_GPS_MMS_script.format(Phy_SiteID_Userlabel = row["Phy SiteID/Userlabel"]))
+                        file.write(formatted_text + "\n" + kk_GPS_MME_script.format(Phy_SiteID_Userlabel = row["Phy SiteID/Userlabel"]))
 
         ######################################################################### GPS/MME Script #######################################################################
         # gps_mme_path = f"01 GPS_MME_script_{node_name}_{current_time}.txt"
         # for node in unique_nodes:
         #    script_path = os.path.join(create_script_paths(base_path_url, node)['lte'], gps_mme_path)
         #    with open(script_path,"a") as file:
-        #        file.write(kk_GPS_MMS_script + "\n")
+        #        file.write(kk_GPS_MME_script + "\n")
         ########################################################################## GPL/LMS Script ###########################################################################
-        gpl_lms_path = f"03_{node_name}_GPL_LMS_script_{current_time}.txt"
 
         Phy_SiteID_Userlabel = site_basic_df['Phy SiteID/Userlabel'].unique()[0]
         for node in unique_nodes:
             script_path = os.path.join(
-                create_script_paths(base_path_url, node)["lte"], gpl_lms_path
+                create_script_paths(base_path_url, node)["lte"], f"03_{node}_GPL_LMS_script_{current_time}.txt"
             )
             with open(script_path, "a") as file:
                 file.write(kk_GPL_LMS_script.format(Phy_SiteID_Userlabel = Phy_SiteID_Userlabel) + "\n")
@@ -772,7 +831,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 
                 nr_cell_df.rename(columns={"bSChannelBwDL/UL": "bSChannelBwDL-UL"}, inplace=True)
                 
-                nr_cell_df_path = os.path.join(create_script_paths(base_path_url, node)["nr"], f"1_{node}_5G Cell creation_Sctp Endpoint Creation_{current_time}.txt")
+                nr_cell_df_path = os.path.join(create_script_paths(base_path_url, node)["nr"], f"01_{node}_5G_Cell_Creation_Sctp_Endpoint_Creation_{current_time}.txt")
                 
                 gnbid = nr_cell_df["gNBId"].unique()[0]
                 
@@ -812,15 +871,17 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                         )
                     )
 
-                NR_GPL_LMS_path = os.path.join(create_script_paths(base_path_url, node)["nr"], f"2_{node}_NR_GPL_LMS_{current_time}.txt")
+                NR_GPL_LMS_path = os.path.join(create_script_paths(base_path_url, node)["nr"], f"02_{node}_NR_GPL_LMS_{current_time}.txt")
                 
                 with open(NR_GPL_LMS_path, "a") as file:
                     file.write(NR_GPL_LMS + "\n")
 
-                Termpoint_GUtranFreqRelation_path = os.path.join(create_script_paths(base_path_url, node_name)["nr"],f"3_{node_name}_Termpoint_GUtranFreqRelation_{current_time}.txt")
+                Termpoint_GUtranFreqRelation_path = os.path.join(create_script_paths(base_path_url, node)["nr"],f"03_{node}_Termpoint_GUtranFreqRelation_{current_time}.txt")
                 
                 with open(Termpoint_GUtranFreqRelation_path, "a") as file:
                     file.write(TREMPOINT_GUTRANCELL_FREQ_RELATION + "\n")
+
+                write_sa_scripts(create_script_paths(base_path_url, node)["nr"], node, current_time, nr_cell_df[nr_cell_df["gNodeBName"] == node], KK_SA_cUCP5qiTable_XML, KK_SA_dU5qiTable_XML, KK_SA_AMF_RIM_CONFIG)
             # .......................................................................... NRCELL CONFIGRATION FOR CELL CREATION IN 5G ................................................
 
         ############################################################### creating the SiteBasic script for 4G and 5G ###############################################################
@@ -960,7 +1021,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
     elif circle == "TN":
         unique_nodes = lte_df["eNodeBName"].unique()
         for node_name in unique_nodes:
-            current_time = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+            current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
             node_dir = create_script_paths(base_path_url, node_name)["lte"]
             node_dir_5g = create_script_paths(base_path_url, node_name)["nr"]
             os.makedirs(node_dir, exist_ok=True)
@@ -1002,7 +1063,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
             with open(script_path, "w") as file:
                 file.write(formatted_text + "\n")
             
-            gpl_path = os.path.join(node_dir, f"03_TN_LTE_GPL_LMS_{node_name}_{current_time}.txt")
+            gpl_path = os.path.join(node_dir, f"03_{node_name}_GPL_LMS_script_{current_time}.txt")
             with open(gpl_path, "w") as file:
                 file.write(TN_s3_LTE_GPL_LMS + "\n")
         
@@ -1011,11 +1072,11 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
             for node in nr_cell_df["gNodeBName"].unique():
                 nr_cell_sub = nr_cell_df[nr_cell_df["gNodeBName"] == node].copy()
                 nr_cell_sub.rename(columns={"bSChannelBwDL/UL": "bSChannelBwDL-UL"}, inplace=True)
-                current_time = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+                current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
                 node_dir_5g = create_script_paths(base_path_url, node)["nr"]
                 os.makedirs(node_dir_5g, exist_ok=True)
                 
-                nr_cell_df_path = os.path.join(node_dir_5g, f"01_{node}_NR_TN_RN_Cell_Def_{current_time}.txt")
+                nr_cell_df_path = os.path.join(node_dir_5g, f"01_{node}_5G_Cell_Creation_Sctp_Endpoint_Creation_{current_time}.txt")
                 gnbid = nr_cell_sub["gNBId"].unique()[0]
                 
                 gnbdu_fuction_element = ""
@@ -1056,6 +1117,8 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 gpl_5g_path = os.path.join(node_dir_5g, f"02_{node}_NR_GPL_LMS_{current_time}.txt")
                 with open(gpl_5g_path, "w") as file:
                     file.write(TN_05_5G_LMS_GPL_ROTN + "\n")
+
+                write_sa_scripts(node_dir_5g, node, current_time, nr_cell_df[nr_cell_df["gNodeBName"] == node], TN_SA_cUCP5qiTable_XML, TN_SA_dU5qiTable_XML, TN_SA_AMF_RIM_CONFIG)
         
         # --------------------------------------------------------- TN Commissioning Scripts -----------------------------------------#
         for node in site_basic_df["eNodeBName"].unique():
@@ -1157,7 +1220,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
     elif circle == "CHN":
         unique_nodes = lte_df["eNodeBName"].unique()
         for node_name in unique_nodes:
-            current_time = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+            current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
             node_dir = create_script_paths(base_path_url, node_name)["lte"]
             node_dir_5g = create_script_paths(base_path_url, node_name)["nr"]
             os.makedirs(node_dir, exist_ok=True)
@@ -1199,7 +1262,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
             with open(script_path, "w") as file:
                 file.write(formatted_text + "\n")
             
-            gpl_path = os.path.join(node_dir, f"03_TN_LTE_GPL_LMS_{node_name}_{current_time}.txt")
+            gpl_path = os.path.join(node_dir, f"03_{node_name}_GPL_LMS_script_{current_time}.txt")
             with open(gpl_path, "w") as file:
                 file.write(CHN_s3_LTE_GPL_LMS + "\n")
         
@@ -1208,11 +1271,11 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
             for node in nr_cell_df["gNodeBName"].unique():
                 nr_cell_sub = nr_cell_df[nr_cell_df["gNodeBName"] == node].copy()
                 nr_cell_sub.rename(columns={"bSChannelBwDL/UL": "bSChannelBwDL-UL"}, inplace=True)
-                current_time = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+                current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
                 node_dir_5g = create_script_paths(base_path_url, node)["nr"]
                 os.makedirs(node_dir_5g, exist_ok=True)
                 
-                nr_cell_df_path = os.path.join(node_dir_5g, f"01_{node}_NR_TN_RN_Cell_Def_CHN_{current_time}.txt")
+                nr_cell_df_path = os.path.join(node_dir_5g, f"01_{node}_5G_Cell_Creation_Sctp_Endpoint_Creation_{current_time}.txt")
                 gnbid = nr_cell_sub["gNBId"].unique()[0]
                 
                 gnbdu_fuction_element = ""
@@ -1253,6 +1316,8 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 gpl_5g_path = os.path.join(node_dir_5g, f"02_{node}_NR_GPL_LMS_{current_time}.txt")
                 with open(gpl_5g_path, "w") as file:
                     file.write(CHN_05_5G_LMS_GPL_CHN + "\n")
+
+                write_sa_scripts(node_dir_5g, node, current_time, nr_cell_df[nr_cell_df["gNodeBName"] == node], CHN_SA_cUCP5qiTable_XML, CHN_SA_dU5qiTable_XML, CHN_SA_AMF_RIM_CONFIG)
                 
         
         # --------------------------------------------------------- CHN Commissioning Scripts -----------------------------------------#
@@ -1364,7 +1429,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
             generate_lte_cell_def_scripts(lte_df=lte_df,directories=directories,node_name=node_name,current_time=current_time,circle=circle)
             
             # ---------------------------------------------------------- AP Circle-specific Script Generation ---------------------------------------------------------------------
-            AP_Route_4G_GPL_LMS_path = os.path.join(create_script_paths(base_path_url, node_name)["lte"],f"03_{node_name}_Route_GPL_LMS_{current_time}.txt")
+            AP_Route_4G_GPL_LMS_path = os.path.join(create_script_paths(base_path_url, node_name)["lte"],f"03_{node_name}_GPL_LMS_script_{current_time}.txt")
             Phy_SiteID_Userlabel = site_basic_df['Phy SiteID/Userlabel'].unique()[0]
             with open(AP_Route_4G_GPL_LMS_path, "a", encoding="utf-8") as file:
                 file.write(AP_Route_4G_GPL_LMS.format(Phy_SiteID_Userlabel = Phy_SiteID_Userlabel) + "\n")
@@ -1406,7 +1471,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 
                 tnPortId = site_basic_data_df['tnPortId'].unique()[0]
                 
-                nr_cell_df_path = os.path.join(create_script_paths(base_path_url, node)["nr"],f"1_{node}_5G Cell creation_Sctp Endpoint Creation_{current_time}.txt")
+                nr_cell_df_path = os.path.join(create_script_paths(base_path_url, node)["nr"],f"01_{node}_5G_Cell_Creation_Sctp_Endpoint_Creation_{current_time}.txt")
                 
                 gnbid = nr_cell_df["gNBId"].unique()[0]
 
@@ -1457,15 +1522,17 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                         )
                     )
 
-                NR_GPL_LMS_path = os.path.join(create_script_paths(base_path_url, node)["nr"],f"2_{node}_NR_GPL_LMS_{current_time}.txt")
+                NR_GPL_LMS_path = os.path.join(create_script_paths(base_path_url, node)["nr"],f"02_{node}_NR_GPL_LMS_{current_time}.txt")
                 
                 with open(NR_GPL_LMS_path, "a") as file:
                     file.write(AP_Route_5G_GPL_LMS + "\n")
 
-                Termpoint_GUtranFreqRelation_path = os.path.join(create_script_paths(base_path_url, node_name)["nr"],f"3_{node_name}_Termpoint_GUtranFreqRelation_{current_time}.txt")
+                Termpoint_GUtranFreqRelation_path = os.path.join(create_script_paths(base_path_url, node)["nr"],f"03_{node}_Termpoint_GUtranFreqRelation_{current_time}.txt")
                 
                 with open(Termpoint_GUtranFreqRelation_path, "a") as file:
                     file.write(AP_Termpoint_GUtranFreqRelation + "\n")
+
+                write_sa_scripts(create_script_paths(base_path_url, node)["nr"], node, current_time, nr_cell_df[nr_cell_df["gNodeBName"] == node], AP_SA_cUCP5qiTable_XML, AP_SA_dU5qiTable_XML, AP_SA_AMF_RIM_CONFIG)
         # ________________________________________________________________________________________________________________________________________________________________________#
 
         ########################################## AP Commissioning Scripts Generation Logic ###############################################################
@@ -1670,7 +1737,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
             generate_lte_cell_def_scripts(lte_df=lte_df,directories=directories,node_name=node_name,current_time=current_time,circle=circle)
             
             # ---------------------------------------------------------- RJ Circle-specific Script Generation ---------------------------------------------------------------------
-            RJ_Route_4G_GPL_LMS_path = os.path.join(create_script_paths(base_path_url, node_name)["lte"],f"03_{node_name}_Route_GPL_LMS_{current_time}.txt")
+            RJ_Route_4G_GPL_LMS_path = os.path.join(create_script_paths(base_path_url, node_name)["lte"],f"03_{node_name}_GPL_LMS_script_{current_time}.txt")
             Phy_SiteID_Userlabel = site_basic_df['Phy SiteID/Userlabel'].unique()[0]
             with open(RJ_Route_4G_GPL_LMS_path, "a", encoding="utf-8") as file:
                 file.write(RJ_Route_4G_GPL_LMS.format(Phy_SiteID_Userlabel = Phy_SiteID_Userlabel) + "\n")
@@ -1712,7 +1779,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 
                 tnPortId = site_basic_data_df['tnPortId'].unique()[0]
                 
-                nr_cell_df_path = os.path.join(create_script_paths(base_path_url, node)["nr"],f"1_{node}_5G Cell creation_Sctp Endpoint Creation_{current_time}.txt")
+                nr_cell_df_path = os.path.join(create_script_paths(base_path_url, node)["nr"],f"01_{node}_5G_Cell_Creation_Sctp_Endpoint_Creation_{current_time}.txt")
                 
                 gnbid = nr_cell_df["gNBId"].unique()[0]
 
@@ -1763,15 +1830,17 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                         )
                     )
 
-                NR_GPL_LMS_path = os.path.join(create_script_paths(base_path_url, node)["nr"],f"2_{node}_NR_GPL_LMS_{current_time}.txt")
+                NR_GPL_LMS_path = os.path.join(create_script_paths(base_path_url, node)["nr"],f"02_{node}_NR_GPL_LMS_{current_time}.txt")
                 
                 with open(NR_GPL_LMS_path, "a") as file:
                     file.write(RJ_Route_5G_GPL_LMS + "\n")
 
-                Termpoint_GUtranFreqRelation_path = os.path.join(create_script_paths(base_path_url, node_name)["nr"],f"3_{node_name}_Termpoint_GUtranFreqRelation_{current_time}.txt")
+                Termpoint_GUtranFreqRelation_path = os.path.join(create_script_paths(base_path_url, node)["nr"],f"03_{node}_Termpoint_GUtranFreqRelation_{current_time}.txt")
                 
                 with open(Termpoint_GUtranFreqRelation_path, "a") as file:
                     file.write(RJ_Termpoint_GUtranFreqRelation + "\n")
+
+                write_sa_scripts(create_script_paths(base_path_url, node)["nr"], node, current_time, nr_cell_df[nr_cell_df["gNodeBName"] == node], RJ_SA_cUCP5qiTable_XML, RJ_SA_dU5qiTable_XML, RJ_SA_AMF_RIM_CONFIG)
         # ________________________________________________________________________________________________________________________________________________________________________#
 
         ########################################## RJ Commissioning Scripts Generation Logic ###############################################################
@@ -1980,7 +2049,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
             generate_lte_cell_def_scripts(lte_df=lte_df,directories=directories,node_name=node_name,current_time=current_time,circle=circle)
             
             # ---------------------------------------------------------- NE Circle-specific Script Generation ---------------------------------------------------------------------
-            NE_Route_4G_GPL_LMS_path = os.path.join(create_script_paths(base_path_url, node_name)["lte"],f"03_{node_name}_Route_GPL_LMS_{current_time}.txt")
+            NE_Route_4G_GPL_LMS_path = os.path.join(create_script_paths(base_path_url, node_name)["lte"],f"03_{node_name}_GPL_LMS_script_{current_time}.txt")
             Phy_SiteID_Userlabel = site_basic_df['Phy SiteID/Userlabel'].unique()[0]
             with open(NE_Route_4G_GPL_LMS_path, "a", encoding="utf-8") as file:
                 file.write(NE_GPL_LMS_DST_SCRIPT.format(Phy_SiteID_Userlabel = Phy_SiteID_Userlabel) + "\n")
@@ -2024,7 +2093,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 
                 tnPortId = site_basic_data_df['tnPortId'].unique()[0]
                 
-                nr_cell_df_path = os.path.join(create_script_paths(base_path_url, node)["nr"],f"1_{node}_5G Cell creation_Sctp Endpoint Creation_{current_time}.txt")
+                nr_cell_df_path = os.path.join(create_script_paths(base_path_url, node)["nr"],f"01_{node}_5G_Cell_Creation_Sctp_Endpoint_Creation_{current_time}.txt")
                 
                 gnbid = nr_cell_df["gNBId"].unique()[0]
 
@@ -2076,15 +2145,17 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                         )
                     )
 
-                NR_GPL_LMS_path = os.path.join(create_script_paths(base_path_url, node)["nr"],f"2_{node}_NR_GPL_LMS_{current_time}.txt")
+                NR_GPL_LMS_path = os.path.join(create_script_paths(base_path_url, node)["nr"],f"02_{node}_NR_GPL_LMS_{current_time}.txt")
                 
                 with open(NR_GPL_LMS_path, "a") as file:
                     file.write(NE_NR_GPL_LMS_SCRIPT + "\n")
 
-                Termpoint_GUtranFreqRelation_path = os.path.join(create_script_paths(base_path_url, node_name)["nr"],f"3_{node_name}_Termpoint_GUtranFreqRelation_{current_time}.txt")
+                Termpoint_GUtranFreqRelation_path = os.path.join(create_script_paths(base_path_url, node)["nr"],f"03_{node}_Termpoint_GUtranFreqRelation_{current_time}.txt")
                 
                 with open(Termpoint_GUtranFreqRelation_path, "a") as file:
                     file.write(NE_Termpoint_GUtranFreqRelation_script + "\n")
+
+                write_sa_scripts(create_script_paths(base_path_url, node)["nr"], node, current_time, nr_cell_df[nr_cell_df["gNodeBName"] == node], NE_SA_cUCP5qiTable_XML, NE_SA_dU5qiTable_XML, NE_SA_AMF_RIM_CONFIG)
         # ________________________________________________________________________________________________________________________________________________________________________#
 
         ########################################## NE Commissioning Scripts Generation Logic ###############################################################
@@ -2281,7 +2352,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
     
     # ---------------------------------------------------------------- AS Circle-specific Script Generation ----------------------------------------------------------------
     elif circle == "AS":
-        current_time = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+        current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         for idx, row in site_basic_df.iterrows():
             print(site_basic_df)
             node_name = row.get("eNodeBName", "UnknownNode")
@@ -2325,13 +2396,12 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
         # for node in unique_nodes:
         #    script_path = os.path.join(create_script_paths(bNEe_path_url, node)['lte'], gps_mme_path)
         #    with open(script_path,"a") as file:
-        #        file.write(kk_GPS_MMS_script + "\n")
+        #        file.write(kk_GPS_MME_script + "\n")
         ########################################################################## GPL/LMS Script ###########################################################################
-        gpl_lms_path = f"03 GPL_LMS_script_{node_name}_{current_time}.txt"
         #### physical siteID is unique for all node in any circle ######################################################
         Phy_SiteID_Userlabel = site_basic_df['Phy SiteID/Userlabel'].unique()[0]
         for node in unique_nodes:
-            script_path = os.path.join(create_script_paths(base_path_url, node)["lte"], gpl_lms_path)
+            script_path = os.path.join(create_script_paths(base_path_url, node)["lte"], f"03_{node}_GPL_LMS_script_{current_time}.txt")
             with open(script_path, "a") as file:
                 file.write(AS_GPL_LMS_DST_SCRIPT.format(Phy_SiteID_Userlabel = Phy_SiteID_Userlabel) + "\n")
 
@@ -2353,7 +2423,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 tnPortId = site_basic_data_df['tnPortId'].unique()[0]
                 nr_cell_df_path = os.path.join(
                     create_script_paths(base_path_url, node)["nr"],
-                    f"1_{node}_5G Cell creation_Sctp Endpoint Creation_{current_time}.txt",
+                    f"01_{node}_5G_Cell_Creation_Sctp_Endpoint_Creation_{current_time}.txt",
                 )
                 gnbid = nr_cell_df["gNBId"].unique()[0]
                 print(nr_cell_df)
@@ -2407,17 +2477,19 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
                 NR_GPL_LMS_path = os.path.join(
                     create_script_paths(base_path_url, node)["nr"],
-                    f"2_{node}_NR_GPL_LMS_{current_time}.txt",
+                    f"02_{node}_NR_GPL_LMS_{current_time}.txt",
                 )
                 with open(NR_GPL_LMS_path, "a") as file:
                     file.write(AS_NR_GPL_LMS_SCRIPT + "\n")
 
                 Termpoint_GUtranFreqRelation_path = os.path.join(
-                    create_script_paths(base_path_url, node_name)["nr"],
-                    f"3_{node_name}_Termpoint_GUtranFreqRelation_{current_time}.txt",
+                    create_script_paths(base_path_url, node)["nr"],
+                    f"03_{node}_Termpoint_GUtranFreqRelation_{current_time}.txt",
                 )
                 with open(Termpoint_GUtranFreqRelation_path, "a") as file:
                     file.write(AS_Termpoint_GUtranFreqRelation_script + "\n")
+
+                write_sa_scripts(create_script_paths(base_path_url, node)["nr"], node, current_time, nr_cell_df[nr_cell_df["gNodeBName"] == node], AS_SA_cUCP5qiTable_XML, AS_SA_dU5qiTable_XML, AS_SA_AMF_RIM_CONFIG)
         # .......................................................................... NRCELL CONFIGRATION FOR CELL CREATION IN 5G ................................................
         ########################################## AS Commissioning Scripts Generation Logic ###############################################################
         for node in site_basic_df["eNodeBName"].unique():
@@ -2597,7 +2669,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
     
     # ---------------------------------------------------------------- DEL Circle-specific Script Generation ----------------------------------------------------------------
     elif circle == "DEL":
-        current_time = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+        current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         for idx, row in site_basic_df.iterrows():
             print(site_basic_df)
             node_name = row.get("eNodeBName", "UnknownNode")
@@ -2641,13 +2713,12 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
         # for node in unique_nodes:
         #    script_path = os.path.join(create_script_paths(bNEe_path_url, node)['lte'], gps_mme_path)
         #    with open(script_path,"a") as file:
-        #        file.write(kk_GPS_MMS_script + "\n")
+        #        file.write(kk_GPS_MME_script + "\n")
         ########################################################################## GPL/LMS Script ###########################################################################
-        gpl_lms_path = f"03 GPL_LMS_script_{node_name}_{current_time}.txt"
         #### physical siteID is unique for all node in any circle ######################################################
         Phy_SiteID_Userlabel = site_basic_df['Phy SiteID/Userlabel'].unique()[0]
         for node in unique_nodes:
-            script_path = os.path.join(create_script_paths(base_path_url, node)["lte"], gpl_lms_path)
+            script_path = os.path.join(create_script_paths(base_path_url, node)["lte"], f"03_{node}_GPL_LMS_script_{current_time}.txt")
             with open(script_path, "a") as file:
                 file.write(DEL_GPL_LMS_DST_SCRIPT.format(Phy_SiteID_Userlabel = Phy_SiteID_Userlabel) + "\n")
 
@@ -2669,7 +2740,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 tnPortId = site_basic_data_df['tnPortId'].unique()[0]
                 nr_cell_df_path = os.path.join(
                     create_script_paths(base_path_url, node)["nr"],
-                    f"1_{node}_5G Cell creation_Sctp Endpoint Creation_{current_time}.txt",
+                    f"01_{node}_5G_Cell_Creation_Sctp_Endpoint_Creation_{current_time}.txt",
                 )
                 gnbid = nr_cell_df["gNBId"].unique()[0]
                 print(nr_cell_df)
@@ -2723,17 +2794,19 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
                 NR_GPL_LMS_path = os.path.join(
                     create_script_paths(base_path_url, node)["nr"],
-                    f"2_{node}_NR_GPL_LMS_{current_time}.txt",
+                    f"02_{node}_NR_GPL_LMS_{current_time}.txt",
                 )
                 with open(NR_GPL_LMS_path, "a") as file:
                     file.write(DEL_NR_GPL_LMS_SCRIPT + "\n")
 
                 Termpoint_GUtranFreqRelation_path = os.path.join(
-                    create_script_paths(base_path_url, node_name)["nr"],
-                    f"3_{node_name}_Termpoint_GUtranFreqRelation_{current_time}.txt",
+                    create_script_paths(base_path_url, node)["nr"],
+                    f"03_{node}_Termpoint_GUtranFreqRelation_{current_time}.txt",
                 )
                 with open(Termpoint_GUtranFreqRelation_path, "a") as file:
                     file.write(DEL_Termpoint_GUtranFreqRelation_script + "\n")
+
+                write_sa_scripts(create_script_paths(base_path_url, node)["nr"], node, current_time, nr_cell_df[nr_cell_df["gNodeBName"] == node], DEL_SA_cUCP5qiTable_XML, DEL_SA_dU5qiTable_XML, DEL_SA_AMF_RIM_CONFIG)
         # .......................................................................... NRCELL CONFIGRATION FOR CELL CREATION IN 5G ................................................
         ########################################## DEL Commissioning Scripts Generation Logic ###############################################################
         for node in site_basic_df["eNodeBName"].unique():
@@ -2914,7 +2987,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
     # ---------------------------------------------------------------- DEL_Vi Circle-specific Script Generation ----------------------------------------------------------------
     elif circle == "DEL_Vi":
-        current_time = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+        current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         for idx, row in site_basic_df.iterrows():
             print(site_basic_df)
             node_name = row.get("eNodeBName", "UnknownNode")
@@ -2963,13 +3036,12 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
         # for node in unique_nodes:
         #    script_path = os.path.join(create_script_paths(bNEe_path_url, node)['lte'], gps_mme_path)
         #    with open(script_path,"a") as file:
-        #        file.write(kk_GPS_MMS_script + "\n")
+        #        file.write(kk_GPS_MME_script + "\n")
         ########################################################################## GPL/LMS Script ###########################################################################
-        gpl_lms_path = f"03 GPL_LMS_script_{node_name}_{current_time}.txt"
         #### physical siteID is unique for all node in any circle ######################################################
         Phy_SiteID_Userlabel = site_basic_df['Phy SiteID/Userlabel'].unique()[0]
         for node in unique_nodes:
-            script_path = os.path.join(create_script_paths(base_path_url, node)["lte"], gpl_lms_path)
+            script_path = os.path.join(create_script_paths(base_path_url, node)["lte"], f"03_{node}_GPL_LMS_script_{current_time}.txt")
             with open(script_path, "a") as file:
                 file.write(DEL_Vi_GPL_LMS_DST_SCRIPT.format(Phy_SiteID_Userlabel = Phy_SiteID_Userlabel) + "\n")
 
@@ -2991,7 +3063,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 tnPortId = site_basic_data_df['tnPortId'].unique()[0]
                 nr_cell_df_path = os.path.join(
                     create_script_paths(base_path_url, node)["nr"],
-                    f"1_{node}_5G Cell creation_Sctp Endpoint Creation_{current_time}.txt",
+                    f"01_{node}_5G_Cell_Creation_Sctp_Endpoint_Creation_{current_time}.txt",
                 )
                 gnbid = nr_cell_df["gNBId"].unique()[0]
                 print(nr_cell_df)
@@ -3045,14 +3117,14 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
                 NR_GPL_LMS_path = os.path.join(
                     create_script_paths(base_path_url, node)["nr"],
-                    f"2_{node}_NR_GPL_LMS_{current_time}.txt",
+                    f"02_{node}_NR_GPL_LMS_{current_time}.txt",
                 )
                 with open(NR_GPL_LMS_path, "a") as file:
                     file.write(DEL_Vi_NR_GPL_LMS_SCRIPT + "\n")
 
                 Termpoint_GUtranFreqRelation_path = os.path.join(
-                    create_script_paths(base_path_url, node_name)["nr"],
-                    f"3_{node_name}_Termpoint_GUtranFreqRelation_{current_time}.txt",
+                    create_script_paths(base_path_url, node)["nr"],
+                    f"03_{node}_Termpoint_GUtranFreqRelation_{current_time}.txt",
                 )
                 with open(Termpoint_GUtranFreqRelation_path, "a") as file:
                     file.write(DEL_Vi_Termpoint_GUtranFreqRelation_script + "\n")
@@ -3248,7 +3320,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
     # ---------------------------------------------------------------- MAG_Vi Circle-specific Script Generation ----------------------------------------------------------------
     elif circle == "MAG_Vi":
-        current_time = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+        current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         for idx, row in site_basic_df.iterrows():
             print(site_basic_df)
             node_name = row.get("eNodeBName", "UnknownNode")
@@ -3297,13 +3369,12 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
         # for node in unique_nodes:
         #    script_path = os.path.join(create_script_paths(bNEe_path_url, node)['lte'], gps_mme_path)
         #    with open(script_path,"a") as file:
-        #        file.write(kk_GPS_MMS_script + "\n")
+        #        file.write(kk_GPS_MME_script + "\n")
         ########################################################################## GPL/LMS Script ###########################################################################
-        gpl_lms_path = f"03 GPL_LMS_script_{node_name}_{current_time}.txt"
         #### physical siteID is unique for all node in any circle ######################################################
         Phy_SiteID_Userlabel = site_basic_df['Phy SiteID/Userlabel'].unique()[0]
         for node in unique_nodes:
-            script_path = os.path.join(create_script_paths(base_path_url, node)["lte"], gpl_lms_path)
+            script_path = os.path.join(create_script_paths(base_path_url, node)["lte"], f"03_{node}_GPL_LMS_script_{current_time}.txt")
             with open(script_path, "a") as file:
                 file.write(MAG_Vi_GPL_LMS_DST_SCRIPT.format(Phy_SiteID_Userlabel = Phy_SiteID_Userlabel) + "\n")
 
@@ -3325,7 +3396,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 tnPortId = site_basic_data_df['tnPortId'].unique()[0]
                 nr_cell_df_path = os.path.join(
                     create_script_paths(base_path_url, node)["nr"],
-                    f"1_{node}_5G Cell creation_Sctp Endpoint Creation_{current_time}.txt",
+                    f"01_{node}_5G_Cell_Creation_Sctp_Endpoint_Creation_{current_time}.txt",
                 )
                 gnbid = nr_cell_df["gNBId"].unique()[0]
                 print(nr_cell_df)
@@ -3379,14 +3450,14 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
                 NR_GPL_LMS_path = os.path.join(
                     create_script_paths(base_path_url, node)["nr"],
-                    f"2_{node}_NR_GPL_LMS_{current_time}.txt",
+                    f"02_{node}_NR_GPL_LMS_{current_time}.txt",
                 )
                 with open(NR_GPL_LMS_path, "a") as file:
                     file.write(MAG_Vi_NR_GPL_LMS_SCRIPT + "\n")
 
                 Termpoint_GUtranFreqRelation_path = os.path.join(
-                    create_script_paths(base_path_url, node_name)["nr"],
-                    f"3_{node_name}_Termpoint_GUtranFreqRelation_{current_time}.txt",
+                    create_script_paths(base_path_url, node)["nr"],
+                    f"03_{node}_Termpoint_GUtranFreqRelation_{current_time}.txt",
                 )
                 with open(Termpoint_GUtranFreqRelation_path, "a") as file:
                     file.write(MAG_Vi_Termpoint_GUtranFreqRelation_script + "\n")
@@ -3582,7 +3653,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
     # ---------------------------------------------------------------- UPW Circle-specific Script Generation ----------------------------------------------------------------
     elif circle == "UPW":
-        current_time = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+        current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         for idx, row in site_basic_df.iterrows():
             print(site_basic_df)
             node_name = row.get("eNodeBName", "UnknownNode")
@@ -3626,13 +3697,12 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
         # for node in unique_nodes:
         #    script_path = os.path.join(create_script_paths(bNEe_path_url, node)['lte'], gps_mme_path)
         #    with open(script_path,"a") as file:
-        #        file.write(kk_GPS_MMS_script + "\n")
+        #        file.write(kk_GPS_MME_script + "\n")
         ########################################################################## GPL/LMS Script ###########################################################################
-        gpl_lms_path = f"03 GPL_LMS_script_{node_name}_{current_time}.txt"
         #### physical siteID is unique for all node in any circle ######################################################
         Phy_SiteID_Userlabel = site_basic_df['Phy SiteID/Userlabel'].unique()[0]
         for node in unique_nodes:
-            script_path = os.path.join(create_script_paths(base_path_url, node)["lte"], gpl_lms_path)
+            script_path = os.path.join(create_script_paths(base_path_url, node)["lte"], f"03_{node}_GPL_LMS_script_{current_time}.txt")
             with open(script_path, "a") as file:
                 file.write(UPW_GPL_LMS_DST_SCRIPT.format(Phy_SiteID_Userlabel = Phy_SiteID_Userlabel) + "\n")
 
@@ -3654,7 +3724,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 tnPortId = site_basic_data_df['tnPortId'].unique()[0]
                 nr_cell_df_path = os.path.join(
                     create_script_paths(base_path_url, node)["nr"],
-                    f"1_{node}_5G Cell creation_Sctp Endpoint Creation_{current_time}.txt",
+                    f"01_{node}_5G_Cell_Creation_Sctp_Endpoint_Creation_{current_time}.txt",
                 )
                 gnbid = nr_cell_df["gNBId"].unique()[0]
                 print(nr_cell_df)
@@ -3708,17 +3778,19 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
                 NR_GPL_LMS_path = os.path.join(
                     create_script_paths(base_path_url, node)["nr"],
-                    f"2_{node}_NR_GPL_LMS_{current_time}.txt",
+                    f"02_{node}_NR_GPL_LMS_{current_time}.txt",
                 )
                 with open(NR_GPL_LMS_path, "a") as file:
                     file.write(UPW_NR_GPL_LMS_SCRIPT + "\n")
 
                 Termpoint_GUtranFreqRelation_path = os.path.join(
-                    create_script_paths(base_path_url, node_name)["nr"],
-                    f"3_{node_name}_Termpoint_GUtranFreqRelation_{current_time}.txt",
+                    create_script_paths(base_path_url, node)["nr"],
+                    f"03_{node}_Termpoint_GUtranFreqRelation_{current_time}.txt",
                 )
                 with open(Termpoint_GUtranFreqRelation_path, "a") as file:
                     file.write(UPW_Termpoint_GUtranFreqRelation_script + "\n")
+
+                write_sa_scripts(create_script_paths(base_path_url, node)["nr"], node, current_time, nr_cell_df[nr_cell_df["gNodeBName"] == node], UPW_SA_cUCP5qiTable_XML, UPW_SA_dU5qiTable_XML, UPW_SA_AMF_RIM_CONFIG)
         # .......................................................................... NRCELL CONFIGRATION FOR CELL CREATION IN 5G ................................................
         ########################################## UPW Commissioning Scripts Generation Logic ###############################################################
         for node in site_basic_df["eNodeBName"].unique():
@@ -3910,7 +3982,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
             generate_lte_cell_def_scripts(lte_df=lte_df,directories=directories,node_name=node_name,current_time=current_time,circle=circle)
             
             # ---------------------------------------------------------- HR Circle-specific Script Generation ---------------------------------------------------------------------
-            HR_Route_4G_GPL_LMS_path = os.path.join(create_script_paths(base_path_url, node_name)["lte"],f"03_{node_name}_Route_GPL_LMS_{current_time}.txt")
+            HR_Route_4G_GPL_LMS_path = os.path.join(create_script_paths(base_path_url, node_name)["lte"],f"03_{node_name}_GPL_LMS_script_{current_time}.txt")
             Phy_SiteID_Userlabel = site_basic_df['Phy SiteID/Userlabel'].unique()[0]
             with open(HR_Route_4G_GPL_LMS_path, "a", encoding="utf-8") as file:
                 file.write(HR_Route_4G_GPL_LMS.format(Phy_SiteID_Userlabel = Phy_SiteID_Userlabel) + "\n")
@@ -3952,7 +4024,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 
                 tnPortId = site_basic_data_df['tnPortId'].unique()[0]
                 
-                nr_cell_df_path = os.path.join(create_script_paths(base_path_url, node)["nr"],f"1_{node}_5G Cell creation_Sctp Endpoint Creation_{current_time}.txt")
+                nr_cell_df_path = os.path.join(create_script_paths(base_path_url, node)["nr"],f"01_{node}_5G_Cell_Creation_Sctp_Endpoint_Creation_{current_time}.txt")
                 
                 gnbid = nr_cell_df["gNBId"].unique()[0]
 
@@ -4003,15 +4075,17 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                         )
                     )
 
-                NR_GPL_LMS_path = os.path.join(create_script_paths(base_path_url, node)["nr"],f"2_{node}_NR_GPL_LMS_{current_time}.txt")
+                NR_GPL_LMS_path = os.path.join(create_script_paths(base_path_url, node)["nr"],f"02_{node}_NR_GPL_LMS_{current_time}.txt")
                 
                 with open(NR_GPL_LMS_path, "a") as file:
                     file.write(HR_Route_5G_GPL_LMS + "\n")
 
-                Termpoint_GUtranFreqRelation_path = os.path.join(create_script_paths(base_path_url, node_name)["nr"],f"3_{node_name}_Termpoint_GUtranFreqRelation_{current_time}.txt")
+                Termpoint_GUtranFreqRelation_path = os.path.join(create_script_paths(base_path_url, node)["nr"],f"03_{node}_Termpoint_GUtranFreqRelation_{current_time}.txt")
                 
                 with open(Termpoint_GUtranFreqRelation_path, "a") as file:
                     file.write(HR_Termpoint_GUtranFreqRelation + "\n")
+
+                write_sa_scripts(create_script_paths(base_path_url, node)["nr"], node, current_time, nr_cell_df[nr_cell_df["gNodeBName"] == node], HR_SA_cUCP5qiTable_XML, HR_SA_dU5qiTable_XML, HR_SA_AMF_RIM_CONFIG)
         # ________________________________________________________________________________________________________________________________________________________________________#
 
         ########################################## HR Commissioning Scripts Generation Logic ###############################################################
@@ -4210,7 +4284,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
     
     # ---------------------------------------------------------------- JK Circle-specific Script Generation ----------------------------------------------------------------
     elif circle == "JK":
-        current_time = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+        current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         for idx, row in site_basic_df.iterrows():
             print(site_basic_df)
             node_name = row.get("eNodeBName", "UnknownNode")
@@ -4254,13 +4328,12 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
         # for node in unique_nodes:
         #    script_path = os.path.join(create_script_paths(bNEe_path_url, node)['lte'], gps_mme_path)
         #    with open(script_path,"a") as file:
-        #        file.write(kk_GPS_MMS_script + "\n")
+        #        file.write(kk_GPS_MME_script + "\n")
         ########################################################################## GPL/LMS Script ###########################################################################
-        gpl_lms_path = f"03 GPL_LMS_script_{node_name}_{current_time}.txt"
         #### physical siteID is unique for all node in any circle ######################################################
         Phy_SiteID_Userlabel = site_basic_df['Phy SiteID/Userlabel'].unique()[0]
         for node in unique_nodes:
-            script_path = os.path.join(create_script_paths(base_path_url, node)["lte"], gpl_lms_path)
+            script_path = os.path.join(create_script_paths(base_path_url, node)["lte"], f"03_{node}_GPL_LMS_script_{current_time}.txt")
             with open(script_path, "a") as file:
                 file.write(JK_GPL_LMS_DST_SCRIPT.format(Phy_SiteID_Userlabel = Phy_SiteID_Userlabel) + "\n")
 
@@ -4282,7 +4355,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 tnPortId = site_basic_data_df['tnPortId'].unique()[0]
                 nr_cell_df_path = os.path.join(
                     create_script_paths(base_path_url, node)["nr"],
-                    f"1_{node}_5G Cell creation_Sctp Endpoint Creation_{current_time}.txt",
+                    f"01_{node}_5G_Cell_Creation_Sctp_Endpoint_Creation_{current_time}.txt",
                 )
                 gnbid = nr_cell_df["gNBId"].unique()[0]
                 print(nr_cell_df)
@@ -4336,17 +4409,19 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
                 NR_GPL_LMS_path = os.path.join(
                     create_script_paths(base_path_url, node)["nr"],
-                    f"2_{node}_NR_GPL_LMS_{current_time}.txt",
+                    f"02_{node}_NR_GPL_LMS_{current_time}.txt",
                 )
                 with open(NR_GPL_LMS_path, "a") as file:
                     file.write(JK_NR_GPL_LMS_SCRIPT + "\n")
 
                 Termpoint_GUtranFreqRelation_path = os.path.join(
-                    create_script_paths(base_path_url, node_name)["nr"],
-                    f"3_{node_name}_Termpoint_GUtranFreqRelation_{current_time}.txt",
+                    create_script_paths(base_path_url, node)["nr"],
+                    f"03_{node}_Termpoint_GUtranFreqRelation_{current_time}.txt",
                 )
                 with open(Termpoint_GUtranFreqRelation_path, "a") as file:
                     file.write(JK_Termpoint_GUtranFreqRelation_script + "\n")
+
+                write_sa_scripts(create_script_paths(base_path_url, node)["nr"], node, current_time, nr_cell_df[nr_cell_df["gNodeBName"] == node], JK_SA_cUCP5qiTable_XML, JK_SA_dU5qiTable_XML, JK_SA_AMF_RIM_CONFIG)
         # .......................................................................... NRCELL CONFIGRATION FOR CELL CREATION IN 5G ................................................
         ########################################## JK Commissioning Scripts Generation Logic ###############################################################
         for node in site_basic_df["eNodeBName"].unique():
