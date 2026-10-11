@@ -310,7 +310,7 @@ def available_sites(workbooks: list[Workbook],
     names = set()
     for wb in workbooks:
         for sheet in wb.sheets:
-            names |= sheet.site_names()
+            names |= sheet.site_names(naming_rules)
 
     groups: dict[str, set[str]] = {}
     for name in names:

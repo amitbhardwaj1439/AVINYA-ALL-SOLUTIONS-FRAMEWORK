@@ -24,7 +24,8 @@ from .writer import write_workbook
 # spellings: AP delivers wide SSIS exports, HR circle-wide master RF data, DEL
 # tall SSIS exports with two 4G nodes per site.
 MAPPINGS = {"AP": ".mapping_ap", "HR": ".mapping_hr", "DEL": ".mapping_del",
-            "DEL_VI": ".mapping_del_vi", "MAG_VI": ".mapping_mag_vi"}
+            "DEL_VI": ".mapping_del_vi", "MAG_VI": ".mapping_mag_vi",
+            "MP_VI": ".mapping_mp_vi"}
 
 
 def _naming(mapping) -> Naming:
@@ -32,6 +33,8 @@ def _naming(mapping) -> Naming:
     return Naming(
         strip_node_prefix=bool(getattr(mapping, "STRIP_NODE_PREFIX", True)),
         numeric_site_ids=bool(getattr(mapping, "NUMERIC_SITE_IDS", False)),
+        key_columns=tuple(getattr(mapping, "KEY_COLUMNS", ()) or ()),
+        vi_node_prefix=bool(getattr(mapping, "VI_NODE_PREFIX", False)),
     )
 
 
