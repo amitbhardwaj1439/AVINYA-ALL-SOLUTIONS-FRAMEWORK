@@ -68,6 +68,44 @@ def _node_name(stem: str) -> str:
     return name.strip(" _-")
 
 
+def _node_ids_from_logs(files: list[Path]) -> list[str]:
+    """Node names read from the logs themselves, via the AMOS prompt.
+
+    The filename is not a reliable source - operators name captures things
+    like "pre.txt" / "post.txt" - but every command in the log is preceded by
+    a "<NODE>> " prompt, which is where reader.py gets Node_ID from too. Using
+    the same source means the name in the report and the Node_ID the
+    correction scripts are filtered by can never disagree.
+    """
+    from .log_parser.reader import _PROMPT_RE
+
+    found: list[str] = []
+    for f in files:
+        try:
+            lines = Path(f).read_text(encoding="utf-8", errors="replace").splitlines()
+        except OSError:
+            continue
+        for line in lines:
+            m = _PROMPT_RE.match(line)
+            if m:
+                node = m.group(1)
+                if node not in found:
+                    found.append(node)
+                break                       # one prompt is enough per file
+    return found
+
+
+def _circle_from_node(node: str) -> str:
+    """The circle code a node name starts with: 'AP-NLHY5979-1' -> 'AP'.
+
+    Node names lead with the circle in both spellings the logs use, hyphenated
+    and underscored ('HR_BB1_KRLI58'), so the audit does not need to be told
+    which circle it is looking at.
+    """
+    head = re.split(r"[-_]", str(node).strip(), maxsplit=1)[0]
+    return head.upper() if head.isalpha() else ""
+
+
 def _parameter_status_summary(sections: list[tuple[str, pd.DataFrame, str]]) -> pd.DataFrame:
     """Roll up per-audit parameter counts (total / OK / NOT OK / Missing) for
     the Summary sheet. `sections` is a list of (label, audit_df, status_column).
@@ -114,12 +152,11 @@ async def main() -> Path:
     nr_sheet = nr_sheet_for_circle(circle)
     log.info("Circle: %s — LTE sheet '%s', NR sheet '%s'", circle, lte_sheet, nr_sheet)
 
-    # session folder: {output_parent}/{site}_{circle}_GPL_Audit_{ts}/
+    # session folder: {output_parent}/{site}_{circle}_GPL_Reference_Audit_{ts}/
     # Every run gets its own folder — excel + correction scripts all land inside.
     # The circle is in the name because the verdict is only meaningful against
-    # the golden sheets of that circle.
-    # "Reference" is in the name so this cannot be mistaken for the PRE/POST
-    # GPL audit, which otherwise produces an identically shaped filename.
+    # the golden sheets of that circle, and "Reference" keeps this distinct
+    # from the PRE/POST GPL audit, which otherwise produces the same shape.
     stem = "_".join(p for p in (site, circle, "GPL_Reference_Audit", ts) if p)
     base_dir = get_output_file().parent
     session_dir = base_dir / stem

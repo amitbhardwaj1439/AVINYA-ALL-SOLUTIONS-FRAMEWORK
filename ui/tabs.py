@@ -33,8 +33,9 @@ from .widgets import (ACCENT, BLUE_BRIGHT, SELECT, TEXT_DIM, FilePanel,
 
 # The LTE generator's circles are the branches its runner actually implements.
 LTE_CIRCLES = ["KK", "TN", "CHN", "AP", "RJ", "NE", "AS", "DEL", "DEL_Vi",
-               "MAG_Vi", "UPW", "HR", "JK"]
+               "MAG_Vi", "MP_Vi", "UPW", "HR", "JK"]
 
+KGET_PATTERNS = [("kget logs", "*.log *.txt"), ("All files", "*.*")]
 EXCEL_PATTERNS = [("Excel files", "*.xlsx *.xlsb *.xlsm *.xls"), ("All files", "*.*")]
 
 
@@ -350,5 +351,41 @@ class IntegrationScriptingTab(ToolTab):
         return Result(f"{res['message']} ({zip_path.name})", zip_path)
 
 
-ALL_TABS: list[type[ToolTab]] = [GplParserTab, GplAuditTab, GplReferenceTab,
+class DatabaseAuditTab(ToolTab):
+    """Full PRE/POST comparison of two kget_mom logs - MNIT2's database_audit app."""
+
+    name = "Database Audit"
+    description = ("Compare the PRE and POST kget_mom logs parameter by parameter (every MO and profile) and "
+                   "produce the audit workbook plus AMOS and XML correction scripts.")
+    run_label = "Run Database Audit"
+
+    def build(self, parent) -> None:
+        self._header(parent, self.description)
+        self._output_note(parent)
+
+        panels = ctk.CTkFrame(parent, fg_color="transparent")
+        panels.pack(fill="both", expand=True)
+        self.pre = FilePanel(panels, "Pre_logs (kget_mom)", KGET_PATTERNS)
+        self.pre.pack(side="left", fill="both", expand=True, padx=(0, 5))
+        self.post = FilePanel(panels, "Post_logs (kget_mom)", KGET_PATTERNS)
+        self.post.pack(side="left", fill="both", expand=True, padx=(5, 0))
+
+    def validate(self) -> None:
+        if not self.pre.get_files():
+            raise ValueError("Add the PRE kget_mom log.")
+        if not self.post.get_files():
+            raise ValueError("Add the POST kget_mom log.")
+
+    def collect(self) -> dict:
+        return {"pre": self.pre.get_files(), "post": self.post.get_files(), "out_dir": downloads_dir()}
+
+    def run(self, params: dict, log) -> Result:
+        from tools.database_audit.main import run_database_audit
+
+        zip_path = Path(run_database_audit([Path(p) for p in params["pre"]], [Path(p) for p in params["post"]],
+                                           params["out_dir"]))
+        return Result("Database Audit complete - " + zip_path.name, zip_path)
+
+
+ALL_TABS: list[type[ToolTab]] = [GplParserTab, GplAuditTab, GplReferenceTab, DatabaseAuditTab,
                                  ConverterTab, IntegrationScriptingTab]

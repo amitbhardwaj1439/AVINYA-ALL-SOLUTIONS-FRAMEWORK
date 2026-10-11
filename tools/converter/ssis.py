@@ -93,6 +93,29 @@ class Naming:
     # would merge every circle site sharing a number.
     numeric_site_ids: bool = False
 
+    # Which column names the site, when the circle needs to say so. Empty for
+    # every circle whose sheets agree on a site id: the parsed key column (see
+    # `_key_index`) is then used, exactly as before.
+    #
+    # MP_Vi needs it because its one workbook keys three ways - the RF sheet on
+    # the node ('LO01INMP606361'), the ATOM report on the VIL id
+    # ('FY27MPC10568') and a 2G tab on a bare number - and only 'NSS ID' is
+    # written on both sheets the converter reads. Declaring it here rather than
+    # adding it to KEY_COLUMN_NAMES keeps DEL_Vi and MAG_Vi on 'Site ID', whose
+    # workbooks carry an 'NSS ID' beside it and would otherwise move.
+    #
+    # Names are tried in order and matched case-insensitively. When set, a sheet
+    # carrying none of them names no sites at all, which is what keeps that 2G
+    # tab's numbers out of the site list.
+    key_columns: tuple[str, ...] = ()
+
+    # MAG_Vi: a VI node is 'LO' + a two-digit instance + the NSS id
+    # ('LO01INMH414266' -> 'INMH414266'). Its 4G CPD sheet names rows by node
+    # while the site sheet and the IP plan use the NSS id, so the node has to
+    # reduce to it for the three to describe one site. Off everywhere else -
+    # MP_Vi's sheets all carry an NSS column of their own and need no rule.
+    vi_node_prefix: bool = False
+
 
 DEFAULT_NAMING = Naming()
 
@@ -126,6 +149,9 @@ def site_candidates(name, naming_rules=DEFAULT_NAMING) -> set[str]:
         out.add(s[1:])                                      # 4G node: LHY9532
     m = re.fullmatch(r"[A-Z]{1,2}(\d{4,})", s)              # DEL node: LD47793
     if rules.numeric_site_ids and m:
+        out.add(m.group(1))
+    m = re.fullmatch(r"LO\d{2}(.+)", s)                     # VI node: LO01INMH414266
+    if rules.vi_node_prefix and m:
         out.add(m.group(1))
     return out
 
@@ -174,42 +200,72 @@ class Sheet:
     def has(self, column_name: str) -> bool:
         return bool(self.occurrences(column_name))
 
-    @property
-    def site_bearing(self) -> bool:
+    def key_index_for(self, naming_rules=DEFAULT_NAMING) -> int | None:
+        """Which column names the site on this sheet, for this circle.
+
+        The parsed `key_index` unless the circle declared `key_columns`, in
+        which case the first of those the sheet carries wins. None means the
+        circle declared them and this sheet has none, so it names no sites.
+        """
+        rules = naming(naming_rules)
+        if not rules.key_columns:
+            return self.key_index
+        for want in rules.key_columns:
+            want = want.strip().lower()
+            for c in self.columns:
+                if c.name.strip().lower() == want:
+                    return c.index
+        return None
+
+    def site_bearing_for(self, naming_rules=DEFAULT_NAMING) -> bool:
         """Whether this sheet's key column actually names sites.
 
         The master workbooks carry scratch tabs whose first column is a number
         or a date; without this they contribute '2', '45238' and the like to the
-        site list.
+        site list. A column the circle named itself is trusted as it stands -
+        'NSS_ID' says nothing about sites but is exactly what MP_Vi keys on.
         """
-        key = next((c.name for c in self.columns if c.index == self.key_index), "")
+        index = self.key_index_for(naming_rules)
+        if index is None:
+            return False
+        if naming(naming_rules).key_columns:
+            return True
+        key = next((c.name for c in self.columns if c.index == index), "")
         key = key.strip().lower()
         return "site" in key or "name" in key or key in ("4g id", "2g")
 
-    def _row_name(self, r: list) -> str | None:
-        return r[self.key_index] if self.key_index < len(r) else None
+    @property
+    def site_bearing(self) -> bool:
+        return self.site_bearing_for()
+
+    def _row_name(self, r: list, naming_rules=DEFAULT_NAMING) -> str | None:
+        index = self.key_index_for(naming_rules)
+        if index is None:
+            return None
+        return r[index] if index < len(r) else None
 
     def rows_for(self, candidates: set[str], naming_rules=DEFAULT_NAMING) -> list[list]:
         """Every data row whose site name shares an id with `candidates`."""
-        if not self.site_bearing:
+        if not self.site_bearing_for(naming_rules):
             return []
         return [r for r in self.rows
-                if site_candidates(self._row_name(r), naming_rules) & candidates]
+                if site_candidates(self._row_name(r, naming_rules), naming_rules) & candidates]
 
     def ids_for(self, candidates: set[str], naming_rules=DEFAULT_NAMING) -> set[str]:
         """Every id the names this sheet uses for that site reduce to."""
         out = set()
         for r in self.rows:
-            keys = site_candidates(self._row_name(r), naming_rules)
+            keys = site_candidates(self._row_name(r, naming_rules), naming_rules)
             if keys & candidates:
                 out |= keys
         return out
 
-    def site_names(self) -> set[str]:
+    def site_names(self, naming_rules=DEFAULT_NAMING) -> set[str]:
         """Every site name written on this sheet, verbatim."""
-        if not self.site_bearing:
+        if not self.site_bearing_for(naming_rules):
             return set()
-        return {n.upper() for n in (self._row_name(r) for r in self.rows) if n}
+        return {n.upper()
+                for n in (self._row_name(r, naming_rules) for r in self.rows) if n}
 
 
 @dataclass

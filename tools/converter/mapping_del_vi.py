@@ -30,6 +30,7 @@ the form Site_Basic carries and 01_SiteBasic expects.
 from __future__ import annotations
 
 from .sitedata import SiteData
+from . import vi_defaults
 
 CIRCLE = "DEL_Vi"
 
@@ -276,6 +277,7 @@ def build_site_basic(data: SiteData) -> list[dict]:
             "ENM": _get(row, "enm"),
             "Phy SiteID/Userlabel": _get(row, "site id"),
             "Configuration_in_Node": CONFIGURATION_IN_NODE,
+            **vi_defaults.SITE_BASIC,
             "eNBId": _int(_get(row, "enodeb id")),
             "OAM_vlan": oam_vlan, "OAM_IP": oam_ip, "OAM_GW": oam_gw,
             "LTE_S1_vlan": s1c_vlan, "LTE_S1_IP": s1c_ip, "LTE_S1_GW": s1c_gw,
@@ -305,6 +307,7 @@ def build_site_basic(data: SiteData) -> list[dict]:
             "Site ID": data.key,
             "Phy SiteID/Userlabel": _get(ip, "site_id"),
             "Configuration_in_Node": CONFIGURATION_IN_NODE,
+            **vi_defaults.SITE_BASIC,
             "OAM_vlan": oam_vlan, "OAM_IP": oam_ip, "OAM_GW": oam_gw,
             "LTE_S1_vlan": s1c_vlan, "LTE_S1_IP": s1c_ip, "LTE_S1_GW": s1c_gw,
             "LTE_UP_vlan": s1u_vlan, "LTE_UP_IP": s1u_ip, "LTE_UP_GW": s1u_gw,
@@ -327,10 +330,13 @@ def build_lte_cell(data: SiteData) -> list[dict]:
         if not cell:
             continue
         bandwidth = _int(_get(row, "bandwidth"))
+        # 'Bucket' names the carrier where the plan has it (MAG); this database
+        # does not, so the Band/name rule stands in.
+        cell_type = _get(row, "bucket") or _cell_type(row)
         rows.append({
             "eNodeBName": _get(row, "4g site name"),
             "eUtranCellFDDId": cell,
-            "Eutrancell_Type": _cell_type(row),
+            "Eutrancell_Type": cell_type,
             "Configuration_in_Node": CONFIGURATION_IN_NODE,
             "Script_Required": SCRIPT_REQUIRED,
             "sectorEquipmentFunctionId": _get(row, "sector equipment function id"),
@@ -339,14 +345,16 @@ def build_lte_cell(data: SiteData) -> list[dict]:
             "earfcndl": _int(_get(row, "earfcndl")),
             "dlChannelBandwidth": bandwidth,
             "ulChannelBandwidth": bandwidth,
-            "Latitude": _get(row, "lat"),
-            "Longitude": _get(row, "long"),
+            "Latitude": vi_defaults.without_decimal(_get(row, "lat")),
+            "Longitude": vi_defaults.without_decimal(_get(row, "long")),
             "cellId": _int(_get(row, "cell id")),
             "physicalLayerCellIdGroup": _int(_get(row, "physicallayercellidgroup")),
             "physicalLayerSubCellId": _int(_get(row, "physicallayersubcellid")),
             "tac": _int(_get(row, "tac")),
             "rachRootSequence": _int(_get(row, "rach rootsequence")),
             "configuredMaxTxPower": _int(_get(row, "sector power")),
+            # Fixed for the circle, so applied last: these win over the sheet.
+            **vi_defaults.cell_overrides(cell, cell_type),
         })
     return rows
 
