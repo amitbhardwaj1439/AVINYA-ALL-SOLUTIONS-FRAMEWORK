@@ -168,8 +168,8 @@ async def main_parse_only() -> Path:
     file_paths = get_pre_files()
     site = _site_name_from_files(file_paths)   # reuse your existing helper
 
-    stem = "_".join(p for p in (site, "GPL_DATA", ts) if p)
     base_dir = get_output_file().parent
+    stem = "_".join(p for p in (site, "GPL_DATA", ts) if p)
     session_dir = base_dir / stem
     session_dir.mkdir(parents=True, exist_ok=True)
 
@@ -237,9 +237,7 @@ async def main_parse_only() -> Path:
 
 async def main() -> Path:
     from .log_parser.config import (
-        get_circle,
         get_post_files,
-        get_pre_files,
         get_output_file,
         set_output_file,
         set_session_dir,
@@ -249,18 +247,16 @@ async def main() -> Path:
 
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
 
-    # Named after the PRE node: the audit reports what the POST logs changed
     # Everything is keyed off the POST node: it is the site being corrected,
     # so it names the report and it is the only node the scripts apply to.
     # Read from the log's AMOS prompt rather than the filename, which is often
-    # just "post.txt" - a filename-derived name produced "pre_AP_GPL_Audit_..."
-    # and, worse, matched no Node_ID so the correction scripts came out empty.
-    post_nodes = _node_ids_from_logs(get_post_files())
-    site = "_".join(post_nodes) if post_nodes else _site_name_from_files(get_post_files())
-
-    # The circle is the node name's own prefix, so the operator is not asked
-    # for something the logs already state. get_circle() still wins if set.
-    circle = get_circle() or (_circle_from_node(post_nodes[0]) if post_nodes else "")
+    # just "post.txt" - a filename-derived name produced "post _GPL_AUDIT_..."
+    # and matched no Node_ID, so the correction scripts came out for every node.
+    post_files = get_post_files()
+    post_nodes = _node_ids_from_logs(post_files)
+    site = "_".join(post_nodes) if post_nodes else _site_name_from_files(post_files)
+    # The circle is the node name's own prefix, so nothing has to supply it.
+    circle = _circle_from_node(post_nodes[0]) if post_nodes else ""
     stem = "_".join(p for p in (site, circle, "GPL_Audit", ts) if p)
 
     # session folder: {output_parent}/{stem}/

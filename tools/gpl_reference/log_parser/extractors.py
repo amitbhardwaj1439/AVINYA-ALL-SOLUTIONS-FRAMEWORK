@@ -108,7 +108,6 @@ async def get_gpl_audit_data(
     )
 
     all_dfs = await parse_all_commands_multi(gpl_commands, file_paths)
-
         
     # exit(0)
 

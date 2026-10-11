@@ -41,17 +41,6 @@ _pre_files_var: "contextvars.ContextVar[list[Path] | None]" = contextvars.Contex
 _post_files_var: "contextvars.ContextVar[list[Path] | None]" = contextvars.ContextVar("post_files", default=None)
 _output_file_var: "contextvars.ContextVar[Path | None]" = contextvars.ContextVar("output_file", default=None)
 _session_dir_var: "contextvars.ContextVar[Path | None]" = contextvars.ContextVar("session_dir", default=None)
-# The audit itself does not use the circle; it names the output, so a
-# downloaded report says on its face which circle the node belongs to.
-_circle_var: "contextvars.ContextVar[str | None]" = contextvars.ContextVar("circle", default=None)
-
-
-def set_circle(circle: str | None) -> None:
-    _circle_var.set(str(circle).strip().upper() if circle else None)
-
-
-def get_circle() -> str | None:
-    return _circle_var.get()
 
 
 def set_pre_files(files: list[Path]) -> None:
