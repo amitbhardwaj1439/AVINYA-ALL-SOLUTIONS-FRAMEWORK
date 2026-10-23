@@ -39,6 +39,9 @@ NODE_MADE = re.compile(r"^,gnbcucpfunction=[^,]+,eutranetwork=[^,]+,eutranfreque
 # id-1 classes the node does not make itself (soft() would take them for system MOs): BWPSet needs at least one
 # BWPSetUeCfg in its create transaction ("child MOC: BWPSetUeCfg, Cardinality 0 is below [1-8]")
 NOT_SOFT = {"BWPSetUeCfg"}
+# MOM per circle: KK runs 25.Q2; AS / NE must work on 25.Q2 and 26.Q2 (user 2026-10-13) -> only what both releases have
+MOM_FILES = {"KK": ("mom_25Q2.json.gz", "preconditions_25Q2.json.gz")}
+MOM_DEFAULT = ("mom_25Q2_26Q2.json.gz", "preconditions_25Q2_26Q2.json.gz")
 BRANCH_ORDER = ["Transport", "NodeSupport", "GNBCUUPFunction", "GNBDUFunction", "GNBCUCPFunction", "ENodeBFunction", "SystemFunctions"]
 HELLO = """<?xml version="1.0" encoding="UTF-8"?>
 <hello xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
@@ -131,6 +134,10 @@ class Ref:
 
     def __repr__(self):
         return self.raw
+
+
+class Cleared(list):
+    """sequence emptied by a set without value (only_changes steps): holds the entries to delete on the node"""
 
 
 class Model:
@@ -422,6 +429,8 @@ class Replay:
         self.deleted_existing = OrderedDict()
         self.events = []          # (kind "cr"|"mod"|"del", key, step) in script execution order
         self.step = ""
+        self.only_changes = set()  # steps whose sets are written only if they change the value (07 VoNR on top of 04-06)
+        self.created_in = {}       # key -> step of its crn/cr
 
     # ------------------------------------------------ helpers
     def subst(self, s):
@@ -458,10 +467,33 @@ class Replay:
         v = convert(self.mom, self.m, mo["key"], info, raw, mo["ldn"])
         if isinstance(v, dict):
             v = self.whole_struct(mo, info, v)
+        elif isinstance(v, list) and v and all(isinstance(x, dict) for x in v):
+            v = self.whole_struct_list(mo, info, v)
         bad = self.bad_ref(v)
         if bad:
             self.notes.append((script, ln, s, f"reference target {bad} does not exist at this point - fails in AMOS too"))
             return "badref"
+        if not creating and self.step in self.only_changes:
+            if "key" in flags:
+                self.notes.append((script, ln, s, f"{name} is the MO key - AMOS set fails too, ignored"))
+                return True
+            old = mo["attrs"].get(name)
+            if name not in mo["attrs"] and mo["origin"] == "script" and d is not None:
+                old = convert(self.mom, self.m, mo["key"], info, d, mo["ldn"])     # MO made by the scripts: MOM default
+            if v is None:
+                if self.created_in.get(k) == self.step:     # created in this step: leave it out of the create
+                    for dct in (mo["attrs"], mo.get("create_attrs") or {}):
+                        dct.pop(name, None)
+                    if name in mo["set"]:
+                        mo["set"].remove(name)
+                elif isinstance(old, list) and not isinstance(old, Cleared) and old:
+                    mo["attrs"][name] = Cleared(old)
+                    if name not in mo["set"]:
+                        mo["set"].append(name)
+                    self.events.append(("set", k, self.step, name))
+                return True
+            if self.canon(old) == self.canon(v):
+                return True
         if v is None:
             if name in mo["attrs"] and name in mo["set"]:
                 mo["attrs"].pop(name)
@@ -476,11 +508,26 @@ class Replay:
             self.events.append(("set", k, self.step, name))
         return True
 
-    def whole_struct(self, mo, info, v):
+    def canon(self, v):
+        """comparable form of a value (moRefs by the MO they point to)"""
+        if isinstance(v, Cleared):
+            return ()
+        if isinstance(v, dict):
+            return tuple((m, self.canon(x)) for m, x in v.items())
+        if isinstance(v, list):
+            return tuple(self.canon(x) for x in v)
+        if isinstance(v, Ref):
+            r = self.m.resolve(v.raw, v.ctx)
+            return ("ref", (r or v.raw).lower())
+        return v
+
+    def whole_struct(self, mo, info, v, cur=None):
         """moshell 'set X struct a=1' keeps the other members; NETCONF needs the whole struct (else 'Multiplicity
-        violation'): missing members come from the current value, else the MOM default"""
+        violation'): missing members come from the current value, else the MOM default, else empty (as the node
+        shows them, e.g. NRCellDU csiRsConfig16P i11Restriction / i12Restriction - HSN143-1 NR02 failed without)"""
         members = self.mom.attrs.get(_kind(info[1])[2], {})
-        cur = mo["attrs"].get(info[0])
+        if cur is None:
+            cur = mo["attrs"].get(info[0])
         cur = cur if isinstance(cur, dict) else {}
         out = OrderedDict()
         for m, (mt, mf, md) in members.items():
@@ -491,8 +538,22 @@ class Replay:
                 out[m] = cur[m]
             elif md is not None and not mseq:
                 out[m] = _scalar(self.mom, self.m, mk, mr, md, mo["ldn"])
+            elif not mseq and mk in ("string", "derivedRef"):
+                out[m] = ""
         out.update((m, x) for m, x in v.items() if m not in out)
         return out
+
+    def whole_struct_list(self, mo, info, v):
+        """sequence of structs: 'set X structs a=1' on a list the MO has (04 LTE cells: qciA1A2ThrOffsetsEndc for
+        qci1/6/9 with their qciProfileRef) changes that member in every entry (one struct given) or entry by entry;
+        an entry without its moRef member is rejected by the node (HSN143-1 NR02 'Multiplicity violation qciProfileRef')"""
+        cur = mo["attrs"].get(info[0])
+        cur = [c for c in cur if isinstance(c, dict)] if isinstance(cur, list) else []
+        if not cur:
+            return [self.whole_struct(mo, info, x, {}) for x in v]
+        if len(v) == 1:
+            return [self.whole_struct(mo, info, v[0], c) for c in cur]
+        return [self.whole_struct(mo, info, x, cur[i] if i < len(cur) else {}) for i, x in enumerate(v)]
 
     def soft(self, ldn):
         """MO the node may already have created itself (system id 1/Default/Base, nothing mandatory or restricted,
@@ -520,6 +581,7 @@ class Replay:
         mo = self.m.mos[k]
         mo["create_attrs"] = OrderedDict((a, mo["attrs"][a]) for a in mo["set"] if a in mo["attrs"])
         self.events.append(("cr", k, self.step, None))
+        self.created_in[k] = self.step
 
     def undo_create(self, k):
         self.m.delete(k)
@@ -851,13 +913,15 @@ class Replay:
             if w in ("scw", "acc", "cvms", "cvcu") or w.startswith("/cm/") or w.startswith("!"):
                 self.left(script, ln, s, {"scw": "hidden parameter (scw)", "cvms": "CV backup", "acc": "MO action", "cvcu": "CV/UP check"}.get(w, "system command"))
                 continue
-            if re.match(r"^(confbd?[+-]|gs[+-])$", low) or re.match(r"^(lt|l|y|return|get|lget|ld|print|end|rbs|wait|st|lst)\b", low) or low.startswith("//"):
+            if re.match(r"^(confbd?[+-]|gs[+-])$", low) or re.match(r"^(lt|l|y|return|get|lget|hget|ld|print|end|rbs|wait|st|lst)\b", low) or low.startswith("//"):
                 continue
             self.left(script, ln, s, "command not interpreted")
 
 
 # ---------------------------------------------------------------------------------------------------- XML output
 def _render(model, node, mo, name, v):
+    if isinstance(v, Cleared):          # emptied sequence: delete the attribute (the node refuses deletes of single entries)
+        return f'<{name} xc:operation="delete"/>'
     if isinstance(v, list):
         return "".join(_render(model, node, mo, name, x) for x in v)
     if isinstance(v, dict):
@@ -870,7 +934,12 @@ def _render(model, node, mo, name, v):
     return f"<{name}>{escape(str(v))}</{name}>"
 
 
-def emit(model, node, events, deleted_existing):
+def _step_id(step):
+    """RPC id prefix: NR steps '01'..'06RIM' -> NR01.., named steps ('LTE01') as they are"""
+    return f"NR{step}" if step[:1].isdigit() else step
+
+
+def emit(model, node, events, deleted_existing, pull_back=None):
     """RPCs in script execution order (like running 01..06 in AMOS):
     - an MO is created where its crn/cr (or XML create) is, with the values given at creation
     - every later change is placed where the script changes that attribute for the last time (final value)
@@ -917,6 +986,18 @@ def emit(model, node, events, deleted_existing):
                 t = model.resolve(x.raw, x.ctx)
                 if t is not None:
                     yield t.lower()
+    # pull_back {later step: earlier step}: an attribute the later step changes last that the earlier step writes too is
+    # written where the earlier step writes it, with the final value (KK 06: VoNR values in the RIM part, not twice)
+    for later, earlier in (pull_back or {}).items():
+        for key, n in list(last_set.items()):
+            if events[n][2] != later:
+                continue
+            k = key[0]
+            back = [i for i, e in enumerate(events[:n]) if e[0] == "set" and e[1] == k and e[2] == earlier
+                    and (group_rx(k, e[3]) or e[3]) == key[1]]
+            vals = [mos[k]["attrs"].get(a) for a in mos[k]["attrs"] if (group_rx(k, a) or a) == key[1]] if k in mos else []
+            if back and not any(last_cr.get(t, -1) > back[-1] for v in vals for t in targets(v)):
+                last_set[key] = back[-1]
     referenced = {t for mo in mos.values() for d in (mo["attrs"], mo.get("create_attrs") or {}) for v in d.values() for t in targets(v)}
 
     def build(needed):
@@ -1079,7 +1160,7 @@ def emit(model, node, events, deleted_existing):
                     body.append(f"<{c}{op}><{idtag}>{escape(i)}</{idtag}>")
                     tags.append(c)
                 body.append("".join(f"</{c}>" for c in reversed(tags)))
-            rpcs.append(rpc(f"NR{step}_{count[step]:03d}_delete", body))
+            rpcs.append(rpc(f"{_step_id(step)}_{count[step]:03d}_delete", body))
             continue
         order = {}
         for n, k in enumerate(g["keys"]):
@@ -1093,7 +1174,7 @@ def emit(model, node, events, deleted_existing):
         name = mos[g["top"]]["ldn"].split("=")[0] if g["top"] else "ManagedElement"
         if g["solo"]:
             name = mos[g["keys"][0]]["ldn"].rsplit(",", 1)[-1].replace("=", "_")
-        rpcs.append(rpc(f"NR{step}_{count[step]:03d}_{name}", body, root))
+        rpcs.append(rpc(f"{_step_id(step)}_{count[step]:03d}_{name}", body, root))
     return HELLO + "".join(rpcs) + CLOSE, order_problems
 
 
@@ -1241,18 +1322,19 @@ def _lock_targets(model, k, pre):
     return cells or [c for c in mos if _CELL.match(c) and c.split(",")[0] == k.split(",")[0]]
 
 
-def lock_sections(model, node, text, prefix):
+def lock_sections(model, node, text, prefix, all_cells=True):
     """Cell Lock RPCs before and Cell Unlock RPCs after the RPCs in text (one XML file): every NR cell (NRCellDU) plus
     any other MO a change in text needs LOCKED (MOM 'Precondition:' of 25.Q2, e.g. NRCellDU sibType2 /
     secondaryCellOnly, NRCellCU transmitSib2 -> its NRCellDU) - a cell unlocked on the node made these RPCs fail
     (BGR583). Locking a LOCKED MO does nothing. MOs created in the file are left alone (created LOCKED by the XML).
     NRCellDU unlocks inside text (06 RIM deb) are taken out: the cells are unlocked only at the end.
+    all_cells=False (07 VoNR on a site in service): only the MOs a change needs LOCKED, nothing if none.
     -> (lock_text, text, unlock_text)"""
-    pre_all = _load("preconditions_25Q2.json.gz")
+    pre_all = _load(MOM_FILES.get(getattr(model, "circle", "KK"), MOM_DEFAULT)[1])
     mom, mos = model.mom, model.mos
     created, need, last_change, unlocked_at = set(), OrderedDict(), {}, {}
     for c in mos:
-        if _CELL.match(c) and c.startswith("gnbdufunction="):
+        if all_cells and _CELL.match(c) and c.startswith("gnbdufunction="):
             need[c] = "NR cell lock section"
             last_change[c] = -1
     for n, (mid, body) in enumerate(re.findall(r'<rpc message-id="([^"]+)"(.*?)</rpc>', text, re.S)):
@@ -1328,16 +1410,19 @@ def lock_sections(model, node, text, prefix):
     return lock, text, unlock
 
 
-def amos_to_netconf_model(node, initial_xml, steps, system="KK"):
-    """amos_to_netconf + the final model (for lock_sections)"""
-    mom = Mom(_load("mom_25Q2.json.gz"))
+def amos_to_netconf_model(node, initial_xml, steps, system="KK", only_changes=(), pull_back=None):
+    """amos_to_netconf + the final model (for lock_sections); only_changes: steps whose sets are written only where
+    they change the value set before; pull_back {later step: earlier step}: see emit"""
+    mom = Mom(_load(MOM_FILES.get(system, MOM_DEFAULT)[0]))
     sysdata = _load(f"system_mos_{system}.json.gz")["templates"]
     model = Model(mom, _system_templates(mom, sysdata))
+    model.circle = system
     for text in initial_xml:
         load_netconf(model, text, "initial")
     for mo in model.mos.values():          # initial state: nothing is 'set by the scripts'
         mo["set"], mo["created"] = [], False
     rp = Replay(model)
+    rp.only_changes = set(only_changes)
     for name, kind, text in steps:
         rp.step = name
         if kind == "xml":
@@ -1346,7 +1431,7 @@ def amos_to_netconf_model(node, initial_xml, steps, system="KK"):
         else:
             rp.run(list(enumerate(text.replace("\r\n", "\n").split("\n"), 1)), name)
     _node_rules(model, rp)
-    xml_text, order_problems = emit(model, node, rp.events, rp.deleted_existing)
+    xml_text, order_problems = emit(model, node, rp.events, rp.deleted_existing, pull_back)
     for ldn, a, target in order_problems:
         rp.left("XML", 0, f"{ldn} {a} -> {target}", "reference to an MO that is created later in the XML - check order")
     return xml_text, rp.leftover, rp.notes, model
