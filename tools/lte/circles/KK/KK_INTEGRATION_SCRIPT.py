@@ -10325,7 +10325,7 @@ KK_LTE_CONFIG_XML_SITE = """<?xml version="1.0" encoding="UTF-8"?>
 <pagingId>1</pagingId>
 <defaultPagingCycle>128</defaultPagingCycle>
 <defaultPagingCycleNbIot>256</defaultPagingCycleNbIot>
-<maxNoOfPagingRecords>16</maxNoOfPagingRecords>
+<maxNoOfPagingRecords>{maxNoOfPagingRecords}</maxNoOfPagingRecords>
 <maxNoOfPagingRecordsNb>3</maxNoOfPagingRecordsNb>
 <nB>T1_2</nB>
 <nBBr>T1_64</nBBr>
@@ -16066,11 +16066,11 @@ KK_LTE_CONFIG_XML_TDD_CELL = """
 <noConsecutiveSubframes>SF1</noConsecutiveSubframes>
 <noOfChannelSelectionSets>6</noOfChannelSelectionSets>
 <noOfEnhAdptReTxCand>-1</noOfEnhAdptReTxCand>
-<noOfPucchCqiUsers>350</noOfPucchCqiUsers>
-<noOfPucchFormat1PrbPairsPerFrameConf>3</noOfPucchFormat1PrbPairsPerFrameConf>
-<noOfPucchFormat2PrbPairsPerFrameConf>1</noOfPucchFormat2PrbPairsPerFrameConf>
+<noOfPucchCqiUsers>620</noOfPucchCqiUsers>
+<noOfPucchFormat1PrbPairsPerFrameConf>10</noOfPucchFormat1PrbPairsPerFrameConf>
+<noOfPucchFormat2PrbPairsPerFrameConf>4</noOfPucchFormat2PrbPairsPerFrameConf>
 <noOfPucchFormat3PrbPairs>0</noOfPucchFormat3PrbPairs>
-<noOfPucchSrUsers>440</noOfPucchSrUsers>
+<noOfPucchSrUsers>710</noOfPucchSrUsers>
 <noOfUlImprovedUe>2</noOfUlImprovedUe>
 <nonCaAnModeF3Enable>false</nonCaAnModeF3Enable>
 <nonCaAnModeMuxEnable>false</nonCaAnModeMuxEnable>
@@ -18188,6 +18188,7 @@ KK_LTE_CONFIG_XML_GPL_CELL_VALUES = {'FDD': {'F1_A': {'configuredMaxTxPower': '8
                   'noOfRxAntennas': '2',
                   'noOfTxAntennas': '2'},
          'F8_A': {'gpl1': '12000',
+                  'gpl3': '2',      # 5 MHz: PUCCH format 1 PRB pairs 2 (as KK-LMYE883-1)
                   'gpl10': '46',
                   'gpl12': '10',
                   'gpl14': '34',
@@ -18233,6 +18234,7 @@ KK_LTE_CONFIG_XML_GPL_CELL_VALUES = {'FDD': {'F1_A': {'configuredMaxTxPower': '8
                   'gpl8': '-64',
                   'gpl9': '4'},
          'F8_B': {'gpl1': '12000',
+                  'gpl3': '2',      # 5 MHz: PUCCH format 1 PRB pairs 2 (as KK-LMYE883-1)
                   'gpl10': '46',
                   'gpl12': '10',
                   'gpl14': '34',
@@ -18278,6 +18280,7 @@ KK_LTE_CONFIG_XML_GPL_CELL_VALUES = {'FDD': {'F1_A': {'configuredMaxTxPower': '8
                   'gpl8': '-64',
                   'gpl9': '4'},
          'F8_C': {'gpl1': '12000',
+                  'gpl3': '2',      # 5 MHz: PUCCH format 1 PRB pairs 2 (as KK-LMYE883-1)
                   'gpl10': '46',
                   'gpl12': '10',
                   'gpl14': '34',
@@ -18542,3 +18545,424 @@ KK_LTE_CONFIG_XML_EXTERNAL_ALARM = """
 ]]>]]>
 """
 
+
+
+# VONR_ACTIVATION section of 06_{node}_RIM_&_VONR_Activation (KK, NETCONF via amos_netconf): VoNR activation replayed on
+# top of 04/05/06 5G - MOs those already created are not created again, values they already set are not written again
+# (views.kk_rim_vonr_parts; a parameter the RIM part sets too gets the VoNR value there).
+# Cell lock/unlock comes from engine.lock_sections (only where a change needs it), so no lbl/ldeb here.
+KK_VONR_ACTIVATION = """lt all
+rbs
+rbs
+
+confb+
+gs+
+
+## VONR Features
+set FeatureState=CXC4012592 featureState 1
+set FeatureState=CXC4012538 featureState 1
+set FeatureState=CXC4012548 featureState 1
+set FeatureState=CXC4012621 featureState 1
+set FeatureState=CXC4012813 featureState 1
+set FeatureState=CXC4012549 featureState 1
+set FeatureState=CXC4012591 featureState 1
+set FeatureState=CXC4012637 featureState 1
+set FeatureState=CXC4012680 featureState 1
+set FeatureState=CXC4012638 featureState 1
+set FeatureState=CXC4012688 featureState 1
+set FeatureState=CXC4012547 featureState 1
+
+## MCPC-VONR
+crn GNBCUCPFunction=1,Mcpc=1,McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=VONR
+ueConfGroupList
+ueGroupList 1
+end
+
+lt all
+
+set GNBCUCPFunction=1,Mcpc=1,McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=VONR mcpcQuantityList 0
+set GNBCUCPFunction=1,Mcpc=1,McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=VONR rsrpSearchZone hysteresis=10,threshold=-99,timeToTrigger=320,timeToTriggerA1=-1
+set GNBCUCPFunction=1,Mcpc=1,McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=VONR rsrpCandidateA5 hysteresis=10,threshold1=-99,threshold2=-101,timeToTrigger=640
+set GNBCUCPFunction=1,Mcpc=1,McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=VONR rsrpCandidateB2 hysteresis=10,threshold1=-99,threshold2EUtra=-113,timeToTrigger=640
+set GNBCUCPFunction=1,Mcpc=1,McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=VONR rsrpCritical hysteresis=10,threshold=-111,timeToTrigger=320,timeToTriggerA1=-1
+set GNBCUCPFunction=1,Mcpc=1,McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=VONR rsrpCriticalEnabled true
+set GNBCUCPFunction=1,Mcpc=1,McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=VONR rsrpSearchTimeRestriction -1
+set GNBCUCPFunction=1,Mcpc=1,McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=VONR ueGroupList 1
+
+
+## MCFB-VONR
+cr GNBCUCPFunction=1,Mcfb=1
+cr GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1
+
+wait 5
+
+
+lt all
+
+set NRCellCU=.*  mcfbCellProfileRef Mcfb=1,McfbCellProfile=1
+set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFallbackOperationEm 1
+set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFbTargetSearchTimer 500
+set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFbAtSessionSetup 1
+set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base rejectVoiceIncHoAtEpsFb false
+set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base triggerQuantity 0
+set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base rsrpCriticalCoverage hysteresis=10,threshold=-109,timeToTrigger=160,timeToTriggerA1=-1
+set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base rsrpCellCandidate hysteresis=10,threshold=-113,timeToTrigger=40
+set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base rsrqCellCandidate hysteresis=10,threshold=-195,timeToTrigger=40
+set Mcfb=1  voiceEpsFbPossible true
+
+set  GNBCUCPFunction=1,Mcfb=Default,McfbCellProfile=1,McfbCellProfileUeCfg=Base triggerQuantity 0
+set  GNBCUCPFunction=1,Mcfb=Default,McfbCellProfile=1,McfbCellProfileUeCfg=Base rsrpCriticalCoverage hysteresis=10,threshold=-109,timeToTrigger=160,timeToTriggerA1=-1
+set  GNBCUCPFunction=1,Mcfb=Default,McfbCellProfile=1,McfbCellProfileUeCfg=Base rsrpCellCandidate hysteresis=10,threshold=-113,timeToTrigger=40
+
+## epsFallbackOperation (all Mcfb profiles)
+set Mcfb=1,McfbCellProfile=.*,McfbCellProfileUeCfg=.*  epsFallbackOperation  3
+
+set GNBCUCPFunction=1,UeCC=1,Rohc=1,RohcUeCfg=Base rohc5qiList 1
+
+cr GNBDUFunction=1,QosPriorityMapping=1
+cr GNBDUFunction=1,QosPriorityMapping=1,PriorityDomainMapping=1
+set QosPriorityMapping=1,PriorityDomainMapping=1            priorityDomain 16
+
+cr GNBDUFunction=1,UeCC=1,SrHandling=5QI_5
+
+wait 5
+
+lt all
+set GNBDUFunction=1,UeCC=1,SrHandling=5QI_5,SrHandlingUeCfg=Base srHandlingMode  1
+set GNBDUFunction=1,UeCC=1,SrHandling=5QI_5,SrHandlingUeCfg=Base conditional5qi  1
+set GNBDUFunction=1,DU5qiTable=1,DU5qi=5 srHandlingRef GNBDUFunction=1,UeCC=1,SrHandling=5QI_5
+set DU5qiTable=1,DU5qi=1                                    drbRlcInDu5qiEnabled false
+
+
+## RLC - VoNR (incl. tPollRetransmit)
+crn GNBDUFunction=1,UeCC=1,RadioLinkControl=1,DrbRlc=Default,DrbRlcUeCfg=VoNR
+tReassemblyDl 65
+tReassemblyUl 65
+rlcSNLength 12
+ueConfGroupList 1
+ueGroupList 1
+end
+
+set GNBDUFunction=1,UeCC=1,RadioLinkControl=1,DrbRlc=Default,DrbRlcUeCfg=VoNR tPollRetransmitDl 40
+set GNBDUFunction=1,UeCC=1,RadioLinkControl=1,DrbRlc=Default,DrbRlcUeCfg=VoNR tPollRetransmitUl 40
+
+cr GNBCUCPFunction=1,EmCall=1
+
+wait 5
+
+lt all
+
+set GNBCUCPFunction=1,EmCall=1 arpPrioEm5qi1List 1
+set GNBCUCPFunction=1,EmCall=1 arpPrioEm5qi5List 1
+
+set NRCellDU=.* drxProfileRef GNBDUFunction=1,UeCC=1,DrxProfile=Default
+set NRCellDU=.* drxProfileEnabled true
+set NRCellDU=.* imsEmSupportEnabled true
+
+crn GNBDUFunction=1,UeCC=1,DrxProfile=Default,DrxProfileUeCfg=VoNR
+drxEnabled true
+drxInactivityTimer 5
+drxLongCycle 4
+drxOnDurationTimer 36
+drxRetransmissionTimerDl 6
+drxRetransmissionTimerUl 6
+prefUeGroupList
+ueGroupList 1
+userLabel
+end
+gs-
+
+
+crn GNBCUCPFunction=1,UeCC=1,InactivityProfile=Default,InactivityProfileUeCfg=VoNR
+tInactivityTimer 15
+tInactivityTimerEndcSn 10
+tInactivityTimerNrdcSn 10
+ueGroupList 1
+end
+
+crn GNBCUCPFunction=1,UeGroupSelection=1
+validityTimeEmergencyCause 6
+validityTimeHighPrioAccCause 6
+validityTimeMcsPrioAccCause 6
+validityTimeMoDataCause 6
+validityTimeMoSignallingCause 6
+validityTimeMoSmsCause 6
+validityTimeMoVideoCallCause 6
+validityTimeMoVoiceCallCause 6
+validityTimeMpsPrioAccCause 6
+validityTimeMtAccessCause 6
+validityTimePagingPrio 6
+end
+
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,UeGroupSelectionProfile=VoNR
+selectionCriteria 5qi==1
+ueGroupId 1
+ueGroupPriority 65535
+end
+
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,UeServiceGroupDefinition=VoNR
+selectionCriteria 5qi==1
+ueServiceGroupId 1
+ueServiceGroupPriority 65535
+end
+
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,PrefUeGroupSelectionProfile=VoNR
+prefUeGroupId 1
+prefUeGroupPriority 65535
+selectionCriteria 5qi==1
+end
+
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,UeMobilityGroupDefinition=VoNR
+ueMobilityGroupId 1
+ueMobilityGroupPriority  65535
+selectionCriteria 5qi==1
+end
+
+
+# BWP - Define VoNR-specific BWP Settings -
+crn GNBDUFunction=1,BWPSet=100,BWPSetUeCfg=vonr
+ueConfGroupList 1
+bwpSwitchingFilterRelaxation false
+end
+
+crn GNBDUFunction=1,BWPSet=100,BWPSetUeCfg=vonr,BWPSetCfg=0
+bWPDlRef BWP=DenseSS_DL_100
+bWPUlRef BWP=DenseSS_UL_100
+end
+
+cr GNBDUFunction=1,BWPSet=100,DynPowerOpt=vonr
+
+crn GNBDUFunction=1,BWPSet=100,BWPSetUeCfg=vonr,BWPSetCfg=1
+bWPDlRef BWP=SparseSS_DL_100
+bWPUlRef BWP=SparseSS_UL_100
+dynPowerOptRef BWPSet=100,DynPowerOpt=vonr
+end
+
+# BWP - Change threshold for BWP (VONR Power Optimiser)
+setm GNBDUFunction=1,BWPSet=100,DynPowerOpt=vonr downDlThreshold 0 downUlThreshold 0 upDlThreshold 0 upUlThreshold 0
+
+################################# add on parameter #############################################
+
+gs+
+confb+
+
+crn GNBCUCPFunction=1,UeCC=1,Rohc=1,RohcUeCfg=Base
+rohc5qiList 1
+userLabel
+end
+
+set GNBCUCPFunction=1,UeCC=1,Rohc=1,RohcUeCfg=Base rohc5qiList 1
+
+crn GNBDUFunction=1,UeCC=1,HARQ=1,HarqUeCfg=VoNR
+dlHarqMode 1
+ulHarqMode 1
+end
+
+crn GNBDUFunction=1,UeCC=1,Bsr=1,BsrUeCfg=VoNR
+srGrantSize 840
+reTxBsrTimer 80
+end
+
+set GNBDUFunction=1,UeCC=1,UeBb=1,UeBbProfile=Default,UeBbProfileUeCfg=MBB ueConfGroupList
+crn GNBDUFunction=1,UeCC=1,UeBb=1,UeBbProfile=Default,UeBbProfileUeCfg=VoNR
+ueConfGroupList 1
+ueGroupList 1
+end
+lt all
+set GNBDUFunction=1,UeCC=1,UeBb=1,UeBbProfile=Default,UeBbProfileUeCfg=VoNR ueGroupList
+set GNBDUFunction=1,UeCC=1,UeBb=1,UeBbProfile=Default,UeBbProfileUeCfg=VoNR prefUeGroupList 1
+set UeBbProfile=Default,UeBbProfileUeCfg=VoNR bsrUeCfgRef GNBDUFunction=1,UeCC=1,Bsr=1,BsrUeCfg=VoNR
+set UeBbProfile=Default,UeBbProfileUeCfg=VoNR harqUeCfgRef GNBDUFunction=1,UeCC=1,Harq=1,HarqUeCfg=VoNR
+cr GNBDUFunction=1,UeCC=1,LinkAdaptation=1,LinkAdaptationUeCfg=VoNR
+cr GNBDUFunction=1,UeCC=1,LinkAdaptation=1,LinkAdaptationUeCfg=VoNR,DlLinkAdaptation=1
+cr GNBDUFunction=1,UeCC=1,LinkAdaptation=1,LinkAdaptationUeCfg=VoNR,PdcchLinkAdaptation=1
+cr GNBDUFunction=1,UeCC=1,LinkAdaptation=1,LinkAdaptationUeCfg=VoNR,UlLinkAdaptation=1
+set GNBDUFunction=1,UeCC=1,UeBb=1,UeBbProfile=Default,UeBbProfileUeCfg=VoNR linkAdaptationUeCfgRef GNBDUFunction=1,UeCC=1,LinkAdaptation=1,LinkAdaptationUeCfg=VoNR
+## Missing parameter for Link Adaptation ###
+set GNBDUFunction=1,UeCC=1,LinkAdaptation=1,LinkAdaptationUeCfg=VoNR ulMcsTable 0
+set GNBDUFunction=1,UeCC=1,LinkAdaptation=1,LinkAdaptationUeCfg=VoNR DlMcsTable 0
+set GNBDUFunction=1,UeCC=1,LinkAdaptation=1,LinkAdaptationUeCfg=VoNR linkAdaptationUeMode 3
+set GNBDUFunction=1,UeCC=1,LinkAdaptation=1,LinkAdaptationUeCfg=VoNR,DlLinkAdaptation=1 dlMaxMcsIndex 16
+set GNBDUFunction=1,UeCC=1,LinkAdaptation=1,LinkAdaptationUeCfg=VoNR,DlLinkAdaptation=1 dlBlerTarget 100
+set GNBDUFunction=1,UeCC=1,LinkAdaptation=1,LinkAdaptationUeCfg=VoNR,UlLinkAdaptation=1 ulBlerTarget 100
+set GNBDUFunction=1,UeCC=1,LinkAdaptation=1,LinkAdaptationUeCfg=VoNR,UlLinkAdaptation=1 ulMinTbs -1
+set GNBDUFunction=1,UeCC=1,LinkAdaptation=1,LinkAdaptationUeCfg=VoNR,UlLinkAdaptation=1 ulMaxMcsIndex 16
+set GNBDUFunction=1,UeCC=1,LinkAdaptation=1,LinkAdaptationUeCfg=VoNR,UlLinkAdaptation=1 ulSinrBackoff 0
+set GNBDUFunction=1,UeCC=1,UlServiceDefinition=1,UlServiceDefinitionUeCfg=VoNR,UlService=1 ulService5qi 1
+gs-
+setm GNBDUFunction=1,UeCC=1,UlServiceDefinition=1,UlServiceDefinitionUeCfg=VoNR,UlService=1 ulServicePacketInterval 20 ulServicePacketSize 75
+set GNBDUFunction=1,UeCC=1,UlServiceDefinition=1,UlServiceDefinitionUeCfg=VoNR,UlService=1 ulPacketPredictionMode 1
+
+crn GNBDUFunction=1,UeCC=1,PuschRep=Default,PuschRepUeCfg=VoNR
+prefUeGroupList
+puschRepMode 1
+ueConfGroupList 1
+ueGroupList 1
+userLabel
+end
+set GNBDUFunction=1,UeCC=1,PuschRep=Default,PuschRepUeCfg=VoNR ueGroupList 1
+set GNBDUFunction=1,UeCC=1,PuschRep=Default,PuschRepUeCfg=VoNR prefUeGroupList 1
+
+## UeMCEUtranFreqRelProfile (KK) - connModeAllowedPCell / connModePrioPCell (IRAT Priority for VONR) / blindRwrAllowed
+cr GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L1800
+cr GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L2100
+cr GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L900
+cr GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L2300_15_1_ULS
+cr GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L2300_15_2_ULS
+cr GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L2300_15_1
+cr GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L2300_15_2
+lt all
+
+crn GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L1800,UeMCEUtranFreqRelProfileUeCfg=VoNR
+blindRwrAllowed                      true
+connModeAllowedPCell                 true
+connModePrioPCell                    6
+prefUeGroupList
+ueConfGroupList                      1
+ueGroupList                          1
+userLabel
+end
+
+crn GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L2100,UeMCEUtranFreqRelProfileUeCfg=VoNR
+blindRwrAllowed                      true
+connModeAllowedPCell                 true
+connModePrioPCell                    5
+prefUeGroupList
+ueConfGroupList                      1
+ueGroupList                          1
+userLabel
+end
+
+crn GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L900,UeMCEUtranFreqRelProfileUeCfg=VoNR
+blindRwrAllowed                      false
+connModeAllowedPCell                 true
+connModePrioPCell                    4
+prefUeGroupList
+ueConfGroupList                      1
+ueGroupList                          1
+userLabel
+end
+
+crn GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L2300_15_1_ULS,UeMCEUtranFreqRelProfileUeCfg=VoNR
+blindRwrAllowed                      false
+connModeAllowedPCell                 true
+connModePrioPCell                    3
+prefUeGroupList
+ueConfGroupList                      1
+ueGroupList                          1
+userLabel
+end
+
+crn GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L2300_15_2_ULS,UeMCEUtranFreqRelProfileUeCfg=VoNR
+blindRwrAllowed                      false
+connModeAllowedPCell                 true
+connModePrioPCell                    3
+prefUeGroupList
+ueConfGroupList                      1
+ueGroupList                          1
+userLabel
+end
+
+crn GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L2300_15_1,UeMCEUtranFreqRelProfileUeCfg=VoNR
+blindRwrAllowed                      false
+connModeAllowedPCell                 false
+connModePrioPCell                    1
+prefUeGroupList
+ueConfGroupList                      1
+ueGroupList                          1
+userLabel
+end
+
+crn GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L2300_15_2,UeMCEUtranFreqRelProfileUeCfg=VoNR
+blindRwrAllowed                      false
+connModeAllowedPCell                 false
+connModePrioPCell                    1
+prefUeGroupList
+ueConfGroupList                      1
+ueGroupList                          1
+userLabel
+end
+
+set GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=Default,UeMCEUtranFreqRelProfileUeCfg=VoNR blindRwrAllowed false
+
+## EUtranFreqRelation -> UeMCEUtranFreqRelProfile (KK EARFCNs)
+set NRCellCU=.*,EUtranFreqRelation=1301 ueMCEUtranFreqRelProfileRef UeMC=1,UeMCEUtranFreqRelProfile=L1800
+set NRCellCU=.*,EUtranFreqRelation=240 ueMCEUtranFreqRelProfileRef UeMC=1,UeMCEUtranFreqRelProfile=L2100
+set NRCellCU=.*,EUtranFreqRelation=3672 ueMCEUtranFreqRelProfileRef UeMC=1,UeMCEUtranFreqRelProfile=L900
+set NRCellCU=.*,EUtranFreqRelation=39126 ueMCEUtranFreqRelProfileRef UeMC=1,UeMCEUtranFreqRelProfile=L2300_15_1_ULS
+set NRCellCU=.*,EUtranFreqRelation=39276 ueMCEUtranFreqRelProfileRef UeMC=1,UeMCEUtranFreqRelProfile=L2300_15_2_ULS
+set NRCellCU=.*,EUtranFreqRelation=39125 ueMCEUtranFreqRelProfileRef UeMC=1,UeMCEUtranFreqRelProfile=L2300_15_1
+set NRCellCU=.*,EUtranFreqRelation=39275 ueMCEUtranFreqRelProfileRef UeMC=1,UeMCEUtranFreqRelProfile=L2300_15_2
+rdel UeMCEUtranFreqRelProfile=TDD
+
+## VoicePrio (EPSFB Prio)
+set NRCellCU=KK_.*,EUtranFreqRelation=1301 voicePrio 6
+set NRCellCU=KK_.*,EUtranFreqRelation=240 voicePrio 5
+set NRCellCU=KK_.*,EUtranFreqRelation=3672 voicePrio 4
+set NRCellCU=KK_.*,EUtranFreqRelation=39126 voicePrio 3
+set NRCellCU=KK_.*,EUtranFreqRelation=39276 voicePrio 3
+set NRCellCU=KK_.*,EUtranFreqRelation=39125 voicePrio -1
+set NRCellCU=KK_.*,EUtranFreqRelation=39275 voicePrio -1
+
+## DrbData - VoNR
+cr GNBCUCPFunction=1,UeCC=1,DrbData=VoNR
+cr GNBCUCPFunction=1,UeCC=1,DrbData=Default,DrbDataUeCfg=VoNR
+set GNBCUCPFunction=1,UeCC=1,DrbData=Default,DrbDataUeCfg=VoNR ueGroupList 1
+set GNBCUCPFunction=1,UeCC=1,DrbData=Default,DrbDataUeCfg=VoNR userLabel
+set GNBCUCPFunction=1,UeCC=1,DrbData=Default,DrbDataUeCfg=VoNR prefUeGroupList
+set GNBCUCPFunction=1,UeCC=1,DrbData=Default,DrbDataUeCfg=VoNR ueConfGroupList
+set GNBCUCPFunction=1,UeCC=1,DrbData=Default,DrbDataUeCfg=VoNR drbDataUeCfgId drbDataUeCfg=VoNR
+set GNBCUCPFunction=1,UeCC=1,DrbData=Default,DrbDataUeCfg=VoNR drbDlDataDuringHoEnabled TRUE
+set DrbData=VoNR ueConfGroupType 1
+set DrbData=VoNR drbDataId DrbData=Default
+
+set CUCP5qiTable=1,CUCP5qi=5qi1 drbDataRef GNBCUCPFunction=1,UeCC=1,DrbData=VoNR
+
+## VONR_Activation Sample Script: 1_Feature / 2_LTE-NR Priority / 4_NR-NR Refresh (final values; the refresh's
+## relation clean-up - lbl/rdel/ldeb of TermPointToGNodeB, RibTmRelation, NRCellRelation, ExternalGNBCUCPFunction - stays AMOS)
+set FeatureState=CXC4012813 featureState 1
+set EUtranCellFDD=KK_E_.*,UeMeasControl=1 nrB1MeasEnabled true
+set EUtranCellTDD=KK_E_.*,UeMeasControl=1 nrB1MeasEnabled true
+set GNBCUCPFunction=1,AnrFunction=1,AnrFunctionNR=1 anrCgiMeasInterFreqMode 1
+set GNBCUCPFunction=1,AnrFunction=1,AnrFunctionNR=1 anrCgiMeasIntraFreqEnabled true
+set GNBCUCPFunction=1 ribTmAutoMax 5
+
+## Verification
+hget UeMCEUtranFreqRelProfileUeCfg blindRwrAllowed|connModeAllowedPCell|connModePrioPCell
+
+
+confb-
+gs-
+"""
+
+# 2G+4G BBU (Site_Basic ABIS_IP filled + LTE cells): Abis transport + GSM (BtsFunction / GsmSector / AbisIp / Trx)
+# at the bottom of 04 LTE_Config, values as on the integrated 2G+4G site KK-LMYE883-1 (25.Q2)
+KK_BSC_BROKER_IPV6 = "2401:4900:c0:2200:0:0:1000:4"
+KK_BSC_BROKER_IPV4 = "10.58.142.91"
+KK_GSM_FEATURES = ["CXC4012017", "CXC4012026"]     # Mixed Mode Baseband GSM, Mixed Mode Radio GSM for Baseband
+KK_GSM_FEATURES_IPV6 = ["CXC4042824"]              # GSM IPv6 for Baseband 6631
+KK_GSM_TRX_PER_SECTOR = 2
+KK_GSM_TRX = {"arfcnMin": 49, "arfcnMax": 92, "frequencyBand": 8, "configuredMaxTxPower": 20000,
+              "noOfRxAntennas": 2, "noOfTxAntennas": 1, "combinedCellType": "NON_COMBINED_CELL"}
+KK_GSM_ABIS_IP = {"dscpSectorControlUL": 46, "initialRetransmissionPeriod": 1, "keepAlivePeriod": 1,
+                  "maxRetransmission": 5, "retransmissionCap": 4}
+
+# one edit-config RPC of 04 LTE_Config ({body} = the MOs under ManagedElement)
+KK_LTE_CONFIG_XML_RPC = """<rpc message-id="{mid}" xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+<edit-config xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+<target>
+<running/>
+</target>
+<config xmlns:xc="urn:ietf:params:xml:ns:netconf:base:1.0">
+<ManagedElement>
+<managedElementId>{node}</managedElementId>
+{body}</ManagedElement>
+</config>
+</edit-config>
+</rpc>
+]]>]]>
+"""

@@ -172,6 +172,9 @@ def parse_kget(path: Path | str) -> KgetData:
         data.mom_from_log = data.mom is not None
     if data.mom is None:
         data.mom = Mom(_load("mom_25Q2.json.gz"))
+        # kget without 'mom all all': the LOCKED preconditions of the same release (else no Cell Lock section and
+        # e.g. NRCellDU bWPSetRef fails on an unlocked cell)
+        data.preconditions = {(cls, a): t for cls, attrs in _load("preconditions_25Q2.json.gz").items() for a, t in attrs.items()}
     if not data.node:
         for line in lines:
             p = _PROMPT.match(line)

@@ -1870,7 +1870,7 @@ set Transport=1,QosProfiles=1,DscpPcpMap=1 pcp7 20 46
 
 set Router=OAM,DnsClient=1 dscp 28
 
-et Router=.*,InterfaceIPv4= egressQosMarking  QosProfiles=1,DscpPcpMap=1
+set Router=.*,InterfaceIPv4= egressQosMarking  QosProfiles=1,DscpPcpMap=1
 set Router=.*,InterfaceIPv4= ingressQosMarking QosProfiles=1,DscpPcpMap=1
 set Router=LTECP,InterfaceIPv4=TN_E_CP  egressQosMarking  QosProfiles=1,DscpPcpMap=1
 set Router=LTEUP,InterfaceIPv4=TN_E_UP  egressQosMarking  QosProfiles=1,DscpPcpMap=1
@@ -2334,6 +2334,18 @@ gs-
 confb-
 
 
+crn ENodeBFunction=1,EndcProfile=1
+meNbS1TermReqArpLev                  0
+splitNotAllowedUeArpLev              0
+userLabel
+end
+
+crn ENodeBFunction=1,EndcProfile=2
+meNbS1TermReqArpLev                  15
+splitNotAllowedUeArpLev              0
+userLabel
+end
+
 confbd+
 crn ENodeBFunction=1,QciTable=default,QciProfileOperatorDefined=qci30
 absPrioOverride                      0
@@ -2538,20 +2550,8 @@ set EUtranCell.*DD=.*                      endcB1MeasGapConfig 0
 set EUtranCell.*DD=.*                      endcSetupUlBsVolThr 5
 set EUtranCell.*DD=.*                      loopingEndcBackoffDuration 200
 set EUtranCell.*D=.*                      loopingEndcProtectionEnabled true
-set EUtranCell>8DD=.*                      loopingEndcShortScgSessTime 3000
+set EUtranCell.*DD=.*                      loopingEndcShortScgSessTime 3000
 
-
-crn ENodeBFunction=1,EndcProfile=1
-meNbS1TermReqArpLev                  0
-splitNotAllowedUeArpLev              0
-userLabel
-end
-
-crn ENodeBFunction=1,EndcProfile=2
-meNbS1TermReqArpLev                  15
-splitNotAllowedUeArpLev              0
-userLabel
-end
 
 set QciTable=default,QciProfilePredefined=qci5              endcProfileRef    EndcProfile=2
 set QciTable=default,QciProfilePredefined=qci6$             endcProfileRef    EndcProfile=1

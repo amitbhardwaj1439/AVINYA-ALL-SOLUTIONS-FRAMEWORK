@@ -36,7 +36,11 @@ RUNTIME = {"TermPointToSGW", "GtpPath", "SctpAssociation", "X2ULink", "S1ULink",
 SITE_DATA = {"latitude", "longitude", "altitude", "cellid", "celllocalid", "nci", "enbid", "gnbid", "gnbidlength",
              "tac", "nrtac", "physicallayercellid", "physicallayercellidgroup", "physicallayersubcellid", "nrpci",
              "rachrootsequence", "earfcn", "earfcndl", "earfcnul", "arfcndl", "arfcnul", "ssbfrequency",
-             "enodebplmnid", "plmnid", "userlabel", "primaryplmnreserved", "ipv4address", "ipv6address"}
+             "enodebplmnid", "plmnid", "userlabel", "primaryplmnreserved", "ipv4address", "ipv6address",
+             # the cell's own carrier: bandwidth and serving frequency (HSN143-1 40 MHz vs PRE KK-NLMYE883-2 100 MHz:
+             # "bSChannelBwDL must be equal to bSChannelBwUL", NRCellCU nRFrequencyRef -> NRCellRelation mismatch)
+             "dlchannelbandwidth", "ulchannelbandwidth", "channelbandwidth", "bschannelbwdl", "bschannelbwul",
+             "nrfrequencyref"}
 # a cross-site value pointing into these is the site's own wiring (SectorCarrier rfBranchRxRef -> its AntennaUnitGroup)
 SITE_REF_TOPS = ("Equipment=", "Transport=", "NodeSupport=", "SystemFunctions=")
 
@@ -189,6 +193,8 @@ class AuditResult:
     new_mos: list = field(default_factory=list)         # LDNs only in POST
     skipped_neighbours: int = 0
     mapping: list = field(default_factory=list)         # (from, to) applied to PRE
+    template_cells: list = field(default_factory=list)  # (lone POST cell, [PRE cells], MOs checked, values that differ)
+    node_managed: int = 0                               # relation values rewritten by the node - not compared
 
     @property
     def node(self) -> str:
@@ -259,6 +265,57 @@ def _pair_cells(pre_mos, post_mos, token: str) -> list:
     for k in lone_post:
         by_post.setdefault(key(k), []).append(k)
     return [(a[0], by_post[g][0]) for g, a in by_pre.items() if g and len(a) == 1 and len(by_post.get(g, [])) == 1]
+
+
+def _cell_stem(ldn: str) -> str:
+    """cell LDN without its sector: KK_E_F1_OM_BG1359A_A / ..B_B -> KK_E_F1_OM_BG1359, ..xxxxBG1359_C -> ..xxxxBG1359
+    (class prefix kept) - cells of one band / layer of the site"""
+    return re.sub(r"[A-Z]?_[A-Za-z0-9]$", "", ldn)
+
+
+def _template_cells(pre_mos, post_mos) -> list:
+    """POST cells without a PRE cell (BG1359 has 3 NR cells, the PRE site 2) are checked against the PRE cells of the same
+    class and layer: every value all of them (2 or more) have the same - the cell's own name taken out - becomes the
+    PRE value of the lone cell and of the same MO below it (DESManagementFunction=1, NRFreqRelation=..). Site data and
+    cell relations / neighbours are left out. -> [(lone POST cell, [PRE cells], synthesized {ldn: attrs}, attrs that
+    differ between the PRE cells)]"""
+    out = []
+    lone = [k for k in post_mos if CELL_CLASSES.match(k) and k not in pre_mos]
+    for cell in lone:
+        tpl = [k for k in pre_mos if CELL_CLASSES.match(k) and k in post_mos and _cell_stem(k) == _cell_stem(cell)]
+        if len(tpl) < 2:
+            continue
+        names = [t.rsplit("=", 1)[1] for t in tpl]
+        rx = [re.compile(rf"(?<![\w-]){re.escape(n)}(?![\w-])") for n in names]
+        rels = None                                   # relative paths every template cell has
+        for t in tpl:
+            mine = {k[len(t):] for k in pre_mos if k == t or k.startswith(t + ",")}
+            rels = mine if rels is None else rels & mine
+        synth, differ = OrderedDict(), 0
+        own = cell.rsplit("=", 1)[1]
+        for rel in sorted(rels, key=lambda r: r.count(",")):
+            if set(classes_of(rel.lstrip(","))) & (CELL_RELATIONS | NEIGHBOURS):
+                continue
+            vals = [pre_mos[t + rel] for t in tpl]
+            attrs = OrderedDict()
+            for a in vals[0]:
+                if a.lower() in SITE_DATA or any(a not in v for v in vals):
+                    continue
+                norm = {text(_subst(v[a], [(r, "\x00")])) for v, r in zip(vals, rx)}
+                if len(norm) == 1:
+                    attrs[a] = _subst(_subst(vals[0][a], [(rx[0], "\x00")]), [(re.compile("\x00"), own)])
+                else:
+                    differ += 1
+            if attrs or cell + rel in post_mos:          # nothing in common and not on POST: nothing to create
+                synth[cell + rel] = attrs
+        out.append((cell, tpl, synth, differ))
+    return out
+
+
+# relation values the node's own optimisation functions rewrite (lastModification of the POST relation): a correction
+# would be undone by the node (BG1359: loadBalancing set by the audit, LM_MODIFICATION again 30 min later)
+NODE_MANAGED = {"LM_MODIFICATION": {"loadBalancing"}, "MLB_MODIFICATION": {"loadBalancing"},
+                "MRO_MODIFICATION": {"cellIndividualOffsetEUtran"}}
 
 
 RELATION_TARGET = {"NRCellRelation": "nRCellRef", "EUtranCellRelation": "neighborCellRef",
@@ -341,7 +398,11 @@ def run_audit(pre: KgetData, post: KgetData) -> AuditResult:
         named = OrderedDict((_subst(k, rel_rules), _subst(v, rel_rules)) for k, v in named.items())
         mapping.append((f"{len(rel_renames)} cell relations", "POST relation to the same cell"))
     pre_mos = OrderedDict(named)
-    res = AuditResult(pre=pre, post=post, pre_mos=pre_mos, cross_site=cross, mapping=mapping)
+    templates = _template_cells(pre_mos, post.mos)
+    for cell, tpl, synth, differ in templates:
+        pre_mos.update(synth)
+    res = AuditResult(pre=pre, post=post, pre_mos=pre_mos, cross_site=cross, mapping=mapping,
+                      template_cells=[(c, t, len(s), d) for c, t, s, d in templates])
     enb, gnb = _own_ids(post)
     own = {x.lstrip("0") for x in [enb, gnb, *_own_cell_numbers(post.mos, enb).values()] if x}
     mom = post.mom
@@ -367,7 +428,12 @@ def run_audit(pre: KgetData, post: KgetData) -> AuditResult:
         if a_pre is None:
             res.new_mos.append(ldn)
             continue
+        lm = re.search(r"\((\w+)\)", text(a_post.get("lastModification", "")))
+        managed = NODE_MANAGED.get(lm.group(1), set()) if lm and section == CELL_REL else set()
         for attr in list(a_pre) + [a for a in a_post if a not in a_pre]:
+            if attr in managed and attr in a_pre and text(a_pre[attr]) != text(a_post.get(attr)):
+                res.node_managed += 1
+                continue
             sheet = info_sheet(ldn, attr)
             if not sheet and (_readonly(mom, ldn, attr) or _is_key(mom, ldn, attr)):
                 continue
