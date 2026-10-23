@@ -18,7 +18,7 @@ import socket
 import os
 import json
 import re
-from tools.lte.amos_netconf import amos_to_netconf_model, lock_sections
+from tools.lte.amos_netconf import amos_to_netconf, amos_to_netconf_model, lock_sections
 import pandas as pd
 import stat
 import zipfile
@@ -42,6 +42,15 @@ from tools.lte.circles.KK.KK_INTEGRATION_SCRIPT import (
     KK_LTE_CONFIG_XML_UL_COMP_GROUP,
     KK_LTE_CONFIG_XML_ANCHOR_4G_ONLY,
     KK_LTE_CONFIG_XML_EXTERNAL_ALARM,
+    KK_LTE_CONFIG_XML_RPC,
+    KK_BSC_BROKER_IPV4,
+    KK_BSC_BROKER_IPV6,
+    KK_GSM_FEATURES,
+    KK_GSM_FEATURES_IPV6,
+    KK_GSM_TRX_PER_SECTOR,
+    KK_GSM_TRX,
+    KK_GSM_ABIS_IP,
+    KK_VONR_ACTIVATION,
 )
 from tools.lte.circles.KK.KK_COMISSIONING_SCRIPT import (
     KK_SITE_BASIC_SCRIPT_6651,
@@ -61,6 +70,7 @@ from tools.lte.universal_SCRIPTS.UNIVERSAL_SCRIPTS import (
     Vi_tdd_cell_script,
     Vi_fdd_cell_script,
     RRU_2219_B0_B1_B3_2X2,
+    RRUS_2271_B1_2X2,
     RRU_2279_B1_B3_2X2,
     RRU_4412_4418_4427_4428_4471_4X4,
     RRU_6626_6X6,
@@ -245,11 +255,14 @@ from tools.lte.circles.DEL.DEL_COMISSIONING_SCRIPT import (
     DEL_SiteBasic_ipv4_6630,
     DEL_SiteBasic_ipv4_6631,
     DEL_SiteBasic_ipv4_6651,
+    DEL_SiteBasic_ipv4_6655,
     DEL_SiteBasic_ipv6_6303,
+    DEL_SiteBasic_ipv6_6353,
     DEL_SiteBasic_ipv6_6339,
     DEL_SiteBasic_ipv6_6630,
     DEL_SiteBasic_ipv6_6631,
     DEL_SiteBasic_ipv6_6651,
+    DEL_SiteBasic_ipv6_6655,
     DEL_SiteBasic_5216_IPV4,
     DEL_SiteBasic_5216_IPV6,
 )
@@ -560,9 +573,269 @@ def _xml_value(value):
     return int(value) if isinstance(value, float) and value.is_integer() else value
 
 
+def kk_site_basic_piu_bridge(row):
+    """
+    KK Site_Basic PIU + bridge parts (pattern from KK-NLBGR583-1 kget), returned as the template placeholders
+    extra_tn_ports / bridge_config / lte_nr_encapsulation.
+    PIU (PIU_tnPortId, e.g. TN_E): VlanPort {PIU}_PIU on the site's own OAM_vlan, bridged with LTE_NR in Bridge=PIU.
+    Bridge_tnPortId (e.g. TN_IDL_C) filled: each bridge only if its VLAN column is filled - Bridge=CP_N (Bridge_CP_vlan;
+    LTE_NR, {PIU}_PIU and {port}_CP_N, no separate PIU bridge), Bridge=OAM_N (Bridge_OAM_vlan) and Bridge=ABIS_N
+    (Bridge_ABIS_vlan) over tnPortId + Bridge_tnPortId
+    (KK AMOS "PIU_KK_TN_IDL_B TO TN_IDL_C & TN_E PIU" / "Bridge_TN_IDL_B_To_TN_IDL_C"). Bridge_UP_vlan is not used in KK.
+    No PIU and no bridge port: interfaces stay on VlanPort=LTE_NR as before.
+    """
+    def value(col):
+        v = row.get(col)
+        if v is None or pd.isna(v) or str(v).strip().upper() in ("", "NA", "N/A", "NAN"):
+            return None
+        return str(_xml_value(v)).strip()
+
+    fru = row["fieldReplaceableUnitId"]
+    tn_port = row["tnPortId"]
+    piu_port = value("PIU_tnPortId")
+    bridge_port = value("Bridge_tnPortId")
+    oam_vlan = str(_xml_value(row["OAM_vlan"]))
+    cp_vlan = value("Bridge_CP_vlan")
+    # a bridge only when its VLAN is in the RF (HSN143-1: only Bridge_ABIS_vlan -> ABIS_N, no CP_N)
+    cp_bridge = "CP_N" if bridge_port and cp_vlan else "PIU" if piu_port else None
+
+    if not piu_port and not bridge_port:
+        return {"extra_tn_ports": "", "bridge_config": "", "lte_nr_encapsulation": "VlanPort=LTE_NR"}
+
+    def tn_port_xml(port):
+        return (
+            f'\n            <TnPort xmlns="urn:com:ericsson:ecim:ReqTnPort">'
+            f'\n              <tnPortId>{port}</tnPortId>'
+            f'\n              <userLabel>{port}</userLabel>'
+            f'\n            </TnPort>'
+        )
+
+    def ethernet_port_xml(port_id, tn):
+        return (
+            f'\n          <EthernetPort xmlns="urn:com:ericsson:ecim:RtnL2EthernetPort">'
+            f'\n            <ethernetPortId>{port_id}</ethernetPortId>'
+            f'\n            <administrativeState>UNLOCKED</administrativeState>'
+            f'\n            <admOperatingMode>1G_FULL</admOperatingMode>'
+            f'\n            <autoNegEnable>true</autoNegEnable>'
+            f'\n            <encapsulation>ManagedElement=1,Equipment=1,FieldReplaceableUnit={fru},TnPort={tn}</encapsulation>'
+            f'\n            <userLabel>{port_id}</userLabel>'
+            f'\n          </EthernetPort>'
+        )
+
+    def vlan_port_xml(vlan_port_id, ethernet_port, vlan):
+        return (
+            f'\n          <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">'
+            f'\n            <vlanPortId>{vlan_port_id}</vlanPortId>'
+            f'\n            <encapsulation>ManagedElement=1,Transport=1,EthernetPort={ethernet_port}</encapsulation>'
+            f'\n            <isTagged>true</isTagged>'
+            f'\n            <vlanId>{vlan}</vlanId>'
+            f'\n          </VlanPort>'
+        )
+
+    def bridge_xml(bridge_id, vlan_ports):
+        ports = "".join(f'\n            <port>ManagedElement=1,Transport=1,VlanPort={p}</port>' for p in vlan_ports)
+        return (
+            f'\n          <Bridge xmlns="urn:com:ericsson:ecim:RtnBridging">'
+            f'\n            <bridgeId>{bridge_id}</bridgeId>{ports}'
+            f'\n          </Bridge>'
+        )
+
+    extra_tn_ports, bridge_config, cp_ports = "", "", ["LTE_NR"]
+    if piu_port:
+        piu_id = f"{piu_port}_PIU"
+        extra_tn_ports += tn_port_xml(piu_port)
+        bridge_config += ethernet_port_xml(piu_id, piu_port) + vlan_port_xml(piu_id, piu_id, oam_vlan)
+        cp_ports.append(piu_id)
+    if bridge_port:
+        extra_tn_ports += tn_port_xml(bridge_port)
+        bridge_config += ethernet_port_xml(bridge_port, bridge_port)
+        if cp_vlan:
+            bridge_config += vlan_port_xml(f"{bridge_port}_CP_N", bridge_port, cp_vlan)
+            cp_ports.append(f"{bridge_port}_CP_N")
+        for bridge_id, vlan_col in (("OAM_N", "Bridge_OAM_vlan"), ("ABIS_N", "Bridge_ABIS_vlan")):
+            vlan = value(vlan_col)
+            if not vlan:
+                continue
+            vlan_ports = [f"{tn_port}_{bridge_id}", f"{bridge_port}_{bridge_id}"]
+            bridge_config += vlan_port_xml(vlan_ports[0], tn_port, vlan) + vlan_port_xml(vlan_ports[1], bridge_port, vlan)
+            bridge_config += bridge_xml(bridge_id, vlan_ports)
+    if not cp_bridge:
+        return {"extra_tn_ports": extra_tn_ports, "bridge_config": bridge_config, "lte_nr_encapsulation": "VlanPort=LTE_NR"}
+    bridge_config += bridge_xml(cp_bridge, cp_ports)
+    return {"extra_tn_ports": extra_tn_ports, "bridge_config": bridge_config, "lte_nr_encapsulation": f"Bridge={cp_bridge}"}
+
+
+# KK NETCONF XMLs (04 LTE_Config, 04/05/06 5G) are still being tested: written only where the environment variable
+# MNIT_XML_TESTING=1 is set (local Postman testing); without it the KK output is the AMOS scripts + SA inputs as before
+XML_TESTING = True      # Avinya: the KK NETCONF XMLs are always written
+
+
+def _site_value(row, col):
+    """Site_Basic cell as text, None when empty / NA."""
+    v = row.get(col) if row is not None else None
+    if v is None or pd.isna(v) or str(v).strip().upper() in ("", "NA", "N/A", "NAN"):
+        return None
+    return str(_xml_value(v)).strip()
+
+
+def kk_lte_config_xml_gsm(node, site_row, node_cells_df, sef_branches=None):
+    """
+    2G+4G BBU part of 04 LTE_Config (Site_Basic ABIS_IP filled + LTE cells), RPCs GSM_* at the bottom of the file,
+    modelled on KK-LMYE883-1:
+    - GSM features (Mixed Mode Baseband / Radio GSM, + GSM IPv6 for an IPv6 Abis), one RPC each
+    - Abis transport: Router=ABIS with InterfaceIPv4/IPv6=ABIS (by the ABIS_IP address type), default route to ABIS_GW,
+      on Bridge=ABIS_N when the SiteBasic made it (Bridge_tnPortId + Bridge_ABIS_vlan), else on a new
+      VlanPort {tnPortId}_ABIS (ABIS_vlan)
+    - BtsFunction=1 + one GsmSector per L900 (F8) cell: name = site part of the cell name (KK_E_F8_OM_MYE883A_A ->
+      MYE883A), AbisIp=1 to the BSC broker (Site_Basic Broker_IP, else KK_BSC_BROKER_IPV4/IPV6), KK_GSM_TRX_PER_SECTOR Trx on the cell's SectorEquipmentFunction
+      (Rx on its first two RfBranches from SiteEquipment, Tx on the first); created LOCKED, unlocked in the last RPC
+    """
+    abis_ip = _site_value(site_row, "ABIS_IP")
+    if not abis_ip or node_cells_df.empty:
+        return []
+    ipv6 = ":" in abis_ip
+    ip = "IPv6" if ipv6 else "IPv4"
+    abis_gw = _site_value(site_row, "ABIS_GW")
+    tn_port = _site_value(site_row, "tnPortId")
+    me = f"ManagedElement={node}"
+    rpc = lambda mid, body: KK_LTE_CONFIG_XML_RPC.format(mid=mid, node=node, body=body)
+    rpcs = []
+
+    for cxc in KK_GSM_FEATURES + (KK_GSM_FEATURES_IPV6 if ipv6 else []):
+        rpcs.append(rpc(f"GSM_Feature_{cxc}", (
+            "<SystemFunctions>\n<systemFunctionsId>1</systemFunctionsId>\n<Lm>\n<lmId>1</lmId>\n<FeatureState>\n"
+            f"<featureStateId>{cxc}</featureStateId>\n<featureState>ACTIVATED</featureState>\n"
+            "</FeatureState>\n</Lm>\n</SystemFunctions>\n")))
+
+    qos = f"<egressQosMarking>{me},Transport=1,QosProfiles=1,DscpPcpMap=1</egressQosMarking>\n"
+    if _site_value(site_row, "Bridge_tnPortId") and _site_value(site_row, "Bridge_ABIS_vlan"):
+        encapsulation, vlan_port = f"{me},Transport=1,Bridge=ABIS_N", ""
+    else:
+        abis_vlan = _site_value(site_row, "ABIS_vlan")
+        if not abis_vlan or not tn_port:
+            print(f"{node}: ABIS_IP without ABIS_vlan / tnPortId - no Abis / GSM part in 04 LTE_Config")
+            return []
+        encapsulation = f"{me},Transport=1,VlanPort={tn_port}_ABIS"
+        vlan_port = (f'<VlanPort xc:operation="create">\n<vlanPortId>{tn_port}_ABIS</vlanPortId>\n'
+                     f"<encapsulation>{me},Transport=1,EthernetPort={tn_port}</encapsulation>\n{qos}"
+                     f"<isTagged>true</isTagged>\n<userLabel>ABIS</userLabel>\n<vlanId>{abis_vlan}</vlanId>\n</VlanPort>\n")
+    address_ref = f"{me},Transport=1,Router=ABIS,Interface{ip}=ABIS,Address{ip}=ABIS"
+    route_table, default_dst = ("RouteTableIPv6Static", "::/0") if ipv6 else ("RouteTableIPv4Static", "0.0.0.0/0")
+    route_table_id = "r" + route_table[1:] + "Id"
+    route = (f"<{route_table}>\n<{route_table_id}>2</{route_table_id}>\n"
+             f"<Dst>\n<dstId>ABIS</dstId>\n<dst>{default_dst}</dst>\n<NextHop>\n<nextHopId>1</nextHopId>\n"
+             f"<address>{abis_gw}</address>\n<adminDistance>1</adminDistance>\n<bfdMonitoring>true</bfdMonitoring>\n"
+             f"</NextHop>\n</Dst>\n</{route_table}>\n") if abis_gw else ""
+    rpcs.append(rpc("GSM_Abis_Transport", (
+        f"<Transport>\n<transportId>1</transportId>\n{vlan_port}"
+        f'<Router xc:operation="create">\n<routerId>ABIS</routerId>\n'
+        f"<Interface{ip}>\n<interface{ip}Id>ABIS</interface{ip}Id>\n<encapsulation>{encapsulation}</encapsulation>\n"
+        f"{'<dscpNdp>48</dscpNdp>' + chr(10) if ipv6 else ''}{qos}<mtu>1500</mtu>\n"
+        f"<Address{ip}>\n<address{ip}Id>ABIS</address{ip}Id>\n<address>{abis_ip}</address>\n</Address{ip}>\n"
+        f"</Interface{ip}>\n{route}</Router>\n</Transport>\n")))
+
+    sectors = []
+    for _, row in node_cells_df.iterrows():
+        cell = str(row["eUtranCellFDDId"])
+        sef = str(row["sectorEquipmentFunctionId"]).strip()
+        if "_F8_" in cell and len(cell.split("_")) > 2:
+            sectors.append((cell.split("_")[-2], sef, re.sub(r"\D", "", sef)))
+    if not sectors:
+        print(f"{node}: ABIS_IP given but no L900 (F8) cell - Abis transport only, no GsmSector / Trx")
+        return rpcs
+    # BSC broker: Site_Basic Broker_IP, else the common KK broker of the Abis IP version
+    broker = (_site_value(site_row, "Broker_IP") or (KK_BSC_BROKER_IPV6 if ipv6 else KK_BSC_BROKER_IPV4)).split("/")[0]
+    broker_tag = "bscBrokerIpv6Address" if ":" in broker else "bscBrokerIpAddress"
+    abis_settings = "".join(f"<{k}>{v}</{k}>\n" for k, v in KK_GSM_ABIS_IP.items())
+    trx_settings = "".join(f"<{k}>{v}</{k}>\n" for k, v in KK_GSM_TRX.items())
+    bts = "<BtsFunction>\n<btsFunctionId>1</btsFunctionId>\n"
+    rpcs.append(rpc("GSM_BtsFunction", bts + "<userLabel>GSM</userLabel>\n</BtsFunction>\n"))
+    # one RPC per GSM sector: with all AbisIp in one transaction the node checks the first ones against AbisIp not yet
+    # complete and raises "Inconsistent Configuration ... ipv4Address" on them (HSN143-2: A and B, not C), cleared only by a restart
+    for sector, sef, aug in sectors:
+        # Rx on the first two RfBranches of the SEF, Tx on the 1st (Trx 0-1) / 2nd (Trx 2+) as in RfbranchRxTxRef_Settings
+        branches = [re.sub(r"^ManagedElement=[^,]+", me, b) for b in (sef_branches or {}).get(sef, [])][:2]
+        if len(branches) < 2:
+            branches = [f"{me},Equipment=1,AntennaUnitGroup={aug},RfBranch={n}" for n in (1, 2)]
+        body = (f'<GsmSector xc:operation="create">\n<gsmSectorId>{sector}</gsmSectorId>\n<userLabel>{sector}</userLabel>\n'
+                 f"<AbisIp>\n<abisIpId>1</abisIpId>\n<administrativeState>LOCKED</administrativeState>\n"
+                 f"{f'<{broker_tag}>{broker}</{broker_tag}>' + chr(10) if broker else ''}"
+                 f"<gsmSectorName>{sector}</gsmSectorName>\n<{ip.lower()}Address>{address_ref}</{ip.lower()}Address>\n"
+                 f"{abis_settings}</AbisIp>\n")
+        for trx in range(KK_GSM_TRX_PER_SECTOR):
+            body += (f"<Trx>\n<trxId>{trx}</trxId>\n<administrativeState>LOCKED</administrativeState>\n{trx_settings}"
+                     f"<rfBranchRxRef>{branches[0]}</rfBranchRxRef>\n<rfBranchRxRef>{branches[1]}</rfBranchRxRef>\n"
+                     f"<rfBranchTxRef>{branches[0] if trx < 2 else branches[1]}</rfBranchTxRef>\n"
+                     f"<sectorEquipmentFunctionRef>{me},NodeSupport=1,SectorEquipmentFunction={sef}</sectorEquipmentFunctionRef>\n"
+                     f"</Trx>\n")
+        body += "</GsmSector>\n"
+        rpcs.append(rpc(f"GSM_{sector}_create", bts + body + "</BtsFunction>\n"))
+    for sector, _, _ in sectors:
+        unlock = (f"<GsmSector>\n<gsmSectorId>{sector}</gsmSectorId>\n"
+                  f"<AbisIp>\n<abisIpId>1</abisIpId>\n<administrativeState>UNLOCKED</administrativeState>\n</AbisIp>\n"
+                  + "".join(f"<Trx>\n<trxId>{trx}</trxId>\n<administrativeState>UNLOCKED</administrativeState>\n</Trx>\n"
+                            for trx in range(KK_GSM_TRX_PER_SECTOR))
+                  + "</GsmSector>\n")
+        rpcs.append(rpc(f"GSM_{sector}_unlock", bts + unlock + "</BtsFunction>\n"))
+    return rpcs
+
+
+def kk_site_equipment_rf_branches(commissioning_dir):
+    """{SectorEquipmentFunction id: [its rfBranchRef LDNs in order]} from the newest 02 SiteEquipment of the node."""
+    found = [os.path.join(commissioning_dir, f) for f in os.listdir(commissioning_dir) if f.startswith("02_") and "SiteEquipment" in f] \
+        if commissioning_dir and os.path.isdir(commissioning_dir) else []
+    if not found:
+        return {}
+    with open(max(found, key=os.path.getmtime), encoding="utf-8", errors="replace") as file:
+        text = file.read()
+    return {sef: re.findall(r"<rfBranchRef>\s*([^<]+?)\s*</rfBranchRef>", body)
+            for sef, body in re.findall(r"<sectorEquipmentFunctionId>([^<]+)</sectorEquipmentFunctionId>(.*?)</SectorEquipmentFunction>",
+                                        text, re.S)}
+
+
+def kk_sector_carrier_rf_branches(node, node_cells_df, sef_branches):
+    """
+    rfBranchRxRef / rfBranchTxRef of the sector carriers on a radio shared by several sectors (RfbranchRxTxRef_Settings,
+    KK-NLMYE883-2 / KK-LMYE883-1 kgets): per SectorEquipmentFunction the sectors (last part of the cell name: A, B, C, M ...)
+    in order take consecutive branches of the SEF's RfBranch list, as many as their antennas (2T2R -> 2, 4T4R -> 4);
+    every carrier of a sector (all bands) gets the same branches for Rx and Tx. A SEF with one sector using all its
+    branches (2219 / 2271 on S40) gets none, as on the nodes.
+    """
+    body = ""
+    for sef, cells in node_cells_df.groupby(node_cells_df["sectorEquipmentFunctionId"].astype(str).str.strip(), sort=False):
+        branches = sef_branches.get(sef, [])
+        sectors = {}
+        for _, row in cells.iterrows():
+            antennas = max(int(_xml_value(row["noOfTxAntennas"])), int(_xml_value(row["noOfRxAntennas"])))
+            sector = sectors.setdefault(str(row["eUtranCellFDDId"]).split("_")[-1], {"antennas": 0, "carriers": []})
+            sector["antennas"] = max(sector["antennas"], antennas)
+            sector["carriers"].append(_xml_value(row["sectorCarrierId"]))
+        needed = sum(s["antennas"] for s in sectors.values())
+        if not branches or (len(sectors) == 1 and needed == len(branches)):
+            continue
+        if needed > len(branches):
+            print(f"{node}: {sef} has {len(branches)} RfBranches but its sectors need {needed} - no rfBranch refs written")
+            continue
+        start = 0
+        for _, sector in sorted(sectors.items()):
+            refs = [re.sub(r"^ManagedElement=[^,]+", f"ManagedElement={node}", b) for b in branches[start:start + sector["antennas"]]]
+            start += sector["antennas"]
+            for carrier in sector["carriers"]:
+                body += (f"<SectorCarrier>\n<sectorCarrierId>{carrier}</sectorCarrierId>\n"
+                         + "".join(f"<rfBranchRxRef>{r}</rfBranchRxRef>\n" for r in refs)
+                         + "".join(f"<rfBranchTxRef>{r}</rfBranchTxRef>\n" for r in refs)
+                         + "</SectorCarrier>\n")
+    return KK_LTE_CONFIG_XML_RPC.format(mid="SectorCarrier_RfBranch_para", node=node,
+                                        body=f"<ENodeBFunction>\n<eNodeBFunctionId>1</eNodeBFunctionId>\n{body}</ENodeBFunction>\n") if body else ""
+
+
 def write_kk_lte_config_xml(lte_dir, node, enb_id, node_cells_df, current_time, phy_siteid_userlabel, fru_id="BB-1",
-                            has_nr=True):
-    parts = [KK_LTE_CONFIG_XML_SITE.format(node=node, eNBId=_xml_value(enb_id), Phy_SiteID_Userlabel=phy_siteid_userlabel)]
+                            has_nr=True, site_row=None, commissioning_dir=None):
+    # Paging: the node rejects maxNoOfPagingRecords above 7 while a cell is narrower than 10 MHz (L900 5 MHz)
+    bandwidths = pd.to_numeric(node_cells_df.get("dlChannelBandwidth", pd.Series(dtype=float)), errors="coerce").dropna()
+    paging_records = 7 if not bandwidths.empty and bandwidths.min() < 10000 else 16
+    parts = [KK_LTE_CONFIG_XML_SITE.format(node=node, eNBId=_xml_value(enb_id), Phy_SiteID_Userlabel=phy_siteid_userlabel,
+                                           maxNoOfPagingRecords=paging_records)]
     for _, row in node_cells_df.iterrows():
         cell = str(row["eUtranCellFDDId"])
         values = {key: _xml_value(row[key]) for key in [
@@ -590,9 +863,21 @@ def write_kk_lte_config_xml(lte_dir, node, enb_id, node_cells_df, current_time, 
             refs = "\n".join(f"<sectorCarrierRef>ManagedElement={node},ENodeBFunction=1,SectorCarrier={c}</sectorCarrierRef>"
                              for c in carriers)
             parts.append(KK_LTE_CONFIG_XML_UL_COMP_GROUP.format(node=node, group=group, sector_carrier_refs=refs))
+    sef_branches = kk_site_equipment_rf_branches(commissioning_dir)
+    if not node_cells_df.empty:
+        parts.append(kk_sector_carrier_rf_branches(node, node_cells_df, sef_branches))
+    # SiteEquipment creates the SectorEquipmentFunctions LOCKED: unlock the ones of the LTE cells (+ GSM Trx on L900)
+    sefs = list(dict.fromkeys(str(s).strip() for s in node_cells_df.get("sectorEquipmentFunctionId", []) if not pd.isna(s)))
+    if sefs:
+        parts.append(KK_LTE_CONFIG_XML_RPC.format(mid="SectorEquipmentFunction_unlock_para", node=node, body=(
+            "<NodeSupport>\n<nodeSupportId>1</nodeSupportId>\n"
+            + "".join(f"<SectorEquipmentFunction>\n<sectorEquipmentFunctionId>{s}</sectorEquipmentFunctionId>\n"
+                      f"<administrativeState>UNLOCKED</administrativeState>\n</SectorEquipmentFunction>\n" for s in sefs)
+            + "</NodeSupport>\n")))
     if not has_nr:          # 5G sites get the anchor / termpoint part from NR 03 in 04 5G_Config
         parts.append(KK_LTE_CONFIG_XML_ANCHOR_4G_ONLY.format(node=node))
     parts.append(KK_LTE_CONFIG_XML_EXTERNAL_ALARM.format(node=node, fru=fru_id))
+    parts.extend(kk_lte_config_xml_gsm(node, site_row, node_cells_df, sef_branches))     # 2G+4G BBU only
     parts.append(KK_LTE_CONFIG_XML_CLOSE)
     with open(os.path.join(lte_dir, f"04_{node}_LTE_Config_{current_time}.xml"), "w") as file:
         file.write(_kk_lte_config_rpc_order("".join(parts)))
@@ -604,13 +889,16 @@ def _kk_lte_config_rpc_order(xml_text):
       instead of rolling back every feature activation
     - the feature RPCs follow the RPC that creates ENodeBFunction, and all cell creates come before all cell
       parameter RPCs: the node creates the children of a new MO (QciTable, UeMeasControl, ...) in its own
-      transaction just after the create, and touching them in the very next RPC collides with that"""
+      transaction just after the create, and touching them in the very next RPC collides with that
+    - the 2G+4G part (GSM_*) at the very end"""
     first = xml_text.index("<rpc ")
     hello = xml_text[:first]
     rpcs = re.findall(r'(<rpc message-id="([^"]*)".*?</rpc>\s*\]\]>\]\]>\n?)', xml_text[first:], re.S)
-    site, features, creates, paras, closing = [], [], [], [], []
+    site, features, creates, paras, gsm, closing = [], [], [], [], [], []
     for text, mid in rpcs:
-        if mid == "Feature_Activation":
+        if mid.startswith("GSM_"):
+            gsm.append(text)
+        elif mid == "Feature_Activation":
             head, body = text.split("<lmId>1</lmId>\n", 1)
             head += "<lmId>1</lmId>\n"
             tail = body[body.index("</Lm>"):]
@@ -625,13 +913,14 @@ def _kk_lte_config_rpc_order(xml_text):
             paras.append(text)
         else:
             site.append(text)
-    return hello + "".join(site[:1] + features + site[1:] + creates + paras + closing)
+    return hello + "".join(site[:1] + features + site[1:] + creates + paras + gsm + closing)
 
 
-def write_kk_5g_config_xml(base_path_url, node, current_time):
+def write_kk_5g_config_xml(base_path_url, node, current_time, system="KK"):
     """NR 01..06 converted to NETCONF (replayed on commissioning + 04 LTE_Config), in three XMLs run in this order:
     04_{node}_5G_Config (NR 01-03), 05_{node}_5G_SA_Config (SA 04/05 + 06 without RIM), 06_{node}_5G_RIM_Activation
-    (RIM part of 06). The SA inputs 04/05/06 are only inputs of the conversion and are removed afterwards."""
+    (RIM part of 06; KK: 06_{node}_RIM_&_VONR_Activation, VoNR activation in its own section at the bottom). The SA
+    inputs 04/05/06 are only inputs of the conversion and are removed afterwards."""
     paths = create_script_paths(base_path_url, node)
 
     def read(path):
@@ -662,7 +951,7 @@ def write_kk_5g_config_xml(base_path_url, node, current_time):
     nr01 = script(paths["nr"], "01_")
     stamp = re.search(r"(\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2})", os.path.basename(nr01)) if nr01 else None
     current_time = stamp.group(1) if stamp else current_time
-    xml_text, _, _, model = amos_to_netconf_model(node, [read(p) for p in initial], steps)
+    xml_text, _, _, model = amos_to_netconf_model(node, [read(p) for p in initial], steps, system)
 
     head = xml_text[: xml_text.index("<rpc ")] if "<rpc " in xml_text else xml_text
     blocks = re.findall(r'<rpc message-id="([^"]+)".*?</rpc>\n\]\]>\]\]>\n', xml_text, re.S)
@@ -671,17 +960,138 @@ def write_kk_5g_config_xml(base_path_url, node, current_time):
     outputs = (
         (f"04_{node}_5G_Config_{current_time}.xml", ("NR01_", "NR02_", "NR03_")),
         (f"05_{node}_5G_SA_Config_{current_time}.xml", ("NR04_", "NR05_", "NR06_")),
-        (f"06_{node}_5G_RIM_Activation_{current_time}.xml", ("NR06RIM_",)),
+        # KK: VoNR activation at the bottom of 06, own section -> 06_{node}_RIM_&_VONR_Activation
+        (f"06_{node}_RIM_&_VONR_Activation_{current_time}.xml" if system == "KK" else
+         f"06_{node}_5G_RIM_Activation_{current_time}.xml", ("NR06RIM_",)),
     )
+    rim = kk_rim_vonr_parts(node, [read(p) for p in initial], steps) if system == "KK" and steps else None
     for path in sa_inputs:
         os.remove(path)
     for name, prefixes in outputs:
         part = "".join(b for m, b in zip(blocks, bodies) if m.startswith(prefixes))
-        if part:
+        extra, mdl = "", model
+        if rim and prefixes == ("NR06RIM_",):
+            part, extra, mdl = rim
+        if part or extra:
             # 05 / 06: NR cells locked at the start and unlocked at the end (a cell unlocked on the node failed BGR583)
-            lock, part, unlock = lock_sections(model, node, part, prefixes[-1].rstrip("_")) if prefixes[0] != "NR01_" else ("", part, "")
+            lock, part, unlock = (lock_sections(mdl, node, part, prefixes[-1].rstrip("_"))
+                                  if prefixes[0] != "NR01_" and part else ("", part, ""))
             with open(os.path.join(paths["nr"], name), "w", encoding="utf-8") as file:
-                file.write(head + lock + part + unlock + closing)
+                file.write(head + lock + part + unlock + extra + closing)
+
+
+def kk_rim_vonr_parts(node, initial, steps):
+    """KK 06_{node}_RIM_&_VONR_Activation: NR 01..06 replayed again with KK_VONR_ACTIVATION after them (04 / 05 come
+    from the replay without it and stay as they are) -> (RIM RPCs, VONR_ACTIVATION section, model).
+    The VoNR part must not fail on a node where 04/05/06 ran: MOs they created are not created again (crn/cr on an
+    existing MO is skipped, as AMOS fails it), values they already set are not written again; cells are locked only
+    where a change needs it. A parameter the RIM part sets too is written in the RIM part with the VoNR value
+    (user: values from VoNR), not a second time in the VoNR section."""
+    xml_text, _, _, model = amos_to_netconf_model(node, initial, steps + [("06VONR", "amos", KK_VONR_ACTIVATION)],
+                                                  "KK", only_changes={"06VONR"}, pull_back={"06VONR": "06RIM"})
+    blocks = re.findall(r'<rpc message-id="([^"]+)".*?</rpc>\n\]\]>\]\]>\n', xml_text, re.S)
+    bodies = re.findall(r'<rpc message-id="[^"]+".*?</rpc>\n\]\]>\]\]>\n', xml_text, re.S)
+    rim = "".join(b for m, b in zip(blocks, bodies) if m.startswith("NR06RIM_"))
+    part = "".join(b for m, b in zip(blocks, bodies) if m.startswith("NR06VONR_"))
+    section = ""
+    if part:
+        lock, part, unlock = lock_sections(model, node, part, "NR06VONR", all_cells=False)
+        section = ("<!-- #####Start: VONR_ACTIVATION ####### -->\n" + lock + part + unlock +
+                   "<!-- #####end: VONR_ACTIVATION ####### -->\n")
+    return rim, section, model
+
+
+def write_lte_config_xml(base_path_url, node, current_time, system, anchor=None):
+    """04_{node}_LTE_Config: LTE 01 TN_RN_GPS_MME + 02 Cell_Def + 03 GPL_LMS converted to NETCONF by the engine
+    (replayed on the commissioning XMLs; AS / NE - KK has its own 04 LTE_Config templates)"""
+    paths = create_script_paths(base_path_url, node)
+
+    def script(folder, prefix):
+        found = [os.path.join(folder, f) for f in os.listdir(folder) if f.startswith(prefix)] if os.path.isdir(folder) else []
+        return max(found, key=os.path.getmtime) if found else None
+
+    def read(path):
+        with open(path, "rb") as f:
+            return f.read().decode("utf-8", errors="replace")
+
+    steps = [(f"LTE{n}", "amos", read(s)) for n in ("01", "02", "03") for s in [script(paths["lte"], n + "_")] if s]
+    if not steps:
+        return
+    initial = [read(p) for p in (script(paths["commissioning"], "01_"), script(paths["commissioning"], "02_")) if p]
+    if anchor:          # 4G only site: ENDC anchor part (5G sites get it in 04 5G_Config)
+        text = anchor(initial[0] if initial else "")
+        if text:
+            steps.append(("LTE04", "amos", text))
+    lte01 = script(paths["lte"], "01_")
+    stamp = re.search(r"(\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2})", os.path.basename(lte01)) if lte01 else None
+    xml_text, _, _ = amos_to_netconf(node, initial, steps, system)
+    with open(os.path.join(paths["lte"], f"04_{node}_LTE_Config_{stamp.group(1) if stamp else current_time}.xml"), "w",
+              encoding="utf-8") as file:
+        file.write(xml_text)
+
+
+ANCHOR_TERMPOINT = {"AS": AS_Termpoint_GUtranFreqRelation_script, "NE": NE_Termpoint_GUtranFreqRelation_script}
+
+
+def anchor_4g_only_amos(site_row, site_basic_xml, termpoint_script):
+    """AMOS of the ENDC anchor part of a 4G only site, as on the AS / NE 2G-4G reference nodes (LBOTR2 / LMZGM2):
+    Router=LTEUP,InterfaceIPv6=NR on the LTE UP interface's encapsulation, AddressIPv6=X2 = Anchor_ENDC_IP, default
+    IPv6 route via Anchor_ENDC_GW, SctpEndpoint=X2_ENDC, then the circle's NR 03 Termpoint script (GUtraNetwork,
+    GUtranSyncSignalFrequency, GUtranFreqRelation, ENodeBFunction X2 ENDC refs). Its ExternalGNodeBFunction /
+    TermPointToGNB / GUtranCellRelation need the gNBId - a 4G only site has none, the conversion leaves them out."""
+    ip, gw = (str(site_row.get(c, "")).strip() for c in ("Anchor_ENDC_IP", "Anchor_ENDC_GW"))
+    if not ip or ip.lower() == "nan" or not gw or gw.lower() == "nan":
+        return ""
+    enc = re.search(r"<routerId>LTEUP</routerId>\s*<InterfaceIPv4[^>]*>\s*<interfaceIPv4Id>[^<]*</interfaceIPv4Id>\s*"
+                    r"<encapsulation>(?:ManagedElement=[^,]*,)?([^<]+)</encapsulation>", site_basic_xml)
+    if not enc:
+        return ""
+    return "\n".join([
+        "crn Transport=1,Router=LTEUP,InterfaceIPv6=NR", f"encapsulation {enc.group(1)}", "mtu 1500", "end",
+        "crn Transport=1,Router=LTEUP,InterfaceIPv6=NR,AddressIPv6=X2", f"address {ip}", "end",
+        "crn Transport=1,Router=LTEUP,RouteTableIPv6Static=2", "end",
+        "crn Transport=1,Router=LTEUP,RouteTableIPv6Static=2,Dst=default", "dst ::/0", "end",
+        "crn Transport=1,Router=LTEUP,RouteTableIPv6Static=2,Dst=default,NextHop=1", f"address {gw}", "adminDistance 1",
+        "end",
+        "crn Transport=1,SctpEndpoint=X2_ENDC", "dtlsSctpSecurityMode 0",
+        "localIpAddress Transport=1,Router=LTEUP,InterfaceIPv6=NR,AddressIPv6=X2", "portNumber 36422",
+        "sctpProfile SctpProfile=1", "end",
+        "", termpoint_script])
+
+
+def write_circle_config_xmls(base_path_url, nodes, current_time, system, site_basic_df=None):
+    """AS / NE NETCONF XMLs per node: 04 LTE_Config (if LTE scripts), then 04 5G_Config / 05 SA / 06 RIM (if NR
+    scripts) on top of commissioning + 04 LTE_Config - as KK; a 4G only site with Anchor_ENDC_IP / _GW gets the ENDC
+    anchor part in its 04 LTE_Config"""
+    for node in nodes:
+        nr = create_script_paths(base_path_url, node)["nr"]
+        has_nr = os.path.isdir(nr) and any(f.startswith("01_") for f in os.listdir(nr))
+        anchor = None
+        if not has_nr and site_basic_df is not None and system in ANCHOR_TERMPOINT:
+            rows = site_basic_df[site_basic_df["eNodeBName"] == node]
+            if not rows.empty:
+                row = rows.iloc[0]
+                anchor = lambda sb, row=row: anchor_4g_only_amos(row, sb, ANCHOR_TERMPOINT[system])
+        write_lte_config_xml(base_path_url, node, current_time, system, anchor)
+        if has_nr:
+            write_kk_5g_config_xml(base_path_url, node, current_time, system)
+def gpl_routes_for_oam_ip(gpl_text, site_basic_df, node):
+    """03 GPL as per the site's OAM IP version (as the commissioning SiteBasic): the IPv4 OSS / ENM routes of
+    Router=OAM (RouteTableIPv4Static=1) only on IPv4 OAM sites - an IPv6 OAM site has no IPv4 route table there, its
+    SiteBasic default route ::/0 covers OSS / ENM"""
+    rows = site_basic_df[site_basic_df["eNodeBName"] == node]
+    oam = str(rows["OAM_IP"].iloc[0]).split("/")[0] if not rows.empty and "OAM_IP" in rows else ""
+    if ":" not in oam:
+        return gpl_text
+    out, skip = [], False
+    for line in gpl_text.splitlines(keepends=True):
+        if re.match(r"^\s*crn\s+Transport=1,Router=OAM,RouteTableIPv4Static=", line):
+            skip = True
+        if not skip:
+            out.append(line)
+        elif line.strip() == "end":
+            skip = False
+    return "".join(out)
 
 
 RIM_SECTION_HEADERS = {
@@ -689,6 +1099,30 @@ RIM_SECTION_HEADERS = {
     2: "RIM Feature Activation Script_2_Sectors",
     3: "RIM Feature Activation Script_3_Sectors",
 }
+
+
+# NR resource blocks per channel bandwidth (MHz) at 30 kHz subcarrier spacing (band n78)
+NR_RBS_30KHZ = {10: 24, 15: 38, 20: 51, 25: 65, 30: 78, 40: 106, 50: 133, 60: 162, 70: 189, 80: 217, 90: 245, 100: 273}
+
+
+def _drop_wide_bwp_refs(node, node_nr_df, script):
+    """The SA script's BWPs ('set bwp numberOfRBs 273' = 100 MHz) only fit a 100 MHz NR cell: on a narrower cell
+    'set NRCellDU ... bwpref / bWPSetRef' is rejected ('BWP ... is wider than the ... NRCellDU ... DL cell width',
+    HSN143-1 40 MHz) and takes the BWPSet=100 create of the same transaction with it. As on the 40 MHz site
+    KK-NLHSN013-1 the BWPs and BWPSet=100 are still made, only the cells do not reference them."""
+    m = re.search(r"^set\s+bwp\s+numberOfRBs\s+(\d+)", script, re.M | re.I)
+    col = next((c for c in ("bSChannelBwDL-UL", "bSChannelBwDL/UL") if c in node_nr_df), None)
+    if not m or not col:
+        return script
+    widths = pd.to_numeric(node_nr_df[col], errors="coerce").dropna()
+    if widths.empty:
+        return script
+    cell_rbs = NR_RBS_30KHZ.get(int(widths.min()), 0)
+    if cell_rbs and cell_rbs >= int(m.group(1)):
+        return script
+    print(f"{node}: NR cell {int(widths.min())} MHz ({cell_rbs} RBs) narrower than the SA BWPs ({m.group(1)} RBs) - "
+          f"NRCellDU bwpref / bWPSetRef left out")
+    return re.sub(r"^set\s+NRCellDU=\S+\s+(bwpref|bWPSetRef)\s+.*\n?", "", script, flags=re.M | re.I)
 
 
 def write_sa_scripts(nr_dir, node, current_time, node_nr_df, cucp_5qi_xml, du_5qi_xml, amf_rim_config):
@@ -701,10 +1135,11 @@ def write_sa_scripts(nr_dir, node, current_time, node_nr_df, cucp_5qi_xml, du_5q
         set_id = row.get("SetID")
         if sector in ("A", "B", "C") and pd.notna(set_id):
             rim_script = rim_script.replace(f"$setID_{sector}", str(int(set_id)))
+    amf_script = _drop_wide_bwp_refs(node, node_nr_df, amf_rim_config[: starts[1]])
     sa_scripts = {
         f"04_{node}_SA_cUCP5qiTable_{current_time}.xml": cucp_5qi_xml,
         f"05_{node}_SA_dU5qiTable_{current_time}.xml": du_5qi_xml,
-        f"06_{node}_SA_AMF_RIM_CONFIG_{current_time}.txt": amf_rim_config[: starts[1]] + rim_script,
+        f"06_{node}_SA_AMF_RIM_CONFIG_{current_time}.txt": amf_script + rim_script,
     }
     for name, text in sa_scripts.items():
         with open(os.path.join(nr_dir, name), "w") as file:
@@ -1040,33 +1475,27 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
             with open(script_path, "a") as file:
                 file.write(kk_GPL_LMS_script.format(Phy_SiteID_Userlabel = Phy_SiteID_Userlabel) + "\n")
 
-        ####################################################### LTE Config XML (TN_RN_GPS_MME + cell creation) ##################################################
-        for _, site_row in site_basic_df.iterrows():
-            node = site_row["eNodeBName"]
-            fru = str(site_row.get("fieldReplaceableUnitId", "")).strip()
-            has_nr = not nr_cell_df.empty and node in set(nr_cell_df["gNodeBName"])
-            write_kk_lte_config_xml(create_script_paths(base_path_url, node)["lte"], node, site_row["eNBId"], lte_df[lte_df["eNodeBName"] == node], current_time,
-                                    site_row["Phy SiteID/Userlabel"], fru if fru and fru.lower() != "nan" else "BB-1", has_nr)
+        lte_config_time = current_time      # 04 LTE_Config (written after SiteEquipment) keeps the LTE scripts' timestamp
 
         ############################################################################### 5G Cell Scripts ##########################################################################
         # ---------------------------------------------------------------------------------------------------
         kk_nr_nodes = list(nr_cell_df["gNodeBName"].unique()) if not nr_cell_df.empty else []
         if not nr_cell_df.empty:
             for node in nr_cell_df["gNodeBName"].unique():
-                nr_cell_df: pd.DataFrame = nr_cell_df[nr_cell_df["gNodeBName"] == node].copy()
+                nr_cell_sub = nr_cell_df[nr_cell_df["gNodeBName"] == node].copy()
                 
-                nr_cell_df.rename(columns={"bSChannelBwDL/UL": "bSChannelBwDL-UL"}, inplace=True)
+                nr_cell_sub.rename(columns={"bSChannelBwDL/UL": "bSChannelBwDL-UL"}, inplace=True)
                 
                 nr_cell_df_path = os.path.join(create_script_paths(base_path_url, node)["nr"], f"01_{node}_5G_Cell_Creation_Sctp_Endpoint_Creation_{current_time}.txt")
                 
-                gnbid = nr_cell_df["gNBId"].unique()[0]
+                gnbid = nr_cell_sub["gNBId"].unique()[0]
                 
-                print(nr_cell_df)
+                print(nr_cell_sub)
 
                 gnbdu_fuction_element = ""
                 gnbcucp_fuction_element = ""
 
-                for idx, row in nr_cell_df.iterrows():
+                for idx, row in nr_cell_sub.iterrows():
                     gnbdu_fuction_element += KK_GNBDUFUNCTION_ELEMENT.format(
                         nRSectorCarrierId=row["nRSectorCarrierId"],
                         arfcnDL=row["arfcnDL"],
@@ -1107,7 +1536,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 with open(Termpoint_GUtranFreqRelation_path, "a") as file:
                     file.write(TREMPOINT_GUTRANCELL_FREQ_RELATION + "\n")
 
-                write_sa_scripts(create_script_paths(base_path_url, node)["nr"], node, current_time, nr_cell_df[nr_cell_df["gNodeBName"] == node], KK_SA_cUCP5qiTable_XML, KK_SA_dU5qiTable_XML, KK_SA_AMF_RIM_CONFIG)
+                write_sa_scripts(create_script_paths(base_path_url, node)["nr"], node, current_time, nr_cell_sub, KK_SA_cUCP5qiTable_XML, KK_SA_dU5qiTable_XML, KK_SA_AMF_RIM_CONFIG)
             # .......................................................................... NRCELL CONFIGRATION FOR CELL CREATION IN 5G ................................................
 
         ############################################################### creating the SiteBasic script for 4G and 5G ###############################################################
@@ -1155,6 +1584,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                             NR_ENDC_IP=row["NR_ENDC_IP"],
                             LTE_UP_GW=row["LTE_UP_GW"],
                             OAM_GW=row["OAM_GW"],
+                            **kk_site_basic_piu_bridge(row),
                         )
                         with open(sitebasic_df_path, "a", encoding="utf-8") as file:
                             file.write(formatted_text+ "\n")
@@ -1162,6 +1592,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
         # # -----------------------------------------------------------------------------------------------------------------------------------------------#
         radio_templates = {
             "2219": RRU_2219_B0_B1_B3_2X2,
+            "2271": RRUS_2271_B1_2X2,
             "2279": RRU_2279_B1_B3_2X2,
             "4412": RRU_4412_4418_4427_4428_4471_4X4,
             "4418": RRU_4412_4418_4427_4428_4471_4X4,
@@ -1242,8 +1673,17 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                     )
                 )
 
+        ################################ LTE Config XML (TN_RN_GPS_MME + cell creation; needs 02 SiteEquipment for the RfBranch refs) ################################
+        for _, site_row in (site_basic_df.iterrows() if XML_TESTING else []):
+            node = site_row["eNodeBName"]
+            fru = str(site_row.get("fieldReplaceableUnitId", "")).strip()
+            has_nr = not nr_cell_df.empty and node in set(nr_cell_df["gNodeBName"])
+            write_kk_lte_config_xml(create_script_paths(base_path_url, node)["lte"], node, site_row["eNBId"], lte_df[lte_df["eNodeBName"] == node], lte_config_time,
+                                    site_row["Phy SiteID/Userlabel"], fru if fru and fru.lower() != "nan" else "BB-1", has_nr,
+                                    site_row, create_script_paths(base_path_url, node)["commissioning"])
+
         ####################################### 5G Config XML (NR 01..06 as one NETCONF XML, needs commissioning + 04 LTE_Config) #######################################
-        for node in kk_nr_nodes:
+        for node in (kk_nr_nodes if XML_TESTING else []):
             write_kk_5g_config_xml(base_path_url, node, current_time)
     #---------------------------------------------------------------- KK Circle-specific Script Generation ---------------------------------------------------------------------
     
@@ -1442,6 +1882,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
             
             rru_type = {
                 "2219": RRU_2219_B0_B1_B3_2X2,
+                "2271": RRUS_2271_B1_2X2,
                 "2279": RRU_2279_B1_B3_2X2,
                 "4412": RRU_4412_4418_4427_4428_4471_4X4,
                 "6626": RRU_6626_6X6,
@@ -1676,6 +2117,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
             
             rru_type = {
                 "2219": RRU_2219_B0_B1_B3_2X2,
+                "2271": RRUS_2271_B1_2X2,
                 "2279": RRU_2279_B1_B3_2X2,
                 "4412": RRU_4412_4418_4427_4428_4471_4X4,
                 "6626": RRU_6626_6X6,
@@ -1755,9 +2197,9 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
             
             for node in nr_cell_df["gNodeBName"].unique():
                 
-                nr_cell_df: pd.DataFrame = nr_cell_df[nr_cell_df["gNodeBName"] == node].copy()
+                nr_cell_sub = nr_cell_df[nr_cell_df["gNodeBName"] == node].copy()
                 
-                nr_cell_df.rename(columns={"bSChannelBwDL/UL": "bSChannelBwDL-UL"}, inplace=True)
+                nr_cell_sub.rename(columns={"bSChannelBwDL/UL": "bSChannelBwDL-UL"}, inplace=True)
                 
                 site_basic_data_df = site_basic_df[site_basic_df["eNodeBName"] == node].copy()
                 
@@ -1771,14 +2213,14 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 
                 nr_cell_df_path = os.path.join(create_script_paths(base_path_url, node)["nr"],f"01_{node}_5G_Cell_Creation_Sctp_Endpoint_Creation_{current_time}.txt")
                 
-                gnbid = nr_cell_df["gNBId"].unique()[0]
+                gnbid = nr_cell_sub["gNBId"].unique()[0]
 
                 gnbdu_fuction_element = ""
                 
                 gnbcucp_fuction_element = ""
                 
                 gnb_cgswitch_element = ""
-                for idx, row in nr_cell_df.iterrows():
+                for idx, row in nr_cell_sub.iterrows():
                     gnbdu_fuction_element += AP_GNBDUFunction_text.format(
                         nRSectorCarrierId=row["nRSectorCarrierId"],
                         arfcnDL=row["arfcnDL"],
@@ -1830,7 +2272,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 with open(Termpoint_GUtranFreqRelation_path, "a") as file:
                     file.write(AP_Termpoint_GUtranFreqRelation + "\n")
 
-                write_sa_scripts(create_script_paths(base_path_url, node)["nr"], node, current_time, nr_cell_df[nr_cell_df["gNodeBName"] == node], AP_SA_cUCP5qiTable_XML, AP_SA_dU5qiTable_XML, AP_SA_AMF_RIM_CONFIG)
+                write_sa_scripts(create_script_paths(base_path_url, node)["nr"], node, current_time, nr_cell_sub, AP_SA_cUCP5qiTable_XML, AP_SA_dU5qiTable_XML, AP_SA_AMF_RIM_CONFIG)
         # ________________________________________________________________________________________________________________________________________________________________________#
 
         ########################################## AP Commissioning Scripts Generation Logic ###############################################################
@@ -1871,7 +2313,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 oam_ip, subnet = (row.get("OAM_IP", "UnknownOAMID").split("/")[0],row.get("OAM_IP", "UnknownOAMID").split("/")[1])
                 abis_ip = row.get("ABIS_IP", "NA")
                 print(abis_ip)
-                ip_type = ip_type(oam_ip)
+                oam_ip_type = ip_type(oam_ip)
 
                 ############################################################ if ip_type in ["IPv4", "IPv6"]:git #####################################################################
                 bbu_script_mapping_ipv4 = {
@@ -1892,7 +2334,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                     "6339": AP_SiteBasic_ipv6_6339,
                     "6303": AP_SiteBasic_ipv6_6303,
                 }
-                bbu_script_mapping = (bbu_script_mapping_ipv4 if ip_type == "IPv4" else bbu_script_mapping_ipv6)
+                bbu_script_mapping = (bbu_script_mapping_ipv4 if oam_ip_type == "IPv4" else bbu_script_mapping_ipv6)
 
                 for bbu_prefix, template in bbu_script_mapping.items():
                     if bbu_prefix in bbu_type:
@@ -1978,6 +2420,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                     
             rru_type = {
                 "2219": RRU_2219_B0_B1_B3_2X2,
+                "2271": RRUS_2271_B1_2X2,
                 "2279": RRU_2279_B1_B3_2X2,
                 "4412": RRU_4412_4418_4427_4428_4471_4X4,
                 "6626": RRU_6626_6X6,
@@ -2065,9 +2508,9 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
             
             for node in nr_cell_df["gNodeBName"].unique():
                 
-                nr_cell_df: pd.DataFrame = nr_cell_df[nr_cell_df["gNodeBName"] == node].copy()
+                nr_cell_sub = nr_cell_df[nr_cell_df["gNodeBName"] == node].copy()
                 
-                nr_cell_df.rename(columns={"bSChannelBwDL/UL": "bSChannelBwDL-UL"}, inplace=True)
+                nr_cell_sub.rename(columns={"bSChannelBwDL/UL": "bSChannelBwDL-UL"}, inplace=True)
                 
                 site_basic_data_df = site_basic_df[site_basic_df["eNodeBName"] == node].copy()
                 
@@ -2081,14 +2524,14 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 
                 nr_cell_df_path = os.path.join(create_script_paths(base_path_url, node)["nr"],f"01_{node}_5G_Cell_Creation_Sctp_Endpoint_Creation_{current_time}.txt")
                 
-                gnbid = nr_cell_df["gNBId"].unique()[0]
+                gnbid = nr_cell_sub["gNBId"].unique()[0]
 
                 gnbdu_fuction_element = ""
                 
                 gnbcucp_fuction_element = ""
                 
                 gnb_cgswitch_element = ""
-                for idx, row in nr_cell_df.iterrows():
+                for idx, row in nr_cell_sub.iterrows():
                     gnbdu_fuction_element += RJ_GNBDUFunction_text.format(
                         nRSectorCarrierId=row["nRSectorCarrierId"],
                         arfcnDL=row["arfcnDL"],
@@ -2140,7 +2583,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 with open(Termpoint_GUtranFreqRelation_path, "a") as file:
                     file.write(RJ_Termpoint_GUtranFreqRelation + "\n")
 
-                write_sa_scripts(create_script_paths(base_path_url, node)["nr"], node, current_time, nr_cell_df[nr_cell_df["gNodeBName"] == node], RJ_SA_cUCP5qiTable_XML, RJ_SA_dU5qiTable_XML, RJ_SA_AMF_RIM_CONFIG)
+                write_sa_scripts(create_script_paths(base_path_url, node)["nr"], node, current_time, nr_cell_sub, RJ_SA_cUCP5qiTable_XML, RJ_SA_dU5qiTable_XML, RJ_SA_AMF_RIM_CONFIG)
         # ________________________________________________________________________________________________________________________________________________________________________#
 
         ########################################## RJ Commissioning Scripts Generation Logic ###############################################################
@@ -2181,7 +2624,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 oam_ip, subnet = (row.get("OAM_IP", "UnknownOAMID").split("/")[0],row.get("OAM_IP", "UnknownOAMID").split("/")[1])
                 abis_ip = row.get("ABIS_IP", "NA")
                 print(abis_ip)
-                ip_type = ip_type(oam_ip)
+                oam_ip_type = ip_type(oam_ip)
 
                 ############################################################ if ip_type in ["IPv4", "IPv6"]:git #####################################################################
                 bbu_script_mapping_ipv4 = {
@@ -2202,7 +2645,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                     "6339": RJ_SiteBasic_ipv6_6339,
                     "6303": RJ_SiteBasic_ipv6_6303,
                 }
-                bbu_script_mapping = (bbu_script_mapping_ipv4 if ip_type == "IPv4" else bbu_script_mapping_ipv6)
+                bbu_script_mapping = (bbu_script_mapping_ipv4 if oam_ip_type == "IPv4" else bbu_script_mapping_ipv6)
 
                 for bbu_prefix, template in bbu_script_mapping.items():
                     if bbu_prefix in bbu_type:
@@ -2290,6 +2733,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                     
             rru_type = {
                 "2219": RRU_2219_B0_B1_B3_2X2,
+                "2271": RRUS_2271_B1_2X2,
                 "2279": RRU_2279_B1_B3_2X2,
                 "4412": RRU_4412_4418_4427_4428_4471_4X4,
                 "6626": RRU_6626_6X6,
@@ -2352,7 +2796,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
             NE_Route_4G_GPL_LMS_path = os.path.join(create_script_paths(base_path_url, node_name)["lte"],f"03_{node_name}_GPL_LMS_script_{current_time}.txt")
             Phy_SiteID_Userlabel = site_basic_df['Phy SiteID/Userlabel'].unique()[0]
             with open(NE_Route_4G_GPL_LMS_path, "a", encoding="utf-8") as file:
-                file.write(NE_GPL_LMS_DST_SCRIPT.format(Phy_SiteID_Userlabel = Phy_SiteID_Userlabel) + "\n")
+                file.write(gpl_routes_for_oam_ip(NE_GPL_LMS_DST_SCRIPT.format(Phy_SiteID_Userlabel = Phy_SiteID_Userlabel), site_basic_df, node_name) + "\n")
 
             temp_lte_df = lte_df[lte_df["eNodeBName"] == node_name].copy()
 
@@ -2379,9 +2823,9 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
             
             for node in nr_cell_df["gNodeBName"].unique():
                 
-                nr_cell_df: pd.DataFrame = nr_cell_df[nr_cell_df["gNodeBName"] == node].copy()
+                nr_cell_sub = nr_cell_df[nr_cell_df["gNodeBName"] == node].copy()
                 
-                nr_cell_df.rename(columns={"bSChannelBwDL/UL": "bSChannelBwDL-UL"}, inplace=True)
+                nr_cell_sub.rename(columns={"bSChannelBwDL/UL": "bSChannelBwDL-UL"}, inplace=True)
                 
                 site_basic_data_df = site_basic_df[site_basic_df["eNodeBName"] == node].copy()
                 
@@ -2395,14 +2839,14 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 
                 nr_cell_df_path = os.path.join(create_script_paths(base_path_url, node)["nr"],f"01_{node}_5G_Cell_Creation_Sctp_Endpoint_Creation_{current_time}.txt")
                 
-                gnbid = nr_cell_df["gNBId"].unique()[0]
+                gnbid = nr_cell_sub["gNBId"].unique()[0]
 
                 gnbdu_fuction_element = ""
                 
                 gnbcucp_fuction_element = ""
                 
                 gnb_cgswitch_element = ""
-                for idx, row in nr_cell_df.iterrows():
+                for idx, row in nr_cell_sub.iterrows():
                     gnbdu_fuction_element += NE_GNBDUFunction.format(
                         nRSectorCarrierId=row["nRSectorCarrierId"],
                         arfcnDL=row["arfcnDL"],
@@ -2455,7 +2899,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 with open(Termpoint_GUtranFreqRelation_path, "a") as file:
                     file.write(NE_Termpoint_GUtranFreqRelation_script + "\n")
 
-                write_sa_scripts(create_script_paths(base_path_url, node)["nr"], node, current_time, nr_cell_df[nr_cell_df["gNodeBName"] == node], NE_SA_cUCP5qiTable_XML, NE_SA_dU5qiTable_XML, NE_SA_AMF_RIM_CONFIG)
+                write_sa_scripts(create_script_paths(base_path_url, node)["nr"], node, current_time, nr_cell_sub, NE_SA_cUCP5qiTable_XML, NE_SA_dU5qiTable_XML, NE_SA_AMF_RIM_CONFIG)
         # ________________________________________________________________________________________________________________________________________________________________________#
 
         ########################################## NE Commissioning Scripts Generation Logic ###############################################################
@@ -2496,7 +2940,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 oam_ip, subnet = (row.get("OAM_IP", "UnknownOAMID").split("/")[0],row.get("OAM_IP", "UnknownOAMID").split("/")[1])
                 abis_ip = row.get("ABIS_IP", "NA")
                 print(abis_ip)
-                ip_type = ip_type(oam_ip)
+                oam_ip_type = ip_type(oam_ip)
 
                 ############################################################ if ip_type in ["IPv4", "IPv6"]:git #####################################################################
                 bbu_script_mapping_ipv4 = {
@@ -2517,7 +2961,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                     "6303": NE_SiteBasic_ipv6_6303,
                     "5216": NE_SiteBasic_5216_IPV6,
                 }
-                bbu_script_mapping = (bbu_script_mapping_ipv4 if ip_type == "IPv4" else bbu_script_mapping_ipv6)
+                bbu_script_mapping = (bbu_script_mapping_ipv4 if oam_ip_type == "IPv4" else bbu_script_mapping_ipv6)
 
                 for bbu_prefix, template in bbu_script_mapping.items():
                     if bbu_prefix in bbu_type:
@@ -2605,6 +3049,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                     
             rru_type = {
                 "2219": RRU_2219_B0_B1_B3_2X2,
+                "2271": RRUS_2271_B1_2X2,
                 "2279": RRU_2279_B1_B3_2X2,
                 "4412": RRU_4412_4418_4427_4428_4471_4X4,
                 "6626": RRU_6626_6X6,
@@ -2648,6 +3093,8 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                         siteBasicFilePath=siteBasicFilePath,
                     )
                 )
+        if XML_TESTING:     # 04 LTE_Config + 04/05/06 5G NETCONF XMLs (testing)
+            write_circle_config_xmls(base_path_url, site_basic_df["eNodeBName"].unique(), current_time, "NE", site_basic_df)
     # ---------------------------------------------------------------- NE Circle-specific Script Generation ---------------------------------------------------------------------
     
     # ---------------------------------------------------------------- AS Circle-specific Script Generation ----------------------------------------------------------------
@@ -2703,17 +3150,17 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
         for node in unique_nodes:
             script_path = os.path.join(create_script_paths(base_path_url, node)["lte"], f"03_{node}_GPL_LMS_script_{current_time}.txt")
             with open(script_path, "a") as file:
-                file.write(AS_GPL_LMS_DST_SCRIPT.format(Phy_SiteID_Userlabel = Phy_SiteID_Userlabel) + "\n")
+                file.write(gpl_routes_for_oam_ip(AS_GPL_LMS_DST_SCRIPT.format(Phy_SiteID_Userlabel = Phy_SiteID_Userlabel), site_basic_df, node) + "\n")
 
         ############################################################################### 5G Cell Scripts ##########################################################################
         # ---------------------------------------------------------------------------------------------------
         print(nr_cell_df)
         if not nr_cell_df.empty:
             for node in nr_cell_df["gNodeBName"].unique():
-                nr_cell_df: pd.DataFrame = nr_cell_df[
+                nr_cell_sub = nr_cell_df[
                     nr_cell_df["gNodeBName"] == node
-                ]
-                nr_cell_df.rename(
+                ].copy()
+                nr_cell_sub.rename(
                     columns={"bSChannelBwDL/UL": "bSChannelBwDL-UL"}, inplace=True
                 )
                 site_basic_data_df = site_basic_df[site_basic_df["eNodeBName"] == node].copy()
@@ -2725,13 +3172,13 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                     create_script_paths(base_path_url, node)["nr"],
                     f"01_{node}_5G_Cell_Creation_Sctp_Endpoint_Creation_{current_time}.txt",
                 )
-                gnbid = nr_cell_df["gNBId"].unique()[0]
-                print(nr_cell_df)
+                gnbid = nr_cell_sub["gNBId"].unique()[0]
+                print(nr_cell_sub)
 
                 gnbdu_fuction_element = ""
                 gnbcucp_fuction_element = ""
                 gnb_cgswitch_element = ""
-                for idx, row in nr_cell_df.iterrows():
+                for idx, row in nr_cell_sub.iterrows():
                     gnbdu_fuction_element += AS_GNBDUFunction.format(
                         nRSectorCarrierId=row["nRSectorCarrierId"],
                         arfcnDL=row["arfcnDL"],
@@ -2789,7 +3236,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 with open(Termpoint_GUtranFreqRelation_path, "a") as file:
                     file.write(AS_Termpoint_GUtranFreqRelation_script + "\n")
 
-                write_sa_scripts(create_script_paths(base_path_url, node)["nr"], node, current_time, nr_cell_df[nr_cell_df["gNodeBName"] == node], AS_SA_cUCP5qiTable_XML, AS_SA_dU5qiTable_XML, AS_SA_AMF_RIM_CONFIG)
+                write_sa_scripts(create_script_paths(base_path_url, node)["nr"], node, current_time, nr_cell_sub, AS_SA_cUCP5qiTable_XML, AS_SA_dU5qiTable_XML, AS_SA_AMF_RIM_CONFIG)
         # .......................................................................... NRCELL CONFIGRATION FOR CELL CREATION IN 5G ................................................
         ########################################## AS Commissioning Scripts Generation Logic ###############################################################
         for node in site_basic_df["eNodeBName"].unique():
@@ -2828,7 +3275,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 
                 abis_ip = row.get('ABIS_IP', 'NA')
                 
-                ip_type = ip_type(oam_ip)
+                oam_ip_type = ip_type(oam_ip)
 
                 ############################################################ if ip_type in ["IPv4", "IPv6"]:git #####################################################################
                 bbu_script_mapping_ipv4 = {
@@ -2849,7 +3296,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                     "6303": AS_SiteBasic_ipv6_6303,
                     "5216": AS_SiteBasic_5216_IPV6,
                 }
-                bbu_script_mapping = (bbu_script_mapping_ipv4 if ip_type == "IPv4" else bbu_script_mapping_ipv6)
+                bbu_script_mapping = (bbu_script_mapping_ipv4 if oam_ip_type == "IPv4" else bbu_script_mapping_ipv6)
 
                 for bbu_prefix, template in bbu_script_mapping.items():
                     if bbu_prefix in bbu_type:
@@ -2922,6 +3369,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
             rru_type = {
                 "2219": RRU_2219_B0_B1_B3_2X2,
+                "2271": RRUS_2271_B1_2X2,
                 "2279": RRU_2279_B1_B3_2X2,
                 "4412": RRU_4412_4418_4427_4428_4471_4X4,
                 "6626": RRU_6626_6X6,
@@ -2965,6 +3413,8 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
             
             with open(site_equipment_script_path, "a", encoding="utf-8") as file:
                 file.write(rbs_summary_script(circle).format(siteEquipmentFilePath=siteEquipmentFilePath,siteBasicFilePath=siteBasicFilePath))
+        if XML_TESTING:     # 04 LTE_Config + 04/05/06 5G NETCONF XMLs (testing)
+            write_circle_config_xmls(base_path_url, site_basic_df["eNodeBName"].unique(), current_time, "AS", site_basic_df)
     # ---------------------------------------------------------------- AS Circle-specific Script Generation ----------------------------------------------------------------
     
     # ---------------------------------------------------------------- DEL Circle-specific Script Generation ----------------------------------------------------------------
@@ -3027,10 +3477,10 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
         print(nr_cell_df)
         if not nr_cell_df.empty:
             for node in nr_cell_df["gNodeBName"].unique():
-                nr_cell_df: pd.DataFrame = nr_cell_df[
+                nr_cell_sub = nr_cell_df[
                     nr_cell_df["gNodeBName"] == node
-                ]
-                nr_cell_df.rename(
+                ].copy()
+                nr_cell_sub.rename(
                     columns={"bSChannelBwDL/UL": "bSChannelBwDL-UL"}, inplace=True
                 )
                 site_basic_data_df = site_basic_df[site_basic_df["eNodeBName"] == node].copy()
@@ -3042,13 +3492,13 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                     create_script_paths(base_path_url, node)["nr"],
                     f"01_{node}_5G_Cell_Creation_Sctp_Endpoint_Creation_{current_time}.txt",
                 )
-                gnbid = nr_cell_df["gNBId"].unique()[0]
-                print(nr_cell_df)
+                gnbid = nr_cell_sub["gNBId"].unique()[0]
+                print(nr_cell_sub)
 
                 gnbdu_fuction_element = ""
                 gnbcucp_fuction_element = ""
                 gnb_cgswitch_element = ""
-                for idx, row in nr_cell_df.iterrows():
+                for idx, row in nr_cell_sub.iterrows():
                     gnbdu_fuction_element += DEL_GNBDUFunction.format(
                         nRSectorCarrierId=row["nRSectorCarrierId"],
                         arfcnDL=row["arfcnDL"],
@@ -3106,7 +3556,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 with open(Termpoint_GUtranFreqRelation_path, "a") as file:
                     file.write(DEL_Termpoint_GUtranFreqRelation_script + "\n")
 
-                write_sa_scripts(create_script_paths(base_path_url, node)["nr"], node, current_time, nr_cell_df[nr_cell_df["gNodeBName"] == node], DEL_SA_cUCP5qiTable_XML, DEL_SA_dU5qiTable_XML, DEL_SA_AMF_RIM_CONFIG)
+                write_sa_scripts(create_script_paths(base_path_url, node)["nr"], node, current_time, nr_cell_sub, DEL_SA_cUCP5qiTable_XML, DEL_SA_dU5qiTable_XML, DEL_SA_AMF_RIM_CONFIG)
         # .......................................................................... NRCELL CONFIGRATION FOR CELL CREATION IN 5G ................................................
         ########################################## DEL Commissioning Scripts Generation Logic ###############################################################
         for node in site_basic_df["eNodeBName"].unique():
@@ -3145,11 +3595,12 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 
                 abis_ip = row.get('ABIS_IP', 'NA')
                 
-                ip_type = ip_type(oam_ip)
+                oam_ip_type = ip_type(oam_ip)
 
                 ############################################################ if ip_type in ["IPv4", "IPv6"]:git #####################################################################
                 bbu_script_mapping_ipv4 = {
                     "6651": DEL_SiteBasic_ipv4_6651,
+                    "6655": DEL_SiteBasic_ipv4_6655,
                     "6631": DEL_SiteBasic_ipv4_6631,
                     "6630": DEL_SiteBasic_ipv4_6630,
                     "6353": DEL_SiteBasic_ipv4_6353,
@@ -3160,13 +3611,15 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
                 bbu_script_mapping_ipv6 = {
                     "6651": DEL_SiteBasic_ipv6_6651,
+                    "6655": DEL_SiteBasic_ipv6_6655,
                     "6631": DEL_SiteBasic_ipv6_6631,
                     "6630": DEL_SiteBasic_ipv6_6630,
                     "6339": DEL_SiteBasic_ipv6_6339,
                     "6303": DEL_SiteBasic_ipv6_6303,
+                    "6353": DEL_SiteBasic_ipv6_6353,
                     "5216": DEL_SiteBasic_5216_IPV6,
                 }
-                bbu_script_mapping = (bbu_script_mapping_ipv4 if ip_type == "IPv4" else bbu_script_mapping_ipv6)
+                bbu_script_mapping = (bbu_script_mapping_ipv4 if oam_ip_type == "IPv4" else bbu_script_mapping_ipv6)
 
                 for bbu_prefix, template in bbu_script_mapping.items():
                     if bbu_prefix in bbu_type:
@@ -3239,6 +3692,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
             rru_type = {
                 "2219": RRU_2219_B0_B1_B3_2X2,
+                "2271": RRUS_2271_B1_2X2,
                 "2279": RRU_2279_B1_B3_2X2,
                 "4412": RRU_4412_4418_4427_4428_4471_4X4,
                 "6626": RRU_6626_6X6,
@@ -3350,10 +3804,10 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
         print(nr_cell_df)
         if not nr_cell_df.empty:
             for node in nr_cell_df["gNodeBName"].unique():
-                nr_cell_df: pd.DataFrame = nr_cell_df[
+                nr_cell_sub = nr_cell_df[
                     nr_cell_df["gNodeBName"] == node
-                ]
-                nr_cell_df.rename(
+                ].copy()
+                nr_cell_sub.rename(
                     columns={"bSChannelBwDL/UL": "bSChannelBwDL-UL"}, inplace=True
                 )
                 site_basic_data_df = site_basic_df[site_basic_df["eNodeBName"] == node].copy()
@@ -3365,13 +3819,13 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                     create_script_paths(base_path_url, node)["nr"],
                     f"01_{node}_5G_Cell_Creation_Sctp_Endpoint_Creation_{current_time}.txt",
                 )
-                gnbid = nr_cell_df["gNBId"].unique()[0]
-                print(nr_cell_df)
+                gnbid = nr_cell_sub["gNBId"].unique()[0]
+                print(nr_cell_sub)
 
                 gnbdu_fuction_element = ""
                 gnbcucp_fuction_element = ""
                 gnb_cgswitch_element = ""
-                for idx, row in nr_cell_df.iterrows():
+                for idx, row in nr_cell_sub.iterrows():
                     gnbdu_fuction_element += DEL_Vi_GNBDUFunction.format(
                         nRSectorCarrierId=row["nRSectorCarrierId"],
                         arfcnDL=row["arfcnDL"],
@@ -3466,7 +3920,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 
                 abis_ip = row.get('ABIS_IP', 'NA')
                 
-                ip_type = ip_type(oam_ip)
+                oam_ip_type = ip_type(oam_ip)
 
                 ############################################################ if ip_type in ["IPv4", "IPv6"]:git #####################################################################
                 bbu_script_mapping_ipv4 = {
@@ -3487,7 +3941,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                     "6303": DEL_Vi_SiteBasic_ipv6_6303,
                     "5216": DEL_Vi_SiteBasic_5216_IPV6,
                 }
-                bbu_script_mapping = (bbu_script_mapping_ipv4 if ip_type == "IPv4" else bbu_script_mapping_ipv6)
+                bbu_script_mapping = (bbu_script_mapping_ipv4 if oam_ip_type == "IPv4" else bbu_script_mapping_ipv6)
 
                 for bbu_prefix, template in bbu_script_mapping.items():
                     if bbu_prefix in bbu_type:
@@ -3573,6 +4027,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
             rru_type = {
                 "2219": RRU_2219_B0_B1_B3_2X2,
+                "2271": RRUS_2271_B1_2X2,
                 "2279": RRU_2279_B1_B3_2X2,
                 "4412": RRU_4412_4418_4427_4428_4471_4X4,
                 "6626": RRU_6626_6X6,
@@ -3701,10 +4156,10 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
         print(nr_cell_df)
         if not nr_cell_df.empty:
             for node in nr_cell_df["gNodeBName"].unique():
-                nr_cell_df: pd.DataFrame = nr_cell_df[
+                nr_cell_sub = nr_cell_df[
                     nr_cell_df["gNodeBName"] == node
-                ]
-                nr_cell_df.rename(
+                ].copy()
+                nr_cell_sub.rename(
                     columns={"bSChannelBwDL/UL": "bSChannelBwDL-UL"}, inplace=True
                 )
                 site_basic_data_df = site_basic_df[site_basic_df["eNodeBName"] == node].copy()
@@ -3716,13 +4171,13 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                     create_script_paths(base_path_url, node)["nr"],
                     f"01_{node}_5G_Cell_Creation_Sctp_Endpoint_Creation_{current_time}.txt",
                 )
-                gnbid = nr_cell_df["gNBId"].unique()[0]
-                print(nr_cell_df)
+                gnbid = nr_cell_sub["gNBId"].unique()[0]
+                print(nr_cell_sub)
 
                 gnbdu_fuction_element = ""
                 gnbcucp_fuction_element = ""
                 gnb_cgswitch_element = ""
-                for idx, row in nr_cell_df.iterrows():
+                for idx, row in nr_cell_sub.iterrows():
                     gnbdu_fuction_element += MAG_Vi_GNBDUFunction.format(
                         nRSectorCarrierId=row["nRSectorCarrierId"],
                         arfcnDL=row["arfcnDL"],
@@ -3822,7 +4277,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 
                 abis_ip = row.get('ABIS_IP', 'NA')
                 
-                ip_type = ip_type(oam_ip)
+                oam_ip_type = ip_type(oam_ip)
 
                 ############################################################ if ip_type in ["IPv4", "IPv6"]:git #####################################################################
                 bbu_script_mapping_ipv4 = {
@@ -3843,7 +4298,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                     "6303": MAG_Vi_SiteBasic_ipv6_6303,
                     "5216": MAG_Vi_SiteBasic_5216_IPV6,
                 }
-                bbu_script_mapping = (bbu_script_mapping_ipv4 if ip_type == "IPv4" else bbu_script_mapping_ipv6)
+                bbu_script_mapping = (bbu_script_mapping_ipv4 if oam_ip_type == "IPv4" else bbu_script_mapping_ipv6)
 
                 for bbu_prefix, template in bbu_script_mapping.items():
                     if bbu_prefix in bbu_type:
@@ -3929,6 +4384,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
             rru_type = {
                 "2219": RRU_2219_B0_B1_B3_2X2,
+                "2271": RRUS_2271_B1_2X2,
                 "2279": RRU_2279_B1_B3_2X2,
                 "4412": RRU_4412_4418_4427_4428_4471_4X4,
                 "6626": RRU_6626_6X6,
@@ -4057,10 +4513,10 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
         print(nr_cell_df)
         if not nr_cell_df.empty:
             for node in nr_cell_df["gNodeBName"].unique():
-                nr_cell_df: pd.DataFrame = nr_cell_df[
+                nr_cell_sub = nr_cell_df[
                     nr_cell_df["gNodeBName"] == node
-                ]
-                nr_cell_df.rename(
+                ].copy()
+                nr_cell_sub.rename(
                     columns={"bSChannelBwDL/UL": "bSChannelBwDL-UL"}, inplace=True
                 )
                 site_basic_data_df = site_basic_df[site_basic_df["eNodeBName"] == node].copy()
@@ -4072,13 +4528,13 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                     create_script_paths(base_path_url, node)["nr"],
                     f"01_{node}_5G_Cell_Creation_Sctp_Endpoint_Creation_{current_time}.txt",
                 )
-                gnbid = nr_cell_df["gNBId"].unique()[0]
-                print(nr_cell_df)
+                gnbid = nr_cell_sub["gNBId"].unique()[0]
+                print(nr_cell_sub)
 
                 gnbdu_fuction_element = ""
                 gnbcucp_fuction_element = ""
                 gnb_cgswitch_element = ""
-                for idx, row in nr_cell_df.iterrows():
+                for idx, row in nr_cell_sub.iterrows():
                     gnbdu_fuction_element += MP_Vi_GNBDUFunction.format(
                         nRSectorCarrierId=row["nRSectorCarrierId"],
                         arfcnDL=row["arfcnDL"],
@@ -4178,7 +4634,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 
                 abis_ip = row.get('ABIS_IP', 'NA')
                 
-                ip_type = ip_type(oam_ip)
+                oam_ip_type = ip_type(oam_ip)
 
                 ############################################################ if ip_type in ["IPv4", "IPv6"]:git #####################################################################
                 bbu_script_mapping_ipv4 = {
@@ -4199,7 +4655,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                     "6303": MP_Vi_SiteBasic_ipv6_6303,
                     "5216": MP_Vi_SiteBasic_5216_IPV6,
                 }
-                bbu_script_mapping = (bbu_script_mapping_ipv4 if ip_type == "IPv4" else bbu_script_mapping_ipv6)
+                bbu_script_mapping = (bbu_script_mapping_ipv4 if oam_ip_type == "IPv4" else bbu_script_mapping_ipv6)
 
                 for bbu_prefix, template in bbu_script_mapping.items():
                     if bbu_prefix in bbu_type:
@@ -4285,6 +4741,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
             rru_type = {
                 "2219": RRU_2219_B0_B1_B3_2X2,
+                "2271": RRUS_2271_B1_2X2,
                 "2279": RRU_2279_B1_B3_2X2,
                 "4412": RRU_4412_4418_4427_4428_4471_4X4,
                 "6626": RRU_6626_6X6,
@@ -4390,10 +4847,10 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
         print(nr_cell_df)
         if not nr_cell_df.empty:
             for node in nr_cell_df["gNodeBName"].unique():
-                nr_cell_df: pd.DataFrame = nr_cell_df[
+                nr_cell_sub = nr_cell_df[
                     nr_cell_df["gNodeBName"] == node
-                ]
-                nr_cell_df.rename(
+                ].copy()
+                nr_cell_sub.rename(
                     columns={"bSChannelBwDL/UL": "bSChannelBwDL-UL"}, inplace=True
                 )
                 site_basic_data_df = site_basic_df[site_basic_df["eNodeBName"] == node].copy()
@@ -4405,13 +4862,13 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                     create_script_paths(base_path_url, node)["nr"],
                     f"01_{node}_5G_Cell_Creation_Sctp_Endpoint_Creation_{current_time}.txt",
                 )
-                gnbid = nr_cell_df["gNBId"].unique()[0]
-                print(nr_cell_df)
+                gnbid = nr_cell_sub["gNBId"].unique()[0]
+                print(nr_cell_sub)
 
                 gnbdu_fuction_element = ""
                 gnbcucp_fuction_element = ""
                 gnb_cgswitch_element = ""
-                for idx, row in nr_cell_df.iterrows():
+                for idx, row in nr_cell_sub.iterrows():
                     gnbdu_fuction_element += UPW_GNBDUFunction.format(
                         nRSectorCarrierId=row["nRSectorCarrierId"],
                         arfcnDL=row["arfcnDL"],
@@ -4469,7 +4926,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 with open(Termpoint_GUtranFreqRelation_path, "a") as file:
                     file.write(UPW_Termpoint_GUtranFreqRelation_script + "\n")
 
-                write_sa_scripts(create_script_paths(base_path_url, node)["nr"], node, current_time, nr_cell_df[nr_cell_df["gNodeBName"] == node], UPW_SA_cUCP5qiTable_XML, UPW_SA_dU5qiTable_XML, UPW_SA_AMF_RIM_CONFIG)
+                write_sa_scripts(create_script_paths(base_path_url, node)["nr"], node, current_time, nr_cell_sub, UPW_SA_cUCP5qiTable_XML, UPW_SA_dU5qiTable_XML, UPW_SA_AMF_RIM_CONFIG)
         # .......................................................................... NRCELL CONFIGRATION FOR CELL CREATION IN 5G ................................................
         ########################################## UPW Commissioning Scripts Generation Logic ###############################################################
         for node in site_basic_df["eNodeBName"].unique():
@@ -4508,7 +4965,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 
                 abis_ip = row.get('ABIS_IP', 'NA')
                 
-                ip_type = ip_type(oam_ip)
+                oam_ip_type = ip_type(oam_ip)
 
                 ############################################################ if ip_type in ["IPv4", "IPv6"]:git #####################################################################
                 bbu_script_mapping_ipv4 = {
@@ -4529,7 +4986,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                     "6303": UPW_SiteBasic_ipv6_6303,
                     "5216": UPW_SiteBasic_5216_IPV6,
                 }
-                bbu_script_mapping = (bbu_script_mapping_ipv4 if ip_type == "IPv4" else bbu_script_mapping_ipv6)
+                bbu_script_mapping = (bbu_script_mapping_ipv4 if oam_ip_type == "IPv4" else bbu_script_mapping_ipv6)
 
                 for bbu_prefix, template in bbu_script_mapping.items():
                     if bbu_prefix in bbu_type:
@@ -4602,6 +5059,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
             rru_type = {
                 "2219": RRU_2219_B0_B1_B3_2X2,
+                "2271": RRUS_2271_B1_2X2,
                 "2279": RRU_2279_B1_B3_2X2,
                 "4412": RRU_4412_4418_4427_4428_4471_4X4,
                 "6626": RRU_6626_6X6,
@@ -4689,9 +5147,9 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
             
             for node in nr_cell_df["gNodeBName"].unique():
                 
-                nr_cell_df: pd.DataFrame = nr_cell_df[nr_cell_df["gNodeBName"] == node].copy()
+                nr_cell_sub = nr_cell_df[nr_cell_df["gNodeBName"] == node].copy()
                 
-                nr_cell_df.rename(columns={"bSChannelBwDL/UL": "bSChannelBwDL-UL"}, inplace=True)
+                nr_cell_sub.rename(columns={"bSChannelBwDL/UL": "bSChannelBwDL-UL"}, inplace=True)
                 
                 site_basic_data_df = site_basic_df[site_basic_df["eNodeBName"] == node].copy()
                 
@@ -4705,14 +5163,14 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 
                 nr_cell_df_path = os.path.join(create_script_paths(base_path_url, node)["nr"],f"01_{node}_5G_Cell_Creation_Sctp_Endpoint_Creation_{current_time}.txt")
                 
-                gnbid = nr_cell_df["gNBId"].unique()[0]
+                gnbid = nr_cell_sub["gNBId"].unique()[0]
 
                 gnbdu_fuction_element = ""
                 
                 gnbcucp_fuction_element = ""
                 
                 gnb_cgswitch_element = ""
-                for idx, row in nr_cell_df.iterrows():
+                for idx, row in nr_cell_sub.iterrows():
                     gnbdu_fuction_element += HR_GNBDUFunction_text.format(
                         nRSectorCarrierId=row["nRSectorCarrierId"],
                         arfcnDL=row["arfcnDL"],
@@ -4764,7 +5222,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 with open(Termpoint_GUtranFreqRelation_path, "a") as file:
                     file.write(HR_Termpoint_GUtranFreqRelation + "\n")
 
-                write_sa_scripts(create_script_paths(base_path_url, node)["nr"], node, current_time, nr_cell_df[nr_cell_df["gNodeBName"] == node], HR_SA_cUCP5qiTable_XML, HR_SA_dU5qiTable_XML, HR_SA_AMF_RIM_CONFIG)
+                write_sa_scripts(create_script_paths(base_path_url, node)["nr"], node, current_time, nr_cell_sub, HR_SA_cUCP5qiTable_XML, HR_SA_dU5qiTable_XML, HR_SA_AMF_RIM_CONFIG)
         # ________________________________________________________________________________________________________________________________________________________________________#
 
         ########################################## HR Commissioning Scripts Generation Logic ###############################################################
@@ -4805,7 +5263,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 oam_ip, subnet = (row.get("OAM_IP", "UnknownOAMID").split("/")[0],row.get("OAM_IP", "UnknownOAMID").split("/")[1])
                 abis_ip = row.get("ABIS_IP", "NA")
                 print(abis_ip)
-                ip_type = ip_type(oam_ip)
+                oam_ip_type = ip_type(oam_ip)
 
                 ############################################################ if ip_type in ["IPv4", "IPv6"]:git #####################################################################
                 bbu_script_mapping_ipv4 = {
@@ -4826,7 +5284,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                     "6339": HR_SiteBasic_ipv6_6339,
                     "6303": HR_SiteBasic_ipv6_6303,
                 }
-                bbu_script_mapping = (bbu_script_mapping_ipv4 if ip_type == "IPv4" else bbu_script_mapping_ipv6)
+                bbu_script_mapping = (bbu_script_mapping_ipv4 if oam_ip_type == "IPv4" else bbu_script_mapping_ipv6)
 
                 # VLAN columns come as float (3080.0) when the column has blanks - node needs an integer
                 def hr_vlan(value):
@@ -4939,6 +5397,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                     
             rru_type = {
                 "2219": RRU_2219_B0_B1_B3_2X2,
+                "2271": RRUS_2271_B1_2X2,
                 "2279": RRU_2279_B1_B3_2X2,
                 "4412": RRU_4412_4418_4427_4428_4471_4X4,
                 "6626": RRU_6626_6X6,
@@ -5044,10 +5503,10 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
         print(nr_cell_df)
         if not nr_cell_df.empty:
             for node in nr_cell_df["gNodeBName"].unique():
-                nr_cell_df: pd.DataFrame = nr_cell_df[
+                nr_cell_sub = nr_cell_df[
                     nr_cell_df["gNodeBName"] == node
-                ]
-                nr_cell_df.rename(
+                ].copy()
+                nr_cell_sub.rename(
                     columns={"bSChannelBwDL/UL": "bSChannelBwDL-UL"}, inplace=True
                 )
                 site_basic_data_df = site_basic_df[site_basic_df["eNodeBName"] == node].copy()
@@ -5059,13 +5518,13 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                     create_script_paths(base_path_url, node)["nr"],
                     f"01_{node}_5G_Cell_Creation_Sctp_Endpoint_Creation_{current_time}.txt",
                 )
-                gnbid = nr_cell_df["gNBId"].unique()[0]
-                print(nr_cell_df)
+                gnbid = nr_cell_sub["gNBId"].unique()[0]
+                print(nr_cell_sub)
 
                 gnbdu_fuction_element = ""
                 gnbcucp_fuction_element = ""
                 gnb_cgswitch_element = ""
-                for idx, row in nr_cell_df.iterrows():
+                for idx, row in nr_cell_sub.iterrows():
                     gnbdu_fuction_element += JK_GNBDUFunction.format(
                         nRSectorCarrierId=row["nRSectorCarrierId"],
                         arfcnDL=row["arfcnDL"],
@@ -5123,7 +5582,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 with open(Termpoint_GUtranFreqRelation_path, "a") as file:
                     file.write(JK_Termpoint_GUtranFreqRelation_script + "\n")
 
-                write_sa_scripts(create_script_paths(base_path_url, node)["nr"], node, current_time, nr_cell_df[nr_cell_df["gNodeBName"] == node], JK_SA_cUCP5qiTable_XML, JK_SA_dU5qiTable_XML, JK_SA_AMF_RIM_CONFIG)
+                write_sa_scripts(create_script_paths(base_path_url, node)["nr"], node, current_time, nr_cell_sub, JK_SA_cUCP5qiTable_XML, JK_SA_dU5qiTable_XML, JK_SA_AMF_RIM_CONFIG)
         # .......................................................................... NRCELL CONFIGRATION FOR CELL CREATION IN 5G ................................................
         ########################################## JK Commissioning Scripts Generation Logic ###############################################################
         for node in site_basic_df["eNodeBName"].unique():
@@ -5162,7 +5621,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 
                 abis_ip = row.get('ABIS_IP', 'NA')
                 
-                ip_type = ip_type(oam_ip)
+                oam_ip_type = ip_type(oam_ip)
 
                 ############################################################ if ip_type in ["IPv4", "IPv6"]:git #####################################################################
                 bbu_script_mapping_ipv4 = {
@@ -5183,7 +5642,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                     "6303": JK_SiteBasic_ipv6_6303,
                     "5216": JK_SiteBasic_5216_IPV6,
                 }
-                bbu_script_mapping = (bbu_script_mapping_ipv4 if ip_type == "IPv4" else bbu_script_mapping_ipv6)
+                bbu_script_mapping = (bbu_script_mapping_ipv4 if oam_ip_type == "IPv4" else bbu_script_mapping_ipv6)
 
                 for bbu_prefix, template in bbu_script_mapping.items():
                     if bbu_prefix in bbu_type:
@@ -5256,6 +5715,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
             rru_type = {
                 "2219": RRU_2219_B0_B1_B3_2X2,
+                "2271": RRUS_2271_B1_2X2,
                 "2279": RRU_2279_B1_B3_2X2,
                 "4412": RRU_4412_4418_4427_4428_4471_4X4,
                 "6626": RRU_6626_6X6,

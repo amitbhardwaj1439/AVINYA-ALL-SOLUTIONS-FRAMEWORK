@@ -18,8 +18,8 @@ from tools.gpl_audit.log_parser.output import (_TABLE_GAP_ROWS, _TITLE_ALIGN, _T
                                                  _style_block)
 
 from .audit import (CELL_REL, EUTRAN_FREQ, EUTRAN_FREQ_REL, FEATURE, GERAN_FREQ_REL, GUTRAN_FREQ_REL, LTE_GPL, NR_GPL,
-                    OTHER, SSB_FREQ, AuditResult, classes_of, section_of, text)
-from .corrections import MISSING, Plan, _creatable, count_commands
+                    CELL_CLASSES, OTHER, SSB_FREQ, AuditResult, classes_of, section_of, text)
+from .corrections import MISSING, Plan, count_commands
 
 WIDE_SHEETS = OrderedDict([
     ("FREQ_AUDIT", (EUTRAN_FREQ, SSB_FREQ)),
@@ -113,25 +113,40 @@ def build_sheets(res: AuditResult, plan: Plan) -> "OrderedDict[str, list[tuple[s
                      "Post SiteId": q[0], "Post eNBID": q[2], "Post CellName": q[1]})
     summary = pd.DataFrame(rows, columns=["Pre SiteId", "Pre CellName", "Pre eNBID", "cellId", "Post SiteId", "Post eNBID", "Post CellName"])
 
+    # Missing = what the correction script creates (gone after it ran); MOs it cannot create (PRE cell without a cell /
+    # radio on the POST site and its whole subtree, node-made, site transport/equipment) are counted apart - they stay
+    # after every correction run
     counts = []
     for sec, label in SECTION_LABEL.items():
         its = [i for i in res.items if i.section == sec and not i.info]
-        miss_mo = sum(1 for k in res.missing_mos if section_of(k) == sec)
+        miss = [k for k in res.missing_mos if section_of(k) == sec]
+        fixed = sum(1 for k in miss if k not in plan.missing_why)
         counts.append({"Audit Section": label, "Total Parameters": len(its),
                        "OK": sum(i.status == "OK" for i in its), "NOT OK": sum(i.status == "NOT OK" for i in its),
-                       "Missing": sum(i.status == "Missing" for i in its) + miss_mo})
+                       "Missing": sum(i.status == "Missing" for i in its) + fixed,
+                       "Missing - not scriptable": len(miss) - fixed})
     for sheet in INFO_SHEETS:
         its = [i for i in res.items if i.info == sheet]
         counts.append({"Audit Section": f"{sheet} (audit only)", "Total Parameters": len(its),
                        "OK": sum(i.status == "OK" for i in its), "NOT OK": sum(i.status == "NOT OK" for i in its),
-                       "Missing": sum(i.status == "Missing" for i in its)})
+                       "Missing": sum(i.status == "Missing" for i in its), "Missing - not scriptable": 0})
+    pre_only_cells = [k.split(",")[-1] for k in res.missing_mos if CELL_CLASSES.match(k)]
     cmd = count_commands(plan)
     info = [("PRE node (reference)", res.pre.node), ("POST node (corrected)", res.post.node),
             ("PRE release", res.pre.release or "NA"), ("POST release", res.post.release or "NA"),
             ("MOs compared", f"PRE {len(res.pre.mos)} / POST {len(res.post.mos)}"),
             ("MOs / profiles missing in POST", len(res.missing_mos)), ("MOs only in POST", len(res.new_mos)),
             ("Cross-site name mapping (PRE -> POST)", ", ".join(f"{a} -> {b}" for a, b in res.mapping) or "same site"),
-            ("Neighbour MOs of the other site (not compared)", res.skipped_neighbours)]
+            ("Neighbour MOs of the other site (not compared)", res.skipped_neighbours),
+            ("Relation values the node rewrites itself (lastModification LM / MLB / MRO) - differences not compared",
+             res.node_managed),
+            ("POST cells without a PRE cell - checked against the values common to the PRE cells",
+             "; ".join(f"{c.rsplit(',', 1)[-1]} <- {', '.join(t.rsplit('=', 1)[1] for t in tpl)} ({n} MOs, {d} values "
+                       "differ between those PRE cells - not checked)" for c, tpl, n, d in res.template_cells) or "none"),
+            ("PRE cells without a cell on the POST site (with their subtree: Missing - not scriptable)",
+             (f"{len(pre_only_cells)}: " + ", ".join(pre_only_cells) +
+              " - cells come from the integration scripts (RF data / radio); use a PRE site with the same cell "
+              "configuration to audit them") if pre_only_cells else "none")]
     info += [(f"Correction commands: {s}", n) for s, n in cmd.items()]
     sheets["Summary"] = [("", summary), ("Parameter Status Summary", pd.DataFrame(counts)),
                          ("Audit Information", pd.DataFrame(info, columns=["Item", "Value"]))]
@@ -236,7 +251,7 @@ def build_sheets(res: AuditResult, plan: Plan) -> "OrderedDict[str, list[tuple[s
     # MOs / profiles missing in POST (+ only in POST)
     rows = []
     for k in res.missing_mos:
-        why = _creatable(res, k)
+        why = plan.missing_why.get(k, "")
         rows.append({"Node_ID": node, "MO": k, "Class": classes_of(k)[-1], "Section": section_of(k),
                      "Status": "Missing in Post", "Creation Script": why or "Scripted (Missing Parameter/Profile Creation)"})
     for k in res.new_mos:
@@ -250,6 +265,12 @@ def build_sheets(res: AuditResult, plan: Plan) -> "OrderedDict[str, list[tuple[s
             for it in res.items if it.section == OTHER and not it.info]
     if rows:
         sheets["OTHER_MO_AUDIT"] = [("", pd.DataFrame(rows))]
+
+    # what the correction scripts leave out and why (no longer written as comments into the scripts)
+    rows = [{"Node_ID": node, "Correction Section": sec, "Not scripted": note} for sec, notes in plan.notes.items()
+            for note in notes]
+    if rows:
+        sheets["NOT_SCRIPTED"] = [("", pd.DataFrame(rows))]
     return sheets
 
 

@@ -12,7 +12,7 @@ import re
 from collections import OrderedDict
 from xml.sax.saxutils import escape
 
-from tools.lte.amos_netconf.engine import CLOSE, HELLO, SYSTEM_IDS, _kind
+from tools.lte.amos_netconf.engine import CLOSE, HELLO, NOT_SOFT, SYSTEM_IDS, _kind
 
 from .audit import (CELL_REL, EUTRAN_FREQ, EUTRAN_FREQ_REL, FEATURE, GERAN_FREQ_REL, GUTRAN_FREQ_REL, LTE_GPL, NR_GPL,
                     OTHER, RUNTIME, SITE_DATA, SITE_REF_TOPS, SSB_FREQ, CELL_CLASSES, AuditResult, classes_of,
@@ -66,6 +66,7 @@ class Plan:
         self.guards = {}           # ldn -> (switch attr, value it must have for the change, value afterwards)
         self.locks = OrderedDict()  # MOs locked at the start and unlocked at the end -> reason
         self.stay_locked = set()    # locked MOs PRE has LOCKED: not unlocked at the end
+        self.missing_why = {}       # MO missing in POST and not created by the script -> reason
 
 
 def _mom_info(res, ldn, attr):
@@ -89,6 +90,11 @@ def _creatable(res, ldn) -> str:
         return "predefined by the node - not scripted"
     if cls[-1].startswith("EP_"):
         return "endpoint made by the node (\"is system created\") - not scripted"
+    if cls[-1] == "PmFlexCounterFilter":
+        same = _same_flex_filter(res, ldn)
+        if same:
+            return (f"POST {same.rsplit(',', 1)[-1]} has the same filter values (the node allows each filter combination "
+                    "once: \"... is not unique\") - not scripted")
     # a class without any writable attribute is made by the node unless a child of it is scripted
     # (RpUserPlaneTermination / S1UTermination with only live links below, PmUlInterferenceReport: "is system created")
     key = res.post.mom.class_key(ldn)
@@ -96,6 +102,53 @@ def _creatable(res, ldn) -> str:
                         and not _creatable(res, k) for k in res.pre_mos):
         return "made by the node (no writable attribute) - not scripted"
     return ""
+
+
+# NR resource blocks per channel bandwidth (MHz) at 30 kHz subcarrier spacing (band n78)
+NR_RBS_30KHZ = {10: 24, 15: 38, 20: 51, 25: 65, 30: 78, 40: 106, 50: 133, 60: 162, 70: 189, 80: 217, 90: 245, 100: 273}
+
+
+def _local(ref: str) -> str:
+    return re.sub(r"^ManagedElement=[^,]+,", "", str(ref).strip())
+
+
+def _bwp_too_wide(res, ldn, attr, pv) -> str:
+    """'' or why an NRCellDU bWPRef / bWPSetRef of PRE cannot go on the POST cell: BWPs wider than the POST cell
+    ("BWP ... is wider than the ... NRCellDU ... DL cell width", HSN143-1 40 MHz with the 100 MHz BWPs of PRE)"""
+    if attr not in ("bWPRef", "bWPSetRef") or not re.match(r"^GNBDUFunction=[^,]+,NRCellDU=[^,]+$", ldn):
+        return ""
+    mos = lambda k: res.post.mos.get(k) or res.pre_mos.get(k) or {}
+    carriers = [_local(r) for r in _refs(res.post.mos.get(ldn, {}).get("nRSectorCarrierRef", ""))]
+    widths = [int(m.group(1)) for c in carriers for m in [re.match(r"^\s*(\d+)", text(mos(c).get("bSChannelBwDL", "")))] if m]
+    if not widths:
+        return ""
+    cell_rbs = NR_RBS_30KHZ.get(min(widths), 0)
+    bwps = [_local(r) for r in _refs(pv)]
+    for s in [b for b in bwps if ",BWPSet=" in b]:             # a BWPSet: its BWPs
+        bwps += [_local(r) for a in ("allBWPRegularRef", "startBWPDlRef", "startBWPUlRef") for r in _refs(mos(s).get(a, ""))]
+    rbs = [int(m.group(1)) for b in bwps if ",BWP=" in b for m in [re.match(r"^\s*(\d+)", text(mos(b).get("numberOfRBs", "")))] if m]
+    if cell_rbs and rbs and max(rbs) > cell_rbs:
+        return f"the BWPs ({max(rbs)} RBs) are wider than the POST cell ({min(widths)} MHz = {cell_rbs} RBs)"
+    return ""
+
+
+def _flex_filter_key(mo) -> tuple:
+    """the enabled filters of a PmFlexCounterFilter with their ranges (what the node keeps unique)"""
+    out = []
+    for a, v in mo.items():
+        m = re.match(r"^(\w+)FilterEnabled$", a)
+        if m and text(v).strip().lower() == "true":
+            out.append((m.group(1), text(mo.get(m.group(1) + "FilterMin", "")), text(mo.get(m.group(1) + "FilterMax", ""))))
+    return tuple(sorted(out))
+
+
+def _same_flex_filter(res, ldn) -> str:
+    """POST PmFlexCounterFilter of the same function with the filter values of the missing PRE one (HSN143-1: PRE ENDC =
+    POST ENDC2To99 made by the 5G GPL: 'combination ... is not unique')"""
+    key = _flex_filter_key(res.pre_mos[ldn])
+    parent = ldn.rsplit(",", 1)[0]
+    return next((k for k, v in res.post.mos.items() if k.rsplit(",", 1)[0] == parent
+                 and classes_of(k)[-1] == "PmFlexCounterFilter" and key and _flex_filter_key(v) == key), "")
 
 
 def _order_creates(res, ldns):
@@ -228,6 +281,8 @@ def build_plan(res: AuditResult) -> Plan:
         elif "restricted" in info[2]:
             plan.notes[target].append(f"{label}: restricted (only settable when the MO is created) - "
                                       f"PRE '{text(pv)}' - not scripted")
+        elif _bwp_too_wide(res, it.ldn, it.attr, pv):
+            plan.notes[target].append(f"{label}: {_bwp_too_wide(res, it.ldn, it.attr, pv)} - not scripted")
         elif res.cross_site and it.attr.lower() in SITE_DATA:
             plan.notes[target].append(f"{label}: site data of a different site - not scripted")
         elif res.cross_site and any(r.startswith(SITE_REF_TOPS) for v in (pv, res.post.mos.get(it.ldn, {}).get(it.attr))
@@ -256,6 +311,7 @@ def build_plan(res: AuditResult) -> Plan:
             why = "its parent MO is not created - not scripted"
         if why:
             not_made.add(ldn)
+            plan.missing_why[ldn] = why
             skipped.setdefault((classes_of(ldn)[-1], why), []).append(ldn)
         else:
             creatable.append(ldn)
@@ -278,14 +334,15 @@ def build_plan(res: AuditResult) -> Plan:
         cls = classes_of(ldn)[-1]
         if parent in left_out or any(r in left_out for v in create_attrs(res, ldn).values() for r in _refs(v)):
             left_out.add(ldn)
-            plan.notes[MISSING].append(f"{ldn}: its parent / a referenced MO is not created - not scripted")
+            plan.missing_why[ldn] = "its parent / a referenced MO is not created - not scripted"
+            plan.notes[MISSING].append(f"{ldn}: {plan.missing_why[ldn]}")
             continue
         if cls in MAX_CHILDREN:
             n = children.get((parent, cls), 0) + 1
             if n > MAX_CHILDREN[cls]:
                 left_out.add(ldn)
-                plan.notes[MISSING].append(f"{ldn}: the parent has {n - 1} {cls} already (node maximum "
-                                           f"{MAX_CHILDREN[cls]}) - not scripted")
+                plan.missing_why[ldn] = f"the parent has {n - 1} {cls} already (node maximum {MAX_CHILDREN[cls]}) - not scripted"
+                plan.notes[MISSING].append(f"{ldn}: {plan.missing_why[ldn]}")
                 continue
             children[(parent, cls)] = n
         if cls in MAX_RESERVED:
@@ -294,11 +351,13 @@ def build_plan(res: AuditResult) -> Plan:
             n = reserved.get(r, 0) + 1
             if n > top:
                 left_out.add(ldn)
-                plan.notes[MISSING].append(f"{ldn}: {r[1]} is used by {n - 1} {cls} already (node maximum {top}) - "
-                                           "not scripted")
+                plan.missing_why[ldn] = f"{r[1]} is used by {n - 1} {cls} already (node maximum {top}) - not scripted"
+                plan.notes[MISSING].append(f"{ldn}: {plan.missing_why[ldn]}")
                 continue
             reserved[r] = n
-        soft = parent in creatable and ldn.rsplit("=", 1)[-1] in SYSTEM_IDS
+        # an id 1/Default/Base child is taken as node-made (own merge RPC after its parent) - not the NOT_SOFT classes:
+        # BWPSet needs its BWPSetUeCfg=1 in its own create (HSN143-1: "must have exactly one BWPSetUeCfg instance ...")
+        soft = parent in creatable and ldn.rsplit("=", 1)[-1] in SYSTEM_IDS and cls not in NOT_SOFT
         plan.creates.append((ldn, soft))
 
     # changes that point to an MO created by the script go behind the creates (NRCellCU mcpcPSCellProfileRef ->
@@ -331,12 +390,14 @@ def build_plan(res: AuditResult) -> Plan:
 
 
 def set_value(res, ldn, attr):
-    """PRE value to write on an existing MO; a struct gets the members PRE leaves empty from POST (the node needs the
-    whole struct: NRCellDU csiRsConfig4P without i11Restriction = "Multiplicity violation")"""
+    """PRE value to write on an existing MO; a struct is written whole with the PRE members, empty ones included (the
+    node needs every member: csiRsConfig4P without i11Restriction = "Multiplicity violation"; taking POST's member
+    instead gave csiRsControl4Ports OFF + i11Restriction FF = "incorrect configuration", HSN143-1); only members PRE
+    does not have at all (other release) come from POST"""
     v = res.pre_mos[ldn][attr]
     cur = res.post.mos.get(ldn, {}).get(attr)
     if isinstance(v, dict) and isinstance(cur, dict):
-        v = OrderedDict((m, cur[m] if text(x) == "" and text(cur.get(m, "")) != "" else x) for m, x in v.items())
+        v = OrderedDict(v)
         v.update((m, x) for m, x in cur.items() if m not in v)
     return v
 
@@ -393,9 +454,7 @@ def write_amos(res: AuditResult, plan: Plan, ts: str) -> str:
         out += [f"# needed for {plan.locks[ldn]}", f"bl {_amos_mo(ldn)}"]
     out += [lock_end, ""]
     for sec, (start, end) in HEADERS.items():
-        out.append(start)
-        for note in plan.notes[sec]:
-            out.append(f"# {note}")
+        out.append(start)               # the 'not scripted' notes stay out of the scripts (user); the report lists them
         if sec == MISSING:
             # same groups and order as the XML; a new MO with new children in one transaction (confb+ ... confb-):
             # a CUCP5qiTable needs at least one CUCP5qi when it is created
@@ -459,6 +518,9 @@ def _xml_attr(res, ldn, attr, v) -> str:
                 mt = members.get(m)
                 mseq, mkind, mref = _kind(mt[0]) if mt else (False, "string", "")
                 vals = _array_items(str(x)) if mseq else [x]
+                if not mseq and text(x) == "" and mkind in ("string", "derivedRef"):
+                    inner.append(f"<{m}></{m}>")        # empty member (csiRsConfig4P i11Restriction) - not left out
+                    continue
                 inner += [f"<{m}>{escape(_xml_scalar(res, mkind, mref, y))}</{m}>" for y in vals if str(y) != ""]
             return f"<{attr}>{''.join(inner)}</{attr}>"
         return "".join(struct(d) for d in (v if isinstance(v, list) else [v]))
@@ -573,7 +635,6 @@ def write_xml(res: AuditResult, plan: Plan, ts: str) -> str:
     lock_section(LOCK_HEADERS[0], _lock_order(plan), "LOCKED", "Lock")
     for sec, (start, end) in HEADERS.items():
         pending.append(_comment(start))
-        pending += [_comment(n) for n in plan.notes[sec]]
         n = 0
         if sec == MISSING:
             # merge, not create: a missing MO the node has made meanwhile (BG1499 UlServiceDefinitionUeCfg=VoNR

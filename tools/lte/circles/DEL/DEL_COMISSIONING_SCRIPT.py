@@ -1,4 +1,5 @@
 DEL_SiteBasic_ipv6_6631 = """
+<?xml version="1.0" encoding="UTF-8"?>
 <hello xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
   <capabilities>
     <capability>urn:ietf:params:netconf:base:1.0</capability>
@@ -13,7 +14,7 @@ DEL_SiteBasic_ipv6_6631 = """
     <config xmlns:xc="urn:ietf:params:xml:ns:netconf:base:1.0">
       <ManagedElement xmlns="urn:com:ericsson:ecim:ComTop">
         <managedElementId>1</managedElementId>
-        <dnPrefix>SubNetwork=ONRM_ROOT_MO,SubNetwork=LTE,MeContext={eNodeBName}</dnPrefix>
+        <dnPrefix>SubNetwork=ONRM_ROOT_MO,SubNetwork=LTE,SubNetwork=Baseband,MeContext={eNodeBName}</dnPrefix>
         <SystemFunctions>
           <systemFunctionsId>1</systemFunctionsId>
           <Lm xmlns="urn:com:ericsson:ecim:RcsLM">
@@ -24,15 +25,12 @@ DEL_SiteBasic_ipv6_6631 = """
             <secMId>1</secMId>
             <UserManagement>
               <userManagementId>1</userManagementId>
-              <LdapAuthenticationMethod xmlns="urn:com:ericsson:ecim:RcsLdapAuthentication">
-                <ldapAuthenticationMethodId>1</ldapAuthenticationMethodId>
-                <administrativeState>UNLOCKED</administrativeState>
-              </LdapAuthenticationMethod>
               <UserIdentity xmlns="urn:com:ericsson:ecim:RcsUser">
                 <userIdentityId>1</userIdentityId>
                 <MaintenanceUser>
                   <maintenanceUserId>1</maintenanceUserId>
                   <userName>rbs</userName>
+                  <userType>MAINTENANCE_USER</userType>
                   <password>
                     <cleartext />
                     <password>rbs</password>
@@ -47,21 +45,27 @@ DEL_SiteBasic_ipv6_6631 = """
               <cliTlsId>1</cliTlsId>
               <administrativeState>UNLOCKED</administrativeState>
             </CliTls>
-            <NtpServer>
-              <ntpServerId>1</ntpServerId>
-              <userLabel>NTP TOD1</userLabel>
-              <serverAddress>10.19.109.12</serverAddress>
-              <administrativeState>UNLOCKED</administrativeState>
-            </NtpServer>
-            </SysM>
+          </SysM>
         </SystemFunctions>
         <Transport>
           <transportId>1</transportId>
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>OAM</routerId>
+            <hopLimit>64</hopLimit>
+            <pathMtuExpiresIPv6>86400</pathMtuExpiresIPv6>
             <ttl>64</ttl>
           </Router>
         </Transport>
+        <Equipment xmlns="urn:com:ericsson:ecim:ReqEquipment">
+          <equipmentId>1</equipmentId>
+          <FieldReplaceableUnit xmlns="urn:com:ericsson:ecim:ReqFieldReplaceableUnit">
+            <fieldReplaceableUnitId>{fieldReplaceableUnitId}</fieldReplaceableUnitId>
+            <TnPort xmlns="urn:com:ericsson:ecim:ReqTnPort">
+              <tnPortId>{tnPortId}</tnPortId>
+              <userLabel>{tnPortId}</userLabel>
+            </TnPort>
+          </FieldReplaceableUnit>
+        </Equipment>
         <Transport>
           <transportId>1</transportId>
           <EthernetPort xmlns="urn:com:ericsson:ecim:RtnL2EthernetPort">
@@ -70,6 +74,7 @@ DEL_SiteBasic_ipv6_6631 = """
             <admOperatingMode>1G_FULL</admOperatingMode>
             <autoNegEnable>true</autoNegEnable>
             <encapsulation>ManagedElement=1,Equipment=1,FieldReplaceableUnit={fieldReplaceableUnitId},TnPort={tnPortId}</encapsulation>
+            <lldpTransmit>DISABLED</lldpTransmit>
             <userLabel>{tnPortId}</userLabel>
           </EthernetPort>
           <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
@@ -83,12 +88,19 @@ DEL_SiteBasic_ipv6_6631 = """
             <routerId>OAM</routerId>
             <InterfaceIPv6 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv6">
               <interfaceIPv6Id>{tnPortId}_OAM</interfaceIPv6Id>
+              <bfdStaticRoutes>DISABLED</bfdStaticRoutes>
+              <dscpNdp>48</dscpNdp>
               <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_OAM</encapsulation>
               <mtu>1500</mtu>
+              <neighborDiscoveryTimeout>30000</neighborDiscoveryTimeout>
+              <neighborSolicitationInterval>1000</neighborSolicitationInterval>
               <userLabel>OAM</userLabel>
               <AddressIPv6>
                 <addressIPv6Id>{tnPortId}_OAM</addressIPv6Id>
                 <address>{OAM_IP}</address>
+                <configurationMode>MANUAL</configurationMode>
+                <duidType>DUID_LLT</duidType>
+                <primaryAddress>true</primaryAddress>
               </AddressIPv6>
             </InterfaceIPv6>
           </Router>
@@ -108,76 +120,82 @@ DEL_SiteBasic_ipv6_6631 = """
             <Snmp xmlns="urn:com:ericsson:ecim:RcsSnmp">
               <snmpId>1</snmpId>
               <administrativeState>UNLOCKED</administrativeState>
-              <agentAddress>
-                <host>0.0.0.0</host>
-                <port>161</port>
-              </agentAddress>
+              <enableSourceCheckForV1V2C>false</enableSourceCheckForV1V2C>
+              <port>161</port>
+              <portDtls>10161</portDtls>
               <SnmpTargetV2C>
-                <snmpTargetV2CId>1</snmpTargetV2CId>
-                <community>public</community>
-                <address>10.19.109.40</address>
+                <snmpTargetV2CId>ENMFM</snmpTargetV2CId>
+                <community>enm-public</community>
+                <informRetryCount>1</informRetryCount>
+                <address>2401:4900:0:133:0:0:2:B821</address>
                 <port>162</port>
+                <informTimeout>300</informTimeout>
+                <transportMethod>TRAP</transportMethod>
+                <isMibWritable>true</isMibWritable>
                 <administrativeState>UNLOCKED</administrativeState>
               </SnmpTargetV2C>
             </Snmp>
+            <TimeM xmlns="urn:com:ericsson:ecim:RcsTimeM">
+              <timeMId>1</timeMId>
+              <Ntp>
+                <ntpId>1</ntpId>
+                <NtpServer>
+                  <ntpServerId>1</ntpServerId>
+                  <serverAddress>2401:4900:0024:0300:0000:0000:0000:0452</serverAddress>
+                  <administrativeState>UNLOCKED</administrativeState>
+                </NtpServer>
+                <NtpServer>
+                  <ntpServerId>2</ntpServerId>
+                  <serverAddress>2401:4900:0024:0300:0000:0000:0000:0453</serverAddress>
+                  <administrativeState>UNLOCKED</administrativeState>
+                </NtpServer>
+              </Ntp>
+            </TimeM>
           </SysM>
         </SystemFunctions>
         <Transport>
           <transportId>1</transportId>
-          <Ntp xmlns="urn:com:ericsson:ecim:RsyncNtp">
-            <ntpId>1</ntpId>
-          </Ntp>
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>LTECP</routerId>
+            <hopLimit>64</hopLimit>
+            <pathMtuExpiresIPv6>86400</pathMtuExpiresIPv6>
             <ttl>64</ttl>
           </Router>
-          <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
-            <vlanPortId>{tnPortId}_CP</vlanPortId>
-            <encapsulation>ManagedElement=1,Transport=1,EthernetPort={tnPortId}</encapsulation>
-            <isTagged>true</isTagged>
-            <userLabel>Control Plane</userLabel>
-            <vlanId>{LTE_S1_vlan}</vlanId>
-          </VlanPort>
-          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
-            <routerId>LTECP</routerId>
-            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
-              <interfaceIPv4Id>{tnPortId}_CP</interfaceIPv4Id>
-              <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_CP</encapsulation>
-              <mtu>1500</mtu>
-              <userLabel>Control Plane</userLabel>
-              <AddressIPv4>
-                <addressIPv4Id>{tnPortId}_CP</addressIPv4Id>
-                <address>{LTE_S1_IP}</address>
-              </AddressIPv4>
-            </InterfaceIPv4>
-          </Router>
-          <Ntp xmlns="urn:com:ericsson:ecim:RsyncNtp">
-            <ntpId>1</ntpId>
-            <NtpFrequencySync>
-              <ntpFrequencySyncId>NTP1</ntpFrequencySyncId>
-              <addressIPv4Reference>ManagedElement=1,Transport=1,Router=LTECP,InterfaceIPv4={tnPortId}_CP,AddressIPv4={tnPortId}_CP</addressIPv4Reference>
-              <dscp>46</dscp>
-              <syncServerNtpIpAddress>10.71.26.24</syncServerNtpIpAddress>
-            </NtpFrequencySync>
-            <NtpFrequencySync>
-              <ntpFrequencySyncId>NTP2</ntpFrequencySyncId>
-              <addressIPv4Reference>ManagedElement=1,Transport=1,Router=LTECP,InterfaceIPv4={tnPortId}_CP,AddressIPv4={tnPortId}_CP</addressIPv4Reference>
-              <dscp>46</dscp>
-              <syncServerNtpIpAddress>10.71.26.26</syncServerNtpIpAddress>
-            </NtpFrequencySync>
-          </Ntp>
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>LTEUP</routerId>
+            <hopLimit>64</hopLimit>
+            <pathMtuExpiresIPv6>86400</pathMtuExpiresIPv6>
             <ttl>64</ttl>
           </Router>
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>OAM</routerId>
             <DnsClient xmlns="urn:com:ericsson:ecim:RtnDnsClient">
               <dnsClientId>1</dnsClientId>
+              <configurationMode>MANUAL</configurationMode>
               <dscp>28</dscp>
-              <serverAddress>10.19.109.12</serverAddress>
-              <serverAddress>10.19.109.13</serverAddress>
+              <serverAddress>2401:4900:0024:0300:0000:0000:0000:0452</serverAddress>
+              <serverAddress>2401:4900:0024:0300:0000:0000:0000:0453</serverAddress>
             </DnsClient>
+          </Router>
+          <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
+            <vlanPortId>{tnPortId}_CP</vlanPortId>
+            <encapsulation>ManagedElement=1,Transport=1,EthernetPort={tnPortId}</encapsulation>
+            <isTagged>true</isTagged>
+            <userLabel>User Plane</userLabel>
+            <vlanId>{LTE_S1_vlan}</vlanId>
+          </VlanPort>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTECP</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_CP</interfaceIPv4Id>
+              <arpTimeout>300</arpTimeout>
+              <bfdStaticRoutes>DISABLED</bfdStaticRoutes>
+              <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_CP</encapsulation>
+              <ipOptionsDisabled>false</ipOptionsDisabled>
+              <mtu>1500</mtu>
+              <pcpArp>6</pcpArp>
+              <userLabel>Control Plane</userLabel>
+            </InterfaceIPv4>
           </Router>
           <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
             <vlanPortId>{tnPortId}_UP</vlanPortId>
@@ -190,71 +208,450 @@ DEL_SiteBasic_ipv6_6631 = """
             <routerId>LTEUP</routerId>
             <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
               <interfaceIPv4Id>{tnPortId}_UP</interfaceIPv4Id>
+              <arpTimeout>300</arpTimeout>
+              <bfdStaticRoutes>DISABLED</bfdStaticRoutes>
               <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_UP</encapsulation>
+              <ipOptionsDisabled>false</ipOptionsDisabled>
               <mtu>1500</mtu>
+              <pcpArp>6</pcpArp>
               <userLabel>User Plane</userLabel>
+            </InterfaceIPv4>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTECP</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_CP</interfaceIPv4Id>
               <AddressIPv4>
-                <addressIPv4Id>{tnPortId}_UP</addressIPv4Id>
-                <address>{LTE_UP_IP}</address>
+                <addressIPv4Id>{tnPortId}_CP</addressIPv4Id>
+                <address>{LTE_S1_IP}</address>
+                <configurationMode>MANUAL</configurationMode>
+                <dhcpClientIdentifierType>AUTOMATIC</dhcpClientIdentifierType>
+                <primaryAddress>true</primaryAddress>
               </AddressIPv4>
             </InterfaceIPv4>
           </Router>
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
-            <routerId>OAM</routerId>
-            <RouteTableIPv6Static xmlns="urn:com:ericsson:ecim:RtnRoutesStaticRouteIPv6">
-              <routeTableIPv6StaticId>1</routeTableIPv6StaticId>
-              <Dst>
-                <dstId>OAM</dstId>
-                <dst>::/0</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{OAM_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              </RouteTableIPv6Static>
-          </Router>
-          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>LTEUP</routerId>
-            <RouteTableIPv4Static xmlns="urn:com:ericsson:ecim:RtnRoutesStaticRouteIPv4">
-              <routeTableIPv4StaticId>2</routeTableIPv4StaticId>
-              <Dst>
-                <dstId>LTEUP</dstId>
-                <dst>0.0.0.0/0</dst>
-                <NextHop>
-                  <nextHopId>2</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-            </RouteTableIPv4Static>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_UP</interfaceIPv4Id>
+              <AddressIPv4>
+                <addressIPv4Id>{tnPortId}_UP</addressIPv4Id>
+                <address>{LTE_UP_IP}</address>
+                <configurationMode>MANUAL</configurationMode>
+                <dhcpClientIdentifierType>AUTOMATIC</dhcpClientIdentifierType>
+                <primaryAddress>true</primaryAddress>
+              </AddressIPv4>
+            </InterfaceIPv4>
           </Router>
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>LTECP</routerId>
             <RouteTableIPv4Static xmlns="urn:com:ericsson:ecim:RtnRoutesStaticRouteIPv4">
               <routeTableIPv4StaticId>3</routeTableIPv4StaticId>
               <Dst>
-                <dstId>LTECP</dstId>
+                <dstId>MME10-Pri</dstId>
+                <dst>10.103.44.12/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>MME10-Sec</dstId>
+                <dst>10.103.44.13/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>MME11-Pri</dstId>
+                <dst>10.103.44.23/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>MME11-Sec</dstId>
+                <dst>10.103.44.24/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>MME12-Pri</dstId>
+                <dst>10.103.44.1/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>MME12-Sec</dstId>
+                <dst>10.103.44.2/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>MME13-Pri</dstId>
+                <dst>10.103.44.34/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>MME13-Sec</dstId>
+                <dst>10.103.44.35/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>RNC</dstId>
+                <dst>10.160.190.0/24</dst>
+                <NextHop>
+                  <nextHopId>34</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-CP</dstId>
                 <dst>0.0.0.0/0</dst>
                 <NextHop>
                   <nextHopId>3</nextHopId>
                   <address>{LTE_S1_GW}</address>
                   <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
                 </NextHop>
               </Dst>
             </RouteTableIPv4Static>
           </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTEUP</routerId>
+            <RouteTableIPv4Static xmlns="urn:com:ericsson:ecim:RtnRoutesStaticRouteIPv4">
+              <routeTableIPv4StaticId>2</routeTableIPv4StaticId>
+              <Dst>
+                <dstId>DEL-NOI-S87-SAE-CUPS-IMS-01</dstId>
+                <dst>10.1.159.80/30</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>DEL-NOI-S87-SAEGW-UP-01</dstId>
+                <dst>10.1.159.66/31</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>DEL-NOI-S87-SAEGW-UP-03</dstId>
+                <dst>10.1.159.68/30</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>DEL-NOI-S87-SAEGW-UP-07</dstId>
+                <dst>10.1.159.72/29</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>Google_POD4_V4</dstId>
+                <dst>10.58.104.165/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>Google_POD5_V4</dstId>
+                <dst>10.58.104.181/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>POD1</dstId>
+                <dst>10.58.96.101/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>POD2</dstId>
+                <dst>10.58.96.117/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>POD3</dstId>
+                <dst>10.58.96.133/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW10</dstId>
+                <dst>10.0.166.37/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW11</dstId>
+                <dst>10.0.232.5/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW12</dstId>
+                <dst>10.50.96.5/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW13</dstId>
+                <dst>10.50.96.17/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW14</dstId>
+                <dst>10.50.97.5/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW15</dstId>
+                <dst>10.75.212.97/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW16</dstId>
+                <dst>10.75.212.176/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW17</dstId>
+                <dst>10.92.7.86/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW2</dstId>
+                <dst>10.155.68.224/27</dst>
+                <NextHop>
+                  <nextHopId>{fieldReplaceableUnitId}</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW3</dstId>
+                <dst>10.206.16.79/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW4</dstId>
+                <dst>10.206.17.12/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW5</dstId>
+                <dst>10.206.17.1/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW6</dstId>
+                <dst>10.0.123.5/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW7</dstId>
+                <dst>10.206.31.2/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW8</dstId>
+                <dst>10.0.123.37/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW9</dstId>
+                <dst>10.0.166.5/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>Twamp4</dstId>
+                <dst>10.61.112.168/29</dst>
+                <NextHop>
+                  <nextHopId>7</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>Twamp5</dstId>
+                <dst>10.188.27.112/29</dst>
+                <NextHop>
+                  <nextHopId>7</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-UP</dstId>
+                <dst>0.0.0.0/0</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+            </RouteTableIPv4Static>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>OAM</routerId>
+            <RouteTableIPv6Static xmlns="urn:com:ericsson:ecim:RtnRoutesStaticRouteIPv6">
+              <routeTableIPv6StaticId>1</routeTableIPv6StaticId>
+              <Dst>
+                <dstId>OSS</dstId>
+                <dst>::/0</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{OAM_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+            </RouteTableIPv6Static>
+          </Router>
         </Transport>
-        <Equipment xmlns="urn:com:ericsson:ecim:ReqEquipment">
-          <equipmentId>1</equipmentId>
-          <FieldReplaceableUnit xmlns="urn:com:ericsson:ecim:ReqFieldReplaceableUnit">
-            <fieldReplaceableUnitId>{fieldReplaceableUnitId}</fieldReplaceableUnitId>
-            <TnPort xmlns="urn:com:ericsson:ecim:ReqTnPort">
-              <tnPortId>{tnPortId}</tnPortId>
-              <userLabel>{tnPortId}</userLabel>
-            </TnPort>
-          </FieldReplaceableUnit>
-        </Equipment>
       </ManagedElement>
     </config>
   </edit-config>
@@ -264,6 +661,7 @@ DEL_SiteBasic_ipv6_6631 = """
   <close-session></close-session>
 </rpc>
 ]]>]]>
+<?xml version="1.0" encoding="UTF-8"?>
 <hello xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
   <capabilities>
     <capability>urn:ietf:params:netconf:base:1.0</capability>
@@ -278,7 +676,7 @@ DEL_SiteBasic_ipv6_6631 = """
     <config xmlns:xc="urn:ietf:params:xml:ns:netconf:base:1.0">
       <ManagedElement xmlns="urn:com:ericsson:ecim:ComTop">
         <managedElementId>1</managedElementId>
-        <networkManagedElementId>{eNodeBName}</networkManagedElementId>
+        <networkManagedElementId></networkManagedElementId>
       </ManagedElement>
     </config>
   </edit-config>
@@ -288,6 +686,7 @@ DEL_SiteBasic_ipv6_6631 = """
   <close-session></close-session>
 </rpc>
 ]]>]]>
+
 
 """
 
@@ -314,7 +713,7 @@ DEL_SiteBasic_5216_IPV4 = """
             <lmId>1</lmId>
             <fingerprint>{fingerprint}</fingerprint>
           </Lm>
-          <SecM xmlns="urn:com:ericsson:ecim:RcsSecM">
+          <SecM xmlns="urn:com:ericsson:ecim:ComSecM">
             <secMId>1</secMId>
             <UserManagement>
               <userManagementId>1</userManagementId>
@@ -343,8 +742,12 @@ DEL_SiteBasic_5216_IPV4 = """
             </CliTls>
             <NtpServer>
               <ntpServerId>1</ntpServerId>
-              <userLabel>NTP TOD</userLabel>
-              <serverAddress>10.102.220.6</serverAddress>
+              <serverAddress>10.3.35.116</serverAddress>
+              <administrativeState>UNLOCKED</administrativeState>
+            </NtpServer>
+            <NtpServer>
+              <ntpServerId>2</ntpServerId>
+              <serverAddress>10.3.35.119</serverAddress>
               <administrativeState>UNLOCKED</administrativeState>
             </NtpServer>
           </SysM>
@@ -353,7 +756,6 @@ DEL_SiteBasic_5216_IPV4 = """
           <transportId>1</transportId>
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>OAM</routerId>
-            <ttl>64</ttl>
           </Router>
         </Transport>
         <Equipment xmlns="urn:com:ericsson:ecim:ReqEquipment">
@@ -373,7 +775,7 @@ DEL_SiteBasic_5216_IPV4 = """
             <administrativeState>UNLOCKED</administrativeState>
             <admOperatingMode>1G_FULL</admOperatingMode>
             <autoNegEnable>true</autoNegEnable>
-            <encapsulation>ManagedElement=1,Equipment=1,FieldReplaceableUnit=4,TnPort={tnPortId}</encapsulation>
+            <encapsulation>ManagedElement=1,Equipment=1,FieldReplaceableUnit={fieldReplaceableUnitId},TnPort={tnPortId}</encapsulation>
             <userLabel>{tnPortId}</userLabel>
           </EthernetPort>
           <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
@@ -388,7 +790,6 @@ DEL_SiteBasic_5216_IPV4 = """
             <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
               <interfaceIPv4Id>{tnPortId}_OAM</interfaceIPv4Id>
               <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_OAM</encapsulation>
-              <mtu>1500</mtu>
               <userLabel>OAM</userLabel>
               <AddressIPv4>
                 <addressIPv4Id>{tnPortId}_OAM</addressIPv4Id>
@@ -405,66 +806,37 @@ DEL_SiteBasic_5216_IPV4 = """
               <oamAccessPointId>1</oamAccessPointId>
               <accessPoint>ManagedElement=1,Transport=1,Router=OAM,InterfaceIPv4={tnPortId}_OAM,AddressIPv4={tnPortId}_OAM</accessPoint>
             </OamAccessPoint>
-            <OamTrafficClass>
-              <oamTrafficClassId>1</oamTrafficClassId>
-              <dscp>28</dscp>
-            </OamTrafficClass>
+            <Snmp xmlns="urn:com:ericsson:ecim:RcsSnmp">
+              <snmpId>1</snmpId>
+              <administrativeState>UNLOCKED</administrativeState>
+              <agentAddress>
+                <host>0.0.0.0</host>
+                <port>161</port>
+              </agentAddress>
+              <SnmpTargetV2C>
+                <snmpTargetV2CId>1</snmpTargetV2CId>
+                <community>public</community>
+                <address>10.3.34.138</address>
+                <port>162</port>
+                <administrativeState>UNLOCKED</administrativeState>
+              </SnmpTargetV2C>
+            </Snmp>
           </SysM>
         </SystemFunctions>
         <Transport>
           <transportId>1</transportId>
-          <Ntp xmlns="urn:com:ericsson:ecim:RsyncNtp">
-            <ntpId>1</ntpId>
-          </Ntp>
-          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
-            <routerId>LTECP</routerId>
-            <ttl>64</ttl>
-          </Router>
-          <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
-            <vlanPortId>{tnPortId}_CP</vlanPortId>
-            <encapsulation>ManagedElement=1,Transport=1,EthernetPort={tnPortId}</encapsulation>
-            <isTagged>true</isTagged>
-            <userLabel>Control Plane</userLabel>
-            <vlanId>{LTE_S1_vlan}</vlanId>
-          </VlanPort>
-          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
-            <routerId>LTECP</routerId>
-            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
-              <interfaceIPv4Id>{tnPortId}_CP</interfaceIPv4Id>
-              <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_CP</encapsulation>
-              <mtu>1500</mtu>
-              <userLabel>Control Plane</userLabel>
-              <AddressIPv4>
-                <addressIPv4Id>{tnPortId}_CP</addressIPv4Id>
-                <address>{LTE_S1_IP}</address>
-              </AddressIPv4>
-            </InterfaceIPv4>
-          </Router>
-          <Ntp xmlns="urn:com:ericsson:ecim:RsyncNtp">
-            <ntpId>1</ntpId>
-            <NtpFrequencySync>
-              <ntpFrequencySyncId>NTP1</ntpFrequencySyncId>
-              <syncServerNtpIpAddress>10.157.222.42</syncServerNtpIpAddress>
-              <dscp>54</dscp>
-              <addressIPv4Reference>ManagedElement=1,Transport=1,Router=LTECP,InterfaceIPv4={tnPortId}_CP,AddressIPv4={tnPortId}_CP</addressIPv4Reference>
-            </NtpFrequencySync>
-            <NtpFrequencySync>
-              <ntpFrequencySyncId>NTP2</ntpFrequencySyncId>
-              <syncServerNtpIpAddress>10.157.222.44</syncServerNtpIpAddress>
-              <dscp>54</dscp>
-              <addressIPv4Reference>ManagedElement=1,Transport=1,Router=LTECP,InterfaceIPv4={tnPortId}_CP,AddressIPv4={tnPortId}_CP</addressIPv4Reference>
-            </NtpFrequencySync>
-          </Ntp>
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>LTEUP</routerId>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTECP</routerId>
             <ttl>64</ttl>
           </Router>
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>OAM</routerId>
             <DnsClient xmlns="urn:com:ericsson:ecim:RtnDnsClient">
               <dnsClientId>1</dnsClientId>
-              <dscp>46</dscp>
-              <serverAddress>10.142.81.132</serverAddress>
+              <serverAddress>10.3.35.116</serverAddress>
             </DnsClient>
           </Router>
           <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
@@ -479,11 +851,42 @@ DEL_SiteBasic_5216_IPV4 = """
             <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
               <interfaceIPv4Id>{tnPortId}_UP</interfaceIPv4Id>
               <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_UP</encapsulation>
-              <mtu>1500</mtu>
               <userLabel>User Plane</userLabel>
+            </InterfaceIPv4>
+          </Router>
+          <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
+            <vlanPortId>{tnPortId}_CP</vlanPortId>
+            <encapsulation>ManagedElement=1,Transport=1,EthernetPort={tnPortId}</encapsulation>
+            <isTagged>true</isTagged>
+            <userLabel>User Plane</userLabel>
+            <vlanId>{LTE_S1_vlan}</vlanId>
+          </VlanPort>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTECP</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_CP</interfaceIPv4Id>
+              <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_CP</encapsulation>
+              <mtu>1500</mtu>
+              <userLabel>Control Plane</userLabel>
+            </InterfaceIPv4>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTEUP</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_UP</interfaceIPv4Id>
               <AddressIPv4>
                 <addressIPv4Id>{tnPortId}_UP</addressIPv4Id>
                 <address>{LTE_UP_IP}</address>
+              </AddressIPv4>
+            </InterfaceIPv4>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTECP</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_CP</interfaceIPv4Id>
+              <AddressIPv4>
+                <addressIPv4Id>{tnPortId}_CP</addressIPv4Id>
+                <address>{LTE_S1_IP}</address>
               </AddressIPv4>
             </InterfaceIPv4>
           </Router>
@@ -492,39 +895,19 @@ DEL_SiteBasic_5216_IPV4 = """
             <RouteTableIPv4Static xmlns="urn:com:ericsson:ecim:RtnRoutesStaticRouteIPv4">
               <routeTableIPv4StaticId>1</routeTableIPv4StaticId>
               <Dst>
+                <dstId>ENM1</dstId>
+                <dst>10.3.34.0/23</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{OAM_GW}</address>
+                </NextHop>
+              </Dst>
+              <Dst>
                 <dstId>OSS2</dstId>
-                <dst>10.142.18.0/24</dst>
+                <dst>10.3.31.0/24</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>2</nextHopId>
                   <address>{OAM_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>Default_ENM</dstId>
-                <dst>0.0.0.0/0</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{OAM_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>OSS4_M</dstId>
-                <dst>10.142.81.0/24</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{OAM_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>OSS4_N</dstId>
-                <dst>10.142.80.0/24</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{OAM_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
             </RouteTableIPv4Static>
@@ -535,47 +918,122 @@ DEL_SiteBasic_5216_IPV4 = """
               <routeTableIPv4StaticId>2</routeTableIPv4StaticId>
               <Dst>
                 <dstId>SGW1</dstId>
-                <dst>10.50.46.121/32</dst>
+                <dst>10.155.72.32/27</dst>
                 <NextHop>
                   <nextHopId>3</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2</dstId>
-                <dst>10.26.144.0/21</dst>
+                <dstId>SGW2</dstId>
+                <dst>10.155.68.224/27</dst>
                 <NextHop>
                   <nextHopId>{fieldReplaceableUnitId}</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-1</dstId>
+                <dst>10.26.48.0/20</dst>
+                <NextHop>
+                  <nextHopId>5</nextHopId>
+                  <address>{LTE_UP_GW}</address>
                 </NextHop>
               </Dst>
               <Dst>
                 <dstId>X2-2</dstId>
-                <dst>10.26.152.0/22</dst>
+                <dst>10.26.80.0/20</dst>
                 <NextHop>
-                  <nextHopId>5</nextHopId>
+                  <nextHopId>6</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
                 <dstId>X2-3</dstId>
-                <dst>10.26.160.0/22</dst>
+                <dst>10.26.100.0/22</dst>
                 <NextHop>
-                  <nextHopId>6</nextHopId>
+                  <nextHopId>7</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
                 <dstId>X2-4</dstId>
-                <dst>10.26.168.0/22</dst>
+                <dst>10.26.108.0/22</dst>
                 <NextHop>
-                  <nextHopId>7</nextHopId>
+                  <nextHopId>8</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-5</dstId>
+                <dst>10.26.116.0/22</dst>
+                <NextHop>
+                  <nextHopId>9</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-6</dstId>
+                <dst>10.30.4.0/22</dst>
+                <NextHop>
+                  <nextHopId>10</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-7</dstId>
+                <dst>10.209.128.0/20</dst>
+                <NextHop>
+                  <nextHopId>11</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-8</dstId>
+                <dst>10.209.192.0/20</dst>
+                <NextHop>
+                  <nextHopId>12</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-9</dstId>
+                <dst>10.209.240.0/22</dst>
+                <NextHop>
+                  <nextHopId>14</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-10</dstId>
+                <dst>10.26.16.0/20</dst>
+                <NextHop>
+                  <nextHopId>15</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-11</dstId>
+                <dst>10.26.124.0/22</dst>
+                <NextHop>
+                  <nextHopId>16</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-12</dstId>
+                <dst>10.35.132.0/22</dst>
+                <NextHop>
+                  <nextHopId>17</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-13</dstId>
+                <dst>10.209.176.0/22</dst>
+                <NextHop>
+                  <nextHopId>18</nextHopId>
+                  <address>{LTE_UP_GW}</address>
                 </NextHop>
               </Dst>
             </RouteTableIPv4Static>
@@ -586,54 +1044,144 @@ DEL_SiteBasic_5216_IPV4 = """
               <routeTableIPv4StaticId>3</routeTableIPv4StaticId>
               <Dst>
                 <dstId>MME1</dstId>
-                <dst>10.210.211.160/28</dst>
+                <dst>10.155.72.32/27</dst>
                 <NextHop>
-                  <nextHopId>8</nextHopId>
+                  <nextHopId>19</nextHopId>
                   <address>{LTE_S1_GW}</address>
                   <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>RNC NTP</dstId>
-                <dst>10.168.4.80/28</dst>
+                <dstId>MME2</dstId>
+                <dst>10.155.68.224/27</dst>
                 <NextHop>
-                  <nextHopId>9</nextHopId>
+                  <nextHopId>20</nextHopId>
                   <address>{LTE_S1_GW}</address>
                   <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2-5</dstId>
-                <dst>10.26.128.0/21</dst>
+                <dstId>X2-14</dstId>
+                <dst>10.26.32.0/20</dst>
                 <NextHop>
-                  <nextHopId>10</nextHopId>
+                  <nextHopId>21</nextHopId>
                   <address>{LTE_S1_GW}</address>
                   <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2-6</dstId>
-                <dst>10.26.136.0/22</dst>
+                <dstId>X2-15</dstId>
+                <dst>10.26.64.0/20</dst>
                 <NextHop>
-                  <nextHopId>11</nextHopId>
+                  <nextHopId>22</nextHopId>
                   <address>{LTE_S1_GW}</address>
                   <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2-7</dstId>
-                <dst>10.26.156.0/22</dst>
+                <dstId>X2-16</dstId>
+                <dst>10.26.96.0/22</dst>
                 <NextHop>
-                  <nextHopId>12</nextHopId>
+                  <nextHopId>23</nextHopId>
                   <address>{LTE_S1_GW}</address>
                   <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2-8</dstId>
-                <dst>10.26.164.0/22</dst>
+                <dstId>X2-17</dstId>
+                <dst>10.26.104.0/22</dst>
                 <NextHop>
-                  <nextHopId>14</nextHopId>
+                  <nextHopId>24</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-18</dstId>
+                <dst>10.26.112.0/22</dst>
+                <NextHop>
+                  <nextHopId>25</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-19</dstId>
+                <dst>10.30.0.0/22</dst>
+                <NextHop>
+                  <nextHopId>26</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-20</dstId>
+                <dst>10.209.144.0/20</dst>
+                <NextHop>
+                  <nextHopId>27</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-21</dstId>
+                <dst>10.209.208.0/20</dst>
+                <NextHop>
+                  <nextHopId>28</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-22</dstId>
+                <dst>10.209.244.0/22</dst>
+                <NextHop>
+                  <nextHopId>29</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-23</dstId>
+                <dst>10.26.0.0/20</dst>
+                <NextHop>
+                  <nextHopId>30</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-24</dstId>
+                <dst>10.26.120.0/22</dst>
+                <NextHop>
+                  <nextHopId>31</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-25</dstId>
+                <dst>10.35.128.0/20</dst>
+                <NextHop>
+                  <nextHopId>32</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-26</dstId>
+                <dst>10.209.180.0/22</dst>
+                <NextHop>
+                  <nextHopId>33</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>RNC</dstId>
+                <dst>10.160.190.0/24</dst>
+                <NextHop>
+                  <nextHopId>34</nextHopId>
                   <address>{LTE_S1_GW}</address>
                   <adminDistance>1</adminDistance>
                 </NextHop>
@@ -676,6 +1224,7 @@ DEL_SiteBasic_5216_IPV4 = """
 </rpc>
 ]]>]]>
 
+
 """
 
 DEL_SiteBasic_5216_IPV6 = """
@@ -694,87 +1243,23 @@ DEL_SiteBasic_5216_IPV6 = """
     <config xmlns:xc="urn:ietf:params:xml:ns:netconf:base:1.0">
       <ManagedElement xmlns="urn:com:ericsson:ecim:ComTop">
         <managedElementId>1</managedElementId>
-        <dnPrefix>SubNetwork=ONRM_ROOT_MO_R,SubNetwork=LTE,MeContext={eNodeBName}</dnPrefix>
+        <dnPrefix>SubNetwork=ONRM_ROOT_MO,SubNetwork=LTE,SubNetwork=Baseband,MeContext={eNodeBName}</dnPrefix>
         <SystemFunctions>
           <systemFunctionsId>1</systemFunctionsId>
           <Lm xmlns="urn:com:ericsson:ecim:RcsLM">
             <lmId>1</lmId>
             <fingerprint>{fingerprint}</fingerprint>
           </Lm>
-        </SystemFunctions>
-      </ManagedElement>
-    </config>
-  </edit-config>
-</rpc>
-]]>]]>
-<rpc message-id="Closing" xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
-  <close-session></close-session>
-</rpc>
-]]>]]>
-<?xml version="1.0" encoding="UTF-8"?>
-<hello xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
-  <capabilities>
-    <capability>urn:ietf:params:netconf:base:1.0</capability>
-  </capabilities>
-</hello>
-]]>]]>
-<rpc message-id="2" xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
-  <edit-config>
-    <target>
-      <running />
-    </target>
-    <config xmlns:xc="urn:ietf:params:xml:ns:netconf:base:1.0">
-      <ManagedElement xmlns="urn:com:ericsson:ecim:ComTop">
-        <managedElementId>1</managedElementId>
-        <SystemFunctions>
-          <systemFunctionsId>1</systemFunctionsId>
-          <Lm xmlns="urn:com:ericsson:ecim:RcsLM">
-            <lmId>1</lmId>
-            <FeatureState>
-              <featureStateId>CXC4040006</featureStateId>
-              <featureState>ACTIVATED</featureState>
-            </FeatureState>
-          </Lm>
-        </SystemFunctions>
-      </ManagedElement>
-    </config>
-  </edit-config>
-</rpc>
-]]>]]>
-<rpc message-id="Closing" xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
-  <close-session></close-session>
-</rpc>
-]]>]]>
-<?xml version="1.0" encoding="UTF-8"?>
-<hello xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
-  <capabilities>
-    <capability>urn:ietf:params:netconf:base:1.0</capability>
-  </capabilities>
-</hello>
-]]>]]>
-<rpc message-id="3" xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
-  <edit-config>
-    <target>
-      <running />
-    </target>
-    <config xmlns:xc="urn:ietf:params:xml:ns:netconf:base:1.0">
-      <ManagedElement xmlns="urn:com:ericsson:ecim:ComTop">
-        <managedElementId>1</managedElementId>
-        <SystemFunctions>
-          <systemFunctionsId>1</systemFunctionsId>
           <SecM xmlns="urn:com:ericsson:ecim:RcsSecM">
             <secMId>1</secMId>
             <UserManagement>
               <userManagementId>1</userManagementId>
-              <LdapAuthenticationMethod xmlns="urn:com:ericsson:ecim:RcsLdapAuthentication">
-                <ldapAuthenticationMethodId>1</ldapAuthenticationMethodId>
-                <administrativeState>UNLOCKED</administrativeState>
-              </LdapAuthenticationMethod>
               <UserIdentity xmlns="urn:com:ericsson:ecim:RcsUser">
                 <userIdentityId>1</userIdentityId>
                 <MaintenanceUser>
                   <maintenanceUserId>1</maintenanceUserId>
                   <userName>rbs</userName>
+                  <userType>MAINTENANCE_USER</userType>
                   <password>
                     <cleartext />
                     <password>rbs</password>
@@ -789,18 +1274,14 @@ DEL_SiteBasic_5216_IPV6 = """
               <cliTlsId>1</cliTlsId>
               <administrativeState>UNLOCKED</administrativeState>
             </CliTls>
-            <NtpServer>
-              <ntpServerId>1</ntpServerId>
-              <userLabel>NTP TOD1</userLabel>
-              <serverAddress>10.102.220.6</serverAddress>
-              <administrativeState>UNLOCKED</administrativeState>
-            </NtpServer>
           </SysM>
         </SystemFunctions>
         <Transport>
           <transportId>1</transportId>
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>OAM</routerId>
+            <hopLimit>64</hopLimit>
+            <pathMtuExpiresIPv6>86400</pathMtuExpiresIPv6>
             <ttl>64</ttl>
           </Router>
         </Transport>
@@ -821,7 +1302,8 @@ DEL_SiteBasic_5216_IPV6 = """
             <administrativeState>UNLOCKED</administrativeState>
             <admOperatingMode>1G_FULL</admOperatingMode>
             <autoNegEnable>true</autoNegEnable>
-            <encapsulation>ManagedElement=1,Equipment=1,FieldReplaceableUnit=4,TnPort={tnPortId}</encapsulation>
+            <encapsulation>ManagedElement=1,Equipment=1,FieldReplaceableUnit={fieldReplaceableUnitId},TnPort={tnPortId}</encapsulation>
+            <lldpTransmit>DISABLED</lldpTransmit>
             <userLabel>{tnPortId}</userLabel>
           </EthernetPort>
           <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
@@ -835,12 +1317,19 @@ DEL_SiteBasic_5216_IPV6 = """
             <routerId>OAM</routerId>
             <InterfaceIPv6 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv6">
               <interfaceIPv6Id>{tnPortId}_OAM</interfaceIPv6Id>
+              <bfdStaticRoutes>DISABLED</bfdStaticRoutes>
+              <dscpNdp>48</dscpNdp>
               <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_OAM</encapsulation>
               <mtu>1500</mtu>
+              <neighborDiscoveryTimeout>30000</neighborDiscoveryTimeout>
+              <neighborSolicitationInterval>1000</neighborSolicitationInterval>
               <userLabel>OAM</userLabel>
               <AddressIPv6>
                 <addressIPv6Id>{tnPortId}_OAM</addressIPv6Id>
                 <address>{OAM_IP}</address>
+                <configurationMode>MANUAL</configurationMode>
+                <duidType>DUID_LLT</duidType>
+                <primaryAddress>true</primaryAddress>
               </AddressIPv6>
             </InterfaceIPv6>
           </Router>
@@ -857,63 +1346,85 @@ DEL_SiteBasic_5216_IPV6 = """
               <oamTrafficClassId>1</oamTrafficClassId>
               <dscp>28</dscp>
             </OamTrafficClass>
+            <Snmp xmlns="urn:com:ericsson:ecim:RcsSnmp">
+              <snmpId>1</snmpId>
+              <administrativeState>UNLOCKED</administrativeState>
+              <enableSourceCheckForV1V2C>false</enableSourceCheckForV1V2C>
+              <port>161</port>
+              <portDtls>10161</portDtls>
+              <SnmpTargetV2C>
+                <snmpTargetV2CId>ENMFM</snmpTargetV2CId>
+                <community>enm-public</community>
+                <informRetryCount>1</informRetryCount>
+                <address>2401:4900:0:133:0:0:2:B821</address>
+                <port>162</port>
+                <informTimeout>300</informTimeout>
+                <transportMethod>TRAP</transportMethod>
+                <isMibWritable>true</isMibWritable>
+                <administrativeState>UNLOCKED</administrativeState>
+              </SnmpTargetV2C>
+            </Snmp>
+            <TimeM xmlns="urn:com:ericsson:ecim:RcsTimeM">
+              <timeMId>1</timeMId>
+              <Ntp>
+                <ntpId>1</ntpId>
+                <NtpServer>
+                  <ntpServerId>1</ntpServerId>
+                  <serverAddress>2401:4900:0024:0300:0000:0000:0000:0452</serverAddress>
+                  <administrativeState>UNLOCKED</administrativeState>
+                </NtpServer>
+                <NtpServer>
+                  <ntpServerId>2</ntpServerId>
+                  <serverAddress>2401:4900:0024:0300:0000:0000:0000:0453</serverAddress>
+                  <administrativeState>UNLOCKED</administrativeState>
+                </NtpServer>
+              </Ntp>
+            </TimeM>
           </SysM>
         </SystemFunctions>
         <Transport>
           <transportId>1</transportId>
-          <Ntp xmlns="urn:com:ericsson:ecim:RsyncNtp">
-            <ntpId>1</ntpId>
-          </Ntp>
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>LTECP</routerId>
+            <hopLimit>64</hopLimit>
+            <pathMtuExpiresIPv6>86400</pathMtuExpiresIPv6>
             <ttl>64</ttl>
           </Router>
-          <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
-            <vlanPortId>{tnPortId}_CP</vlanPortId>
-            <encapsulation>ManagedElement=1,Transport=1,EthernetPort={tnPortId}</encapsulation>
-            <isTagged>true</isTagged>
-            <userLabel>Control Plane</userLabel>
-            <vlanId>{LTE_S1_vlan}</vlanId>
-          </VlanPort>
-          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
-            <routerId>LTECP</routerId>
-            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
-              <interfaceIPv4Id>{tnPortId}_CP</interfaceIPv4Id>
-              <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_CP</encapsulation>
-              <mtu>1500</mtu>
-              <userLabel>Control Plane</userLabel>
-              <AddressIPv4>
-                <addressIPv4Id>{tnPortId}_CP</addressIPv4Id>
-                <address>{LTE_S1_IP}</address>
-              </AddressIPv4>
-            </InterfaceIPv4>
-          </Router>
-          <Ntp xmlns="urn:com:ericsson:ecim:RsyncNtp">
-            <ntpId>1</ntpId>
-            <NtpFrequencySync>
-              <ntpFrequencySyncId>NTP1</ntpFrequencySyncId>
-              <syncServerNtpIpAddress>10.177.250.60</syncServerNtpIpAddress>
-              <dscp>54</dscp>
-              <addressIPv4Reference>ManagedElement=1,Transport=1,Router=LTECP,InterfaceIPv4={tnPortId}_CP,AddressIPv4={tnPortId}_CP</addressIPv4Reference>
-            </NtpFrequencySync>
-            <NtpFrequencySync>
-              <ntpFrequencySyncId>NTP2</ntpFrequencySyncId>
-              <syncServerNtpIpAddress>10.177.250.62</syncServerNtpIpAddress>
-              <dscp>54</dscp>
-              <addressIPv4Reference>ManagedElement=1,Transport=1,Router=LTECP,InterfaceIPv4={tnPortId}_CP,AddressIPv4={tnPortId}_CP</addressIPv4Reference>
-            </NtpFrequencySync>
-          </Ntp>		  
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>LTEUP</routerId>
+            <hopLimit>64</hopLimit>
+            <pathMtuExpiresIPv6>86400</pathMtuExpiresIPv6>
             <ttl>64</ttl>
           </Router>
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>OAM</routerId>
             <DnsClient xmlns="urn:com:ericsson:ecim:RtnDnsClient">
               <dnsClientId>1</dnsClientId>
-              <dscp>46</dscp>
-              <serverAddress>10.142.9.179</serverAddress>
+              <configurationMode>MANUAL</configurationMode>
+              <dscp>28</dscp>
+              <serverAddress>2401:4900:0024:0300:0000:0000:0000:0452</serverAddress>
+              <serverAddress>2401:4900:0024:0300:0000:0000:0000:0453</serverAddress>
             </DnsClient>
+          </Router>
+          <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
+            <vlanPortId>{tnPortId}_CP</vlanPortId>
+            <encapsulation>ManagedElement=1,Transport=1,EthernetPort={tnPortId}</encapsulation>
+            <isTagged>true</isTagged>
+            <userLabel>User Plane</userLabel>
+            <vlanId>{LTE_S1_vlan}</vlanId>
+          </VlanPort>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTECP</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_CP</interfaceIPv4Id>
+              <arpTimeout>300</arpTimeout>
+              <bfdStaticRoutes>DISABLED</bfdStaticRoutes>
+              <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_CP</encapsulation>
+              <ipOptionsDisabled>false</ipOptionsDisabled>
+              <mtu>1500</mtu>
+              <pcpArp>6</pcpArp>
+              <userLabel>Control Plane</userLabel>
+            </InterfaceIPv4>
           </Router>
           <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
             <vlanPortId>{tnPortId}_UP</vlanPortId>
@@ -926,119 +1437,429 @@ DEL_SiteBasic_5216_IPV6 = """
             <routerId>LTEUP</routerId>
             <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
               <interfaceIPv4Id>{tnPortId}_UP</interfaceIPv4Id>
+              <arpTimeout>300</arpTimeout>
+              <bfdStaticRoutes>DISABLED</bfdStaticRoutes>
               <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_UP</encapsulation>
+              <ipOptionsDisabled>false</ipOptionsDisabled>
               <mtu>1500</mtu>
+              <pcpArp>6</pcpArp>
               <userLabel>User Plane</userLabel>
+            </InterfaceIPv4>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTECP</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_CP</interfaceIPv4Id>
+              <AddressIPv4>
+                <addressIPv4Id>{tnPortId}_CP</addressIPv4Id>
+                <address>{LTE_S1_IP}</address>
+                <configurationMode>MANUAL</configurationMode>
+                <dhcpClientIdentifierType>AUTOMATIC</dhcpClientIdentifierType>
+                <primaryAddress>true</primaryAddress>
+              </AddressIPv4>
+            </InterfaceIPv4>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTEUP</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_UP</interfaceIPv4Id>
               <AddressIPv4>
                 <addressIPv4Id>{tnPortId}_UP</addressIPv4Id>
                 <address>{LTE_UP_IP}</address>
+                <configurationMode>MANUAL</configurationMode>
+                <dhcpClientIdentifierType>AUTOMATIC</dhcpClientIdentifierType>
+                <primaryAddress>true</primaryAddress>
               </AddressIPv4>
             </InterfaceIPv4>
-            <RouteTableIPv4Static xmlns="urn:com:ericsson:ecim:RtnRoutesStaticRouteIPv4">
-              <routeTableIPv4StaticId>2</routeTableIPv4StaticId>
-              <Dst>
-                <dstId>SGW1</dstId>
-                <dst>10.50.46.121/32</dst>
-                <NextHop>
-                  <nextHopId>2</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X21</dstId>
-                <dst>10.26.176.0/22</dst>
-                <NextHop>
-                  <nextHopId>3</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X22</dstId>
-                <dst>10.26.184.0/22</dst>
-                <NextHop>
-                  <nextHopId>{fieldReplaceableUnitId}</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X23</dstId>
-                <dst>10.26.192.0/22</dst>
-                <NextHop>
-                  <nextHopId>5</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X24</dstId>
-                <dst>10.26.200.0/22</dst>
-                <NextHop>
-                  <nextHopId>6</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-            </RouteTableIPv4Static>
           </Router>
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>LTECP</routerId>
             <RouteTableIPv4Static xmlns="urn:com:ericsson:ecim:RtnRoutesStaticRouteIPv4">
               <routeTableIPv4StaticId>3</routeTableIPv4StaticId>
               <Dst>
-                <dstId>MME1</dstId>
-                <dst>10.50.46.168/29</dst>
+                <dstId>MME10-Pri</dstId>
+                <dst>10.103.44.12/32</dst>
                 <NextHop>
-                  <nextHopId>7</nextHopId>
+                  <nextHopId>2</nextHopId>
                   <address>{LTE_S1_GW}</address>
                   <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X25</dstId>
-                <dst>10.26.172.0/22</dst>
+                <dstId>MME10-Sec</dstId>
+                <dst>10.103.44.13/32</dst>
                 <NextHop>
-                  <nextHopId>8</nextHopId>
+                  <nextHopId>2</nextHopId>
                   <address>{LTE_S1_GW}</address>
                   <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X26</dstId>
-                <dst>10.26.180.0/22</dst>
+                <dstId>MME11-Pri</dstId>
+                <dst>10.103.44.23/32</dst>
                 <NextHop>
-                  <nextHopId>9</nextHopId>
+                  <nextHopId>2</nextHopId>
                   <address>{LTE_S1_GW}</address>
                   <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X27</dstId>
-                <dst>10.26.188.0/22</dst>
+                <dstId>MME11-Sec</dstId>
+                <dst>10.103.44.24/32</dst>
                 <NextHop>
-                  <nextHopId>10</nextHopId>
+                  <nextHopId>2</nextHopId>
                   <address>{LTE_S1_GW}</address>
                   <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X28</dstId>
-                <dst>10.26.196.0/22</dst>
+                <dstId>MME12-Pri</dstId>
+                <dst>10.103.44.1/32</dst>
                 <NextHop>
-                  <nextHopId>11</nextHopId>
+                  <nextHopId>2</nextHopId>
                   <address>{LTE_S1_GW}</address>
                   <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>MME12-Sec</dstId>
+                <dst>10.103.44.2/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>MME13-Pri</dstId>
+                <dst>10.103.44.34/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>MME13-Sec</dstId>
+                <dst>10.103.44.35/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
                 </NextHop>
               </Dst>
               <Dst>
                 <dstId>RNC</dstId>
-                <dst>10.177.250.0/24</dst>
+                <dst>10.160.190.0/24</dst>
                 <NextHop>
-                  <nextHopId>12</nextHopId>
+                  <nextHopId>34</nextHopId>
                   <address>{LTE_S1_GW}</address>
                   <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-CP</dstId>
+                <dst>0.0.0.0/0</dst>
+                <NextHop>
+                  <nextHopId>3</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+            </RouteTableIPv4Static>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTEUP</routerId>
+            <RouteTableIPv4Static xmlns="urn:com:ericsson:ecim:RtnRoutesStaticRouteIPv4">
+              <routeTableIPv4StaticId>2</routeTableIPv4StaticId>
+              <Dst>
+                <dstId>DEL-NOI-S87-SAE-CUPS-IMS-01</dstId>
+                <dst>10.1.159.80/30</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>DEL-NOI-S87-SAEGW-UP-01</dstId>
+                <dst>10.1.159.66/31</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>DEL-NOI-S87-SAEGW-UP-03</dstId>
+                <dst>10.1.159.68/30</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>DEL-NOI-S87-SAEGW-UP-07</dstId>
+                <dst>10.1.159.72/29</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>Google_POD4_V4</dstId>
+                <dst>10.58.104.165/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>Google_POD5_V4</dstId>
+                <dst>10.58.104.181/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>POD1</dstId>
+                <dst>10.58.96.101/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>POD2</dstId>
+                <dst>10.58.96.117/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>POD3</dstId>
+                <dst>10.58.96.133/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW10</dstId>
+                <dst>10.0.166.37/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW11</dstId>
+                <dst>10.0.232.5/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW12</dstId>
+                <dst>10.50.96.5/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW13</dstId>
+                <dst>10.50.96.17/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW14</dstId>
+                <dst>10.50.97.5/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW15</dstId>
+                <dst>10.75.212.97/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW16</dstId>
+                <dst>10.75.212.176/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW17</dstId>
+                <dst>10.92.7.86/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW2</dstId>
+                <dst>10.155.68.224/27</dst>
+                <NextHop>
+                  <nextHopId>{fieldReplaceableUnitId}</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW3</dstId>
+                <dst>10.206.16.79/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW4</dstId>
+                <dst>10.206.17.12/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW5</dstId>
+                <dst>10.206.17.1/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW6</dstId>
+                <dst>10.0.123.5/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW7</dstId>
+                <dst>10.206.31.2/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW8</dstId>
+                <dst>10.0.123.37/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW9</dstId>
+                <dst>10.0.166.5/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>Twamp4</dstId>
+                <dst>10.61.112.168/29</dst>
+                <NextHop>
+                  <nextHopId>7</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>Twamp5</dstId>
+                <dst>10.188.27.112/29</dst>
+                <NextHop>
+                  <nextHopId>7</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-UP</dstId>
+                <dst>0.0.0.0/0</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
                 </NextHop>
               </Dst>
             </RouteTableIPv4Static>
@@ -1048,12 +1869,13 @@ DEL_SiteBasic_5216_IPV6 = """
             <RouteTableIPv6Static xmlns="urn:com:ericsson:ecim:RtnRoutesStaticRouteIPv6">
               <routeTableIPv6StaticId>1</routeTableIPv6StaticId>
               <Dst>
-                <dstId>Default_OSS_ENM</dstId>
+                <dstId>OSS</dstId>
                 <dst>::/0</dst>
                 <NextHop>
                   <nextHopId>1</nextHopId>
                   <address>{OAM_GW}</address>
                   <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
                 </NextHop>
               </Dst>
             </RouteTableIPv6Static>
@@ -1075,7 +1897,7 @@ DEL_SiteBasic_5216_IPV6 = """
   </capabilities>
 </hello>
 ]]>]]>
-<rpc message-id="4" xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+<rpc message-id="2" xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
   <edit-config>
     <target>
       <running />
@@ -1083,7 +1905,7 @@ DEL_SiteBasic_5216_IPV6 = """
     <config xmlns:xc="urn:ietf:params:xml:ns:netconf:base:1.0">
       <ManagedElement xmlns="urn:com:ericsson:ecim:ComTop">
         <managedElementId>1</managedElementId>
-        <networkManagedElementId>{eNodeBName}</networkManagedElementId>
+        <networkManagedElementId></networkManagedElementId>
       </ManagedElement>
     </config>
   </edit-config>
@@ -1094,10 +1916,12 @@ DEL_SiteBasic_5216_IPV6 = """
 </rpc>
 ]]>]]>
 
+
 """
 
 
 DEL_SiteBasic_ipv6_6651 = """
+<?xml version="1.0" encoding="UTF-8"?>
 <hello xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
   <capabilities>
     <capability>urn:ietf:params:netconf:base:1.0</capability>
@@ -1112,7 +1936,7 @@ DEL_SiteBasic_ipv6_6651 = """
     <config xmlns:xc="urn:ietf:params:xml:ns:netconf:base:1.0">
       <ManagedElement xmlns="urn:com:ericsson:ecim:ComTop">
         <managedElementId>1</managedElementId>
-        <dnPrefix>SubNetwork=ONRM_ROOT_MO,SubNetwork=LTE,MeContext={eNodeBName}</dnPrefix>
+        <dnPrefix>SubNetwork=ONRM_ROOT_MO,SubNetwork=LTE,SubNetwork=Baseband,MeContext={eNodeBName}</dnPrefix>
         <SystemFunctions>
           <systemFunctionsId>1</systemFunctionsId>
           <Lm xmlns="urn:com:ericsson:ecim:RcsLM">
@@ -1123,15 +1947,12 @@ DEL_SiteBasic_ipv6_6651 = """
             <secMId>1</secMId>
             <UserManagement>
               <userManagementId>1</userManagementId>
-              <LdapAuthenticationMethod xmlns="urn:com:ericsson:ecim:RcsLdapAuthentication">
-                <ldapAuthenticationMethodId>1</ldapAuthenticationMethodId>
-                <administrativeState>UNLOCKED</administrativeState>
-              </LdapAuthenticationMethod>
               <UserIdentity xmlns="urn:com:ericsson:ecim:RcsUser">
                 <userIdentityId>1</userIdentityId>
                 <MaintenanceUser>
                   <maintenanceUserId>1</maintenanceUserId>
                   <userName>rbs</userName>
+                  <userType>MAINTENANCE_USER</userType>
                   <password>
                     <cleartext />
                     <password>rbs</password>
@@ -1146,21 +1967,27 @@ DEL_SiteBasic_ipv6_6651 = """
               <cliTlsId>1</cliTlsId>
               <administrativeState>UNLOCKED</administrativeState>
             </CliTls>
-            <NtpServer>
-              <ntpServerId>1</ntpServerId>
-              <userLabel>NTP TOD1</userLabel>
-              <serverAddress>10.19.109.12</serverAddress>
-              <administrativeState>UNLOCKED</administrativeState>
-            </NtpServer>
-            </SysM>
+          </SysM>
         </SystemFunctions>
         <Transport>
           <transportId>1</transportId>
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>OAM</routerId>
+            <hopLimit>64</hopLimit>
+            <pathMtuExpiresIPv6>86400</pathMtuExpiresIPv6>
             <ttl>64</ttl>
           </Router>
         </Transport>
+        <Equipment xmlns="urn:com:ericsson:ecim:ReqEquipment">
+          <equipmentId>1</equipmentId>
+          <FieldReplaceableUnit xmlns="urn:com:ericsson:ecim:ReqFieldReplaceableUnit">
+            <fieldReplaceableUnitId>{fieldReplaceableUnitId}</fieldReplaceableUnitId>
+            <TnPort xmlns="urn:com:ericsson:ecim:ReqTnPort">
+              <tnPortId>{tnPortId}</tnPortId>
+              <userLabel>{tnPortId}</userLabel>
+            </TnPort>
+          </FieldReplaceableUnit>
+        </Equipment>
         <Transport>
           <transportId>1</transportId>
           <EthernetPort xmlns="urn:com:ericsson:ecim:RtnL2EthernetPort">
@@ -1169,6 +1996,7 @@ DEL_SiteBasic_ipv6_6651 = """
             <admOperatingMode>1G_FULL</admOperatingMode>
             <autoNegEnable>true</autoNegEnable>
             <encapsulation>ManagedElement=1,Equipment=1,FieldReplaceableUnit={fieldReplaceableUnitId},TnPort={tnPortId}</encapsulation>
+            <lldpTransmit>DISABLED</lldpTransmit>
             <userLabel>{tnPortId}</userLabel>
           </EthernetPort>
           <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
@@ -1182,12 +2010,19 @@ DEL_SiteBasic_ipv6_6651 = """
             <routerId>OAM</routerId>
             <InterfaceIPv6 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv6">
               <interfaceIPv6Id>{tnPortId}_OAM</interfaceIPv6Id>
+              <bfdStaticRoutes>DISABLED</bfdStaticRoutes>
+              <dscpNdp>48</dscpNdp>
               <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_OAM</encapsulation>
               <mtu>1500</mtu>
+              <neighborDiscoveryTimeout>30000</neighborDiscoveryTimeout>
+              <neighborSolicitationInterval>1000</neighborSolicitationInterval>
               <userLabel>OAM</userLabel>
               <AddressIPv6>
                 <addressIPv6Id>{tnPortId}_OAM</addressIPv6Id>
                 <address>{OAM_IP}</address>
+                <configurationMode>MANUAL</configurationMode>
+                <duidType>DUID_LLT</duidType>
+                <primaryAddress>true</primaryAddress>
               </AddressIPv6>
             </InterfaceIPv6>
           </Router>
@@ -1207,76 +2042,82 @@ DEL_SiteBasic_ipv6_6651 = """
             <Snmp xmlns="urn:com:ericsson:ecim:RcsSnmp">
               <snmpId>1</snmpId>
               <administrativeState>UNLOCKED</administrativeState>
-              <agentAddress>
-                <host>0.0.0.0</host>
-                <port>161</port>
-              </agentAddress>
+              <enableSourceCheckForV1V2C>false</enableSourceCheckForV1V2C>
+              <port>161</port>
+              <portDtls>10161</portDtls>
               <SnmpTargetV2C>
-                <snmpTargetV2CId>1</snmpTargetV2CId>
-                <community>public</community>
-                <address>10.19.109.40</address>
+                <snmpTargetV2CId>ENMFM</snmpTargetV2CId>
+                <community>enm-public</community>
+                <informRetryCount>1</informRetryCount>
+                <address>2401:4900:0:133:0:0:2:B821</address>
                 <port>162</port>
+                <informTimeout>300</informTimeout>
+                <transportMethod>TRAP</transportMethod>
+                <isMibWritable>true</isMibWritable>
                 <administrativeState>UNLOCKED</administrativeState>
               </SnmpTargetV2C>
             </Snmp>
+            <TimeM xmlns="urn:com:ericsson:ecim:RcsTimeM">
+              <timeMId>1</timeMId>
+              <Ntp>
+                <ntpId>1</ntpId>
+                <NtpServer>
+                  <ntpServerId>1</ntpServerId>
+                  <serverAddress>2401:4900:0024:0300:0000:0000:0000:0452</serverAddress>
+                  <administrativeState>UNLOCKED</administrativeState>
+                </NtpServer>
+                <NtpServer>
+                  <ntpServerId>2</ntpServerId>
+                  <serverAddress>2401:4900:0024:0300:0000:0000:0000:0453</serverAddress>
+                  <administrativeState>UNLOCKED</administrativeState>
+                </NtpServer>
+              </Ntp>
+            </TimeM>
           </SysM>
         </SystemFunctions>
         <Transport>
           <transportId>1</transportId>
-          <Ntp xmlns="urn:com:ericsson:ecim:RsyncNtp">
-            <ntpId>1</ntpId>
-          </Ntp>
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>LTECP</routerId>
+            <hopLimit>64</hopLimit>
+            <pathMtuExpiresIPv6>86400</pathMtuExpiresIPv6>
             <ttl>64</ttl>
           </Router>
-          <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
-            <vlanPortId>{tnPortId}_CP</vlanPortId>
-            <encapsulation>ManagedElement=1,Transport=1,EthernetPort={tnPortId}</encapsulation>
-            <isTagged>true</isTagged>
-            <userLabel>Control Plane</userLabel>
-            <vlanId>{LTE_S1_vlan}</vlanId>
-          </VlanPort>
-          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
-            <routerId>LTECP</routerId>
-            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
-              <interfaceIPv4Id>{tnPortId}_CP</interfaceIPv4Id>
-              <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_CP</encapsulation>
-              <mtu>1500</mtu>
-              <userLabel>Control Plane</userLabel>
-              <AddressIPv4>
-                <addressIPv4Id>{tnPortId}_CP</addressIPv4Id>
-                <address>{LTE_S1_IP}</address>
-              </AddressIPv4>
-            </InterfaceIPv4>
-          </Router>
-          <Ntp xmlns="urn:com:ericsson:ecim:RsyncNtp">
-            <ntpId>1</ntpId>
-            <NtpFrequencySync>
-              <ntpFrequencySyncId>NTP1</ntpFrequencySyncId>
-              <addressIPv4Reference>ManagedElement=1,Transport=1,Router=LTECP,InterfaceIPv4={tnPortId}_CP,AddressIPv4={tnPortId}_CP</addressIPv4Reference>
-              <dscp>46</dscp>
-              <syncServerNtpIpAddress>10.71.26.24</syncServerNtpIpAddress>
-            </NtpFrequencySync>
-            <NtpFrequencySync>
-              <ntpFrequencySyncId>NTP2</ntpFrequencySyncId>
-              <addressIPv4Reference>ManagedElement=1,Transport=1,Router=LTECP,InterfaceIPv4={tnPortId}_CP,AddressIPv4={tnPortId}_CP</addressIPv4Reference>
-              <dscp>46</dscp>
-              <syncServerNtpIpAddress>10.71.26.26</syncServerNtpIpAddress>
-            </NtpFrequencySync>
-          </Ntp>
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>LTEUP</routerId>
+            <hopLimit>64</hopLimit>
+            <pathMtuExpiresIPv6>86400</pathMtuExpiresIPv6>
             <ttl>64</ttl>
           </Router>
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>OAM</routerId>
             <DnsClient xmlns="urn:com:ericsson:ecim:RtnDnsClient">
               <dnsClientId>1</dnsClientId>
+              <configurationMode>MANUAL</configurationMode>
               <dscp>28</dscp>
-              <serverAddress>10.19.109.12</serverAddress>
-              <serverAddress>10.19.109.13</serverAddress>
+              <serverAddress>2401:4900:0024:0300:0000:0000:0000:0452</serverAddress>
+              <serverAddress>2401:4900:0024:0300:0000:0000:0000:0453</serverAddress>
             </DnsClient>
+          </Router>
+          <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
+            <vlanPortId>{tnPortId}_CP</vlanPortId>
+            <encapsulation>ManagedElement=1,Transport=1,EthernetPort={tnPortId}</encapsulation>
+            <isTagged>true</isTagged>
+            <userLabel>User Plane</userLabel>
+            <vlanId>{LTE_S1_vlan}</vlanId>
+          </VlanPort>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTECP</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_CP</interfaceIPv4Id>
+              <arpTimeout>300</arpTimeout>
+              <bfdStaticRoutes>DISABLED</bfdStaticRoutes>
+              <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_CP</encapsulation>
+              <ipOptionsDisabled>false</ipOptionsDisabled>
+              <mtu>1500</mtu>
+              <pcpArp>6</pcpArp>
+              <userLabel>Control Plane</userLabel>
+            </InterfaceIPv4>
           </Router>
           <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
             <vlanPortId>{tnPortId}_UP</vlanPortId>
@@ -1289,71 +2130,450 @@ DEL_SiteBasic_ipv6_6651 = """
             <routerId>LTEUP</routerId>
             <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
               <interfaceIPv4Id>{tnPortId}_UP</interfaceIPv4Id>
+              <arpTimeout>300</arpTimeout>
+              <bfdStaticRoutes>DISABLED</bfdStaticRoutes>
               <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_UP</encapsulation>
+              <ipOptionsDisabled>false</ipOptionsDisabled>
               <mtu>1500</mtu>
+              <pcpArp>6</pcpArp>
               <userLabel>User Plane</userLabel>
+            </InterfaceIPv4>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTECP</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_CP</interfaceIPv4Id>
               <AddressIPv4>
-                <addressIPv4Id>{tnPortId}_UP</addressIPv4Id>
-                <address>{LTE_UP_IP}</address>
+                <addressIPv4Id>{tnPortId}_CP</addressIPv4Id>
+                <address>{LTE_S1_IP}</address>
+                <configurationMode>MANUAL</configurationMode>
+                <dhcpClientIdentifierType>AUTOMATIC</dhcpClientIdentifierType>
+                <primaryAddress>true</primaryAddress>
               </AddressIPv4>
             </InterfaceIPv4>
           </Router>
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
-            <routerId>OAM</routerId>
-            <RouteTableIPv6Static xmlns="urn:com:ericsson:ecim:RtnRoutesStaticRouteIPv6">
-              <routeTableIPv6StaticId>1</routeTableIPv6StaticId>
-              <Dst>
-                <dstId>OAM</dstId>
-                <dst>::/0</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{OAM_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              </RouteTableIPv6Static>
-          </Router>
-          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>LTEUP</routerId>
-            <RouteTableIPv4Static xmlns="urn:com:ericsson:ecim:RtnRoutesStaticRouteIPv4">
-              <routeTableIPv4StaticId>2</routeTableIPv4StaticId>
-              <Dst>
-                <dstId>LTEUP</dstId>
-                <dst>0.0.0.0/0</dst>
-                <NextHop>
-                  <nextHopId>2</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-            </RouteTableIPv4Static>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_UP</interfaceIPv4Id>
+              <AddressIPv4>
+                <addressIPv4Id>{tnPortId}_UP</addressIPv4Id>
+                <address>{LTE_UP_IP}</address>
+                <configurationMode>MANUAL</configurationMode>
+                <dhcpClientIdentifierType>AUTOMATIC</dhcpClientIdentifierType>
+                <primaryAddress>true</primaryAddress>
+              </AddressIPv4>
+            </InterfaceIPv4>
           </Router>
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>LTECP</routerId>
             <RouteTableIPv4Static xmlns="urn:com:ericsson:ecim:RtnRoutesStaticRouteIPv4">
               <routeTableIPv4StaticId>3</routeTableIPv4StaticId>
               <Dst>
-                <dstId>LTECP</dstId>
+                <dstId>MME10-Pri</dstId>
+                <dst>10.103.44.12/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>MME10-Sec</dstId>
+                <dst>10.103.44.13/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>MME11-Pri</dstId>
+                <dst>10.103.44.23/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>MME11-Sec</dstId>
+                <dst>10.103.44.24/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>MME12-Pri</dstId>
+                <dst>10.103.44.1/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>MME12-Sec</dstId>
+                <dst>10.103.44.2/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>MME13-Pri</dstId>
+                <dst>10.103.44.34/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>MME13-Sec</dstId>
+                <dst>10.103.44.35/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>RNC</dstId>
+                <dst>10.160.190.0/24</dst>
+                <NextHop>
+                  <nextHopId>34</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-CP</dstId>
                 <dst>0.0.0.0/0</dst>
                 <NextHop>
                   <nextHopId>3</nextHopId>
                   <address>{LTE_S1_GW}</address>
                   <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
                 </NextHop>
               </Dst>
             </RouteTableIPv4Static>
           </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTEUP</routerId>
+            <RouteTableIPv4Static xmlns="urn:com:ericsson:ecim:RtnRoutesStaticRouteIPv4">
+              <routeTableIPv4StaticId>2</routeTableIPv4StaticId>
+              <Dst>
+                <dstId>DEL-NOI-S87-SAE-CUPS-IMS-01</dstId>
+                <dst>10.1.159.80/30</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>DEL-NOI-S87-SAEGW-UP-01</dstId>
+                <dst>10.1.159.66/31</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>DEL-NOI-S87-SAEGW-UP-03</dstId>
+                <dst>10.1.159.68/30</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>DEL-NOI-S87-SAEGW-UP-07</dstId>
+                <dst>10.1.159.72/29</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>Google_POD4_V4</dstId>
+                <dst>10.58.104.165/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>Google_POD5_V4</dstId>
+                <dst>10.58.104.181/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>POD1</dstId>
+                <dst>10.58.96.101/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>POD2</dstId>
+                <dst>10.58.96.117/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>POD3</dstId>
+                <dst>10.58.96.133/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW10</dstId>
+                <dst>10.0.166.37/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW11</dstId>
+                <dst>10.0.232.5/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW12</dstId>
+                <dst>10.50.96.5/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW13</dstId>
+                <dst>10.50.96.17/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW14</dstId>
+                <dst>10.50.97.5/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW15</dstId>
+                <dst>10.75.212.97/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW16</dstId>
+                <dst>10.75.212.176/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW17</dstId>
+                <dst>10.92.7.86/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW2</dstId>
+                <dst>10.155.68.224/27</dst>
+                <NextHop>
+                  <nextHopId>{fieldReplaceableUnitId}</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW3</dstId>
+                <dst>10.206.16.79/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW4</dstId>
+                <dst>10.206.17.12/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW5</dstId>
+                <dst>10.206.17.1/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW6</dstId>
+                <dst>10.0.123.5/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW7</dstId>
+                <dst>10.206.31.2/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW8</dstId>
+                <dst>10.0.123.37/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW9</dstId>
+                <dst>10.0.166.5/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>Twamp4</dstId>
+                <dst>10.61.112.168/29</dst>
+                <NextHop>
+                  <nextHopId>7</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>Twamp5</dstId>
+                <dst>10.188.27.112/29</dst>
+                <NextHop>
+                  <nextHopId>7</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-UP</dstId>
+                <dst>0.0.0.0/0</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+            </RouteTableIPv4Static>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>OAM</routerId>
+            <RouteTableIPv6Static xmlns="urn:com:ericsson:ecim:RtnRoutesStaticRouteIPv6">
+              <routeTableIPv6StaticId>1</routeTableIPv6StaticId>
+              <Dst>
+                <dstId>OSS</dstId>
+                <dst>::/0</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{OAM_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+            </RouteTableIPv6Static>
+          </Router>
         </Transport>
-        <Equipment xmlns="urn:com:ericsson:ecim:ReqEquipment">
-          <equipmentId>1</equipmentId>
-          <FieldReplaceableUnit xmlns="urn:com:ericsson:ecim:ReqFieldReplaceableUnit">
-            <fieldReplaceableUnitId>{fieldReplaceableUnitId}</fieldReplaceableUnitId>
-            <TnPort xmlns="urn:com:ericsson:ecim:ReqTnPort">
-              <tnPortId>{tnPortId}</tnPortId>
-              <userLabel>{tnPortId}</userLabel>
-            </TnPort>
-          </FieldReplaceableUnit>
-        </Equipment>
       </ManagedElement>
     </config>
   </edit-config>
@@ -1363,6 +2583,7 @@ DEL_SiteBasic_ipv6_6651 = """
   <close-session></close-session>
 </rpc>
 ]]>]]>
+<?xml version="1.0" encoding="UTF-8"?>
 <hello xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
   <capabilities>
     <capability>urn:ietf:params:netconf:base:1.0</capability>
@@ -1377,7 +2598,698 @@ DEL_SiteBasic_ipv6_6651 = """
     <config xmlns:xc="urn:ietf:params:xml:ns:netconf:base:1.0">
       <ManagedElement xmlns="urn:com:ericsson:ecim:ComTop">
         <managedElementId>1</managedElementId>
-        <networkManagedElementId>{eNodeBName}</networkManagedElementId>
+        <networkManagedElementId></networkManagedElementId>
+      </ManagedElement>
+    </config>
+  </edit-config>
+</rpc>
+]]>]]>
+<rpc message-id="Closing" xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+  <close-session></close-session>
+</rpc>
+]]>]]>
+
+"""
+
+DEL_SiteBasic_ipv6_6655 = """
+<?xml version="1.0" encoding="UTF-8"?>
+<hello xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+  <capabilities>
+    <capability>urn:ietf:params:netconf:base:1.0</capability>
+  </capabilities>
+</hello>
+]]>]]>
+<rpc message-id="1" xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+  <edit-config>
+    <target>
+      <running />
+    </target>
+    <config xmlns:xc="urn:ietf:params:xml:ns:netconf:base:1.0">
+      <ManagedElement xmlns="urn:com:ericsson:ecim:ComTop">
+        <managedElementId>1</managedElementId>
+        <dnPrefix>SubNetwork=ONRM_ROOT_MO,SubNetwork=LTE,SubNetwork=Baseband,MeContext={eNodeBName}</dnPrefix>
+        <SystemFunctions>
+          <systemFunctionsId>1</systemFunctionsId>
+          <Lm xmlns="urn:com:ericsson:ecim:RcsLM">
+            <lmId>1</lmId>
+            <fingerprint>{fingerprint}</fingerprint>
+          </Lm>
+          <SecM xmlns="urn:com:ericsson:ecim:RcsSecM">
+            <secMId>1</secMId>
+            <UserManagement>
+              <userManagementId>1</userManagementId>
+              <UserIdentity xmlns="urn:com:ericsson:ecim:RcsUser">
+                <userIdentityId>1</userIdentityId>
+                <MaintenanceUser>
+                  <maintenanceUserId>1</maintenanceUserId>
+                  <userName>rbs</userName>
+                  <userType>MAINTENANCE_USER</userType>
+                  <password>
+                    <cleartext />
+                    <password>rbs</password>
+                  </password>
+                </MaintenanceUser>
+              </UserIdentity>
+            </UserManagement>
+          </SecM>
+          <SysM xmlns="urn:com:ericsson:ecim:RcsSysM">
+            <sysMId>1</sysMId>
+            <CliTls>
+              <cliTlsId>1</cliTlsId>
+              <administrativeState>UNLOCKED</administrativeState>
+            </CliTls>
+          </SysM>
+        </SystemFunctions>
+        <Transport>
+          <transportId>1</transportId>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>OAM</routerId>
+            <hopLimit>64</hopLimit>
+            <pathMtuExpiresIPv6>86400</pathMtuExpiresIPv6>
+            <ttl>64</ttl>
+          </Router>
+        </Transport>
+        <Equipment xmlns="urn:com:ericsson:ecim:ReqEquipment">
+          <equipmentId>1</equipmentId>
+          <FieldReplaceableUnit xmlns="urn:com:ericsson:ecim:ReqFieldReplaceableUnit">
+            <fieldReplaceableUnitId>{fieldReplaceableUnitId}</fieldReplaceableUnitId>
+            <TnPort xmlns="urn:com:ericsson:ecim:ReqTnPort">
+              <tnPortId>{tnPortId}</tnPortId>
+              <userLabel>{tnPortId}</userLabel>
+            </TnPort>
+          </FieldReplaceableUnit>
+        </Equipment>
+        <Transport>
+          <transportId>1</transportId>
+          <EthernetPort xmlns="urn:com:ericsson:ecim:RtnL2EthernetPort">
+            <ethernetPortId>{tnPortId}</ethernetPortId>
+            <administrativeState>UNLOCKED</administrativeState>
+            <admOperatingMode>1G_FULL</admOperatingMode>
+            <autoNegEnable>true</autoNegEnable>
+            <encapsulation>ManagedElement=1,Equipment=1,FieldReplaceableUnit={fieldReplaceableUnitId},TnPort={tnPortId}</encapsulation>
+            <lldpTransmit>DISABLED</lldpTransmit>
+            <userLabel>{tnPortId}</userLabel>
+          </EthernetPort>
+          <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
+            <vlanPortId>{tnPortId}_OAM</vlanPortId>
+            <encapsulation>ManagedElement=1,Transport=1,EthernetPort={tnPortId}</encapsulation>
+            <isTagged>true</isTagged>
+            <userLabel>OAM</userLabel>
+            <vlanId>{OAM_vlan}</vlanId>
+          </VlanPort>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>OAM</routerId>
+            <InterfaceIPv6 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv6">
+              <interfaceIPv6Id>{tnPortId}_OAM</interfaceIPv6Id>
+              <bfdStaticRoutes>DISABLED</bfdStaticRoutes>
+              <dscpNdp>48</dscpNdp>
+              <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_OAM</encapsulation>
+              <mtu>1500</mtu>
+              <neighborDiscoveryTimeout>30000</neighborDiscoveryTimeout>
+              <neighborSolicitationInterval>1000</neighborSolicitationInterval>
+              <userLabel>OAM</userLabel>
+              <AddressIPv6>
+                <addressIPv6Id>{tnPortId}_OAM</addressIPv6Id>
+                <address>{OAM_IP}</address>
+                <configurationMode>MANUAL</configurationMode>
+                <duidType>DUID_LLT</duidType>
+                <primaryAddress>true</primaryAddress>
+              </AddressIPv6>
+            </InterfaceIPv6>
+          </Router>
+        </Transport>
+        <SystemFunctions>
+          <systemFunctionsId>1</systemFunctionsId>
+          <SysM xmlns="urn:com:ericsson:ecim:RcsSysM">
+            <sysMId>1</sysMId>
+            <OamAccessPoint>
+              <oamAccessPointId>1</oamAccessPointId>
+              <accessPoint>ManagedElement=1,Transport=1,Router=OAM,InterfaceIPv6={tnPortId}_OAM,AddressIPv6={tnPortId}_OAM</accessPoint>
+            </OamAccessPoint>
+            <OamTrafficClass>
+              <oamTrafficClassId>1</oamTrafficClassId>
+              <dscp>28</dscp>
+            </OamTrafficClass>
+            <Snmp xmlns="urn:com:ericsson:ecim:RcsSnmp">
+              <snmpId>1</snmpId>
+              <administrativeState>UNLOCKED</administrativeState>
+              <enableSourceCheckForV1V2C>false</enableSourceCheckForV1V2C>
+              <port>161</port>
+              <portDtls>10161</portDtls>
+              <SnmpTargetV2C>
+                <snmpTargetV2CId>ENMFM</snmpTargetV2CId>
+                <community>enm-public</community>
+                <informRetryCount>1</informRetryCount>
+                <address>2401:4900:0:133:0:0:2:B821</address>
+                <port>162</port>
+                <informTimeout>300</informTimeout>
+                <transportMethod>TRAP</transportMethod>
+                <isMibWritable>true</isMibWritable>
+                <administrativeState>UNLOCKED</administrativeState>
+              </SnmpTargetV2C>
+            </Snmp>
+            <TimeM xmlns="urn:com:ericsson:ecim:RcsTimeM">
+              <timeMId>1</timeMId>
+              <Ntp>
+                <ntpId>1</ntpId>
+                <NtpServer>
+                  <ntpServerId>1</ntpServerId>
+                  <serverAddress>2401:4900:0024:0300:0000:0000:0000:0452</serverAddress>
+                  <administrativeState>UNLOCKED</administrativeState>
+                </NtpServer>
+                <NtpServer>
+                  <ntpServerId>2</ntpServerId>
+                  <serverAddress>2401:4900:0024:0300:0000:0000:0000:0453</serverAddress>
+                  <administrativeState>UNLOCKED</administrativeState>
+                </NtpServer>
+              </Ntp>
+            </TimeM>
+          </SysM>
+        </SystemFunctions>
+        <Transport>
+          <transportId>1</transportId>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTECP</routerId>
+            <hopLimit>64</hopLimit>
+            <pathMtuExpiresIPv6>86400</pathMtuExpiresIPv6>
+            <ttl>64</ttl>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTEUP</routerId>
+            <hopLimit>64</hopLimit>
+            <pathMtuExpiresIPv6>86400</pathMtuExpiresIPv6>
+            <ttl>64</ttl>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>OAM</routerId>
+            <DnsClient xmlns="urn:com:ericsson:ecim:RtnDnsClient">
+              <dnsClientId>1</dnsClientId>
+              <configurationMode>MANUAL</configurationMode>
+              <dscp>28</dscp>
+              <serverAddress>2401:4900:0024:0300:0000:0000:0000:0452</serverAddress>
+              <serverAddress>2401:4900:0024:0300:0000:0000:0000:0453</serverAddress>
+            </DnsClient>
+          </Router>
+          <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
+            <vlanPortId>{tnPortId}_CP</vlanPortId>
+            <encapsulation>ManagedElement=1,Transport=1,EthernetPort={tnPortId}</encapsulation>
+            <isTagged>true</isTagged>
+            <userLabel>User Plane</userLabel>
+            <vlanId>{LTE_S1_vlan}</vlanId>
+          </VlanPort>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTECP</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_CP</interfaceIPv4Id>
+              <arpTimeout>300</arpTimeout>
+              <bfdStaticRoutes>DISABLED</bfdStaticRoutes>
+              <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_CP</encapsulation>
+              <ipOptionsDisabled>false</ipOptionsDisabled>
+              <mtu>1500</mtu>
+              <pcpArp>6</pcpArp>
+              <userLabel>Control Plane</userLabel>
+            </InterfaceIPv4>
+          </Router>
+          <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
+            <vlanPortId>{tnPortId}_UP</vlanPortId>
+            <encapsulation>ManagedElement=1,Transport=1,EthernetPort={tnPortId}</encapsulation>
+            <isTagged>true</isTagged>
+            <userLabel>User Plane</userLabel>
+            <vlanId>{LTE_UP_vlan}</vlanId>
+          </VlanPort>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTEUP</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_UP</interfaceIPv4Id>
+              <arpTimeout>300</arpTimeout>
+              <bfdStaticRoutes>DISABLED</bfdStaticRoutes>
+              <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_UP</encapsulation>
+              <ipOptionsDisabled>false</ipOptionsDisabled>
+              <mtu>1500</mtu>
+              <pcpArp>6</pcpArp>
+              <userLabel>User Plane</userLabel>
+            </InterfaceIPv4>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTECP</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_CP</interfaceIPv4Id>
+              <AddressIPv4>
+                <addressIPv4Id>{tnPortId}_CP</addressIPv4Id>
+                <address>{LTE_S1_IP}</address>
+                <configurationMode>MANUAL</configurationMode>
+                <dhcpClientIdentifierType>AUTOMATIC</dhcpClientIdentifierType>
+                <primaryAddress>true</primaryAddress>
+              </AddressIPv4>
+            </InterfaceIPv4>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTEUP</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_UP</interfaceIPv4Id>
+              <AddressIPv4>
+                <addressIPv4Id>{tnPortId}_UP</addressIPv4Id>
+                <address>{LTE_UP_IP}</address>
+                <configurationMode>MANUAL</configurationMode>
+                <dhcpClientIdentifierType>AUTOMATIC</dhcpClientIdentifierType>
+                <primaryAddress>true</primaryAddress>
+              </AddressIPv4>
+            </InterfaceIPv4>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTECP</routerId>
+            <RouteTableIPv4Static xmlns="urn:com:ericsson:ecim:RtnRoutesStaticRouteIPv4">
+              <routeTableIPv4StaticId>3</routeTableIPv4StaticId>
+              <Dst>
+                <dstId>MME10-Pri</dstId>
+                <dst>10.103.44.12/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>MME10-Sec</dstId>
+                <dst>10.103.44.13/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>MME11-Pri</dstId>
+                <dst>10.103.44.23/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>MME11-Sec</dstId>
+                <dst>10.103.44.24/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>MME12-Pri</dstId>
+                <dst>10.103.44.1/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>MME12-Sec</dstId>
+                <dst>10.103.44.2/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>MME13-Pri</dstId>
+                <dst>10.103.44.34/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>MME13-Sec</dstId>
+                <dst>10.103.44.35/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>RNC</dstId>
+                <dst>10.160.190.0/24</dst>
+                <NextHop>
+                  <nextHopId>34</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-CP</dstId>
+                <dst>0.0.0.0/0</dst>
+                <NextHop>
+                  <nextHopId>3</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+            </RouteTableIPv4Static>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTEUP</routerId>
+            <RouteTableIPv4Static xmlns="urn:com:ericsson:ecim:RtnRoutesStaticRouteIPv4">
+              <routeTableIPv4StaticId>2</routeTableIPv4StaticId>
+              <Dst>
+                <dstId>DEL-NOI-S87-SAE-CUPS-IMS-01</dstId>
+                <dst>10.1.159.80/30</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>DEL-NOI-S87-SAEGW-UP-01</dstId>
+                <dst>10.1.159.66/31</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>DEL-NOI-S87-SAEGW-UP-03</dstId>
+                <dst>10.1.159.68/30</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>DEL-NOI-S87-SAEGW-UP-07</dstId>
+                <dst>10.1.159.72/29</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>Google_POD4_V4</dstId>
+                <dst>10.58.104.165/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>Google_POD5_V4</dstId>
+                <dst>10.58.104.181/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>POD1</dstId>
+                <dst>10.58.96.101/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>POD2</dstId>
+                <dst>10.58.96.117/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>POD3</dstId>
+                <dst>10.58.96.133/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW10</dstId>
+                <dst>10.0.166.37/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW11</dstId>
+                <dst>10.0.232.5/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW12</dstId>
+                <dst>10.50.96.5/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW13</dstId>
+                <dst>10.50.96.17/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW14</dstId>
+                <dst>10.50.97.5/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW15</dstId>
+                <dst>10.75.212.97/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW16</dstId>
+                <dst>10.75.212.176/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW17</dstId>
+                <dst>10.92.7.86/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW2</dstId>
+                <dst>10.155.68.224/27</dst>
+                <NextHop>
+                  <nextHopId>{fieldReplaceableUnitId}</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW3</dstId>
+                <dst>10.206.16.79/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW4</dstId>
+                <dst>10.206.17.12/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW5</dstId>
+                <dst>10.206.17.1/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW6</dstId>
+                <dst>10.0.123.5/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW7</dstId>
+                <dst>10.206.31.2/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW8</dstId>
+                <dst>10.0.123.37/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW9</dstId>
+                <dst>10.0.166.5/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>Twamp4</dstId>
+                <dst>10.61.112.168/29</dst>
+                <NextHop>
+                  <nextHopId>7</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>Twamp5</dstId>
+                <dst>10.188.27.112/29</dst>
+                <NextHop>
+                  <nextHopId>7</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-UP</dstId>
+                <dst>0.0.0.0/0</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+            </RouteTableIPv4Static>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>OAM</routerId>
+            <RouteTableIPv6Static xmlns="urn:com:ericsson:ecim:RtnRoutesStaticRouteIPv6">
+              <routeTableIPv6StaticId>1</routeTableIPv6StaticId>
+              <Dst>
+                <dstId>OSS</dstId>
+                <dst>::/0</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{OAM_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+            </RouteTableIPv6Static>
+          </Router>
+        </Transport>
+      </ManagedElement>
+    </config>
+  </edit-config>
+</rpc>
+]]>]]>
+<rpc message-id="Closing" xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+  <close-session></close-session>
+</rpc>
+]]>]]>
+<?xml version="1.0" encoding="UTF-8"?>
+<hello xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+  <capabilities>
+    <capability>urn:ietf:params:netconf:base:1.0</capability>
+  </capabilities>
+</hello>
+]]>]]>
+<rpc message-id="2" xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+  <edit-config>
+    <target>
+      <running />
+    </target>
+    <config xmlns:xc="urn:ietf:params:xml:ns:netconf:base:1.0">
+      <ManagedElement xmlns="urn:com:ericsson:ecim:ComTop">
+        <managedElementId>1</managedElementId>
+        <networkManagedElementId></networkManagedElementId>
       </ManagedElement>
     </config>
   </edit-config>
@@ -1391,6 +3303,7 @@ DEL_SiteBasic_ipv6_6651 = """
 """
 
 DEL_SiteBasic_ipv6_6630 = """
+<?xml version="1.0" encoding="UTF-8"?>
 <hello xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
   <capabilities>
     <capability>urn:ietf:params:netconf:base:1.0</capability>
@@ -1405,7 +3318,7 @@ DEL_SiteBasic_ipv6_6630 = """
     <config xmlns:xc="urn:ietf:params:xml:ns:netconf:base:1.0">
       <ManagedElement xmlns="urn:com:ericsson:ecim:ComTop">
         <managedElementId>1</managedElementId>
-        <dnPrefix>SubNetwork=ONRM_ROOT_MO,SubNetwork=LTE,MeContext={eNodeBName}</dnPrefix>
+        <dnPrefix>SubNetwork=ONRM_ROOT_MO,SubNetwork=LTE,SubNetwork=Baseband,MeContext={eNodeBName}</dnPrefix>
         <SystemFunctions>
           <systemFunctionsId>1</systemFunctionsId>
           <Lm xmlns="urn:com:ericsson:ecim:RcsLM">
@@ -1416,15 +3329,12 @@ DEL_SiteBasic_ipv6_6630 = """
             <secMId>1</secMId>
             <UserManagement>
               <userManagementId>1</userManagementId>
-              <LdapAuthenticationMethod xmlns="urn:com:ericsson:ecim:RcsLdapAuthentication">
-                <ldapAuthenticationMethodId>1</ldapAuthenticationMethodId>
-                <administrativeState>UNLOCKED</administrativeState>
-              </LdapAuthenticationMethod>
               <UserIdentity xmlns="urn:com:ericsson:ecim:RcsUser">
                 <userIdentityId>1</userIdentityId>
                 <MaintenanceUser>
                   <maintenanceUserId>1</maintenanceUserId>
                   <userName>rbs</userName>
+                  <userType>MAINTENANCE_USER</userType>
                   <password>
                     <cleartext />
                     <password>rbs</password>
@@ -1439,21 +3349,27 @@ DEL_SiteBasic_ipv6_6630 = """
               <cliTlsId>1</cliTlsId>
               <administrativeState>UNLOCKED</administrativeState>
             </CliTls>
-            <NtpServer>
-              <ntpServerId>1</ntpServerId>
-              <userLabel>NTP TOD1</userLabel>
-              <serverAddress>10.19.109.12</serverAddress>
-              <administrativeState>UNLOCKED</administrativeState>
-            </NtpServer>
-            </SysM>
+          </SysM>
         </SystemFunctions>
         <Transport>
           <transportId>1</transportId>
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>OAM</routerId>
+            <hopLimit>64</hopLimit>
+            <pathMtuExpiresIPv6>86400</pathMtuExpiresIPv6>
             <ttl>64</ttl>
           </Router>
         </Transport>
+        <Equipment xmlns="urn:com:ericsson:ecim:ReqEquipment">
+          <equipmentId>1</equipmentId>
+          <FieldReplaceableUnit xmlns="urn:com:ericsson:ecim:ReqFieldReplaceableUnit">
+            <fieldReplaceableUnitId>{fieldReplaceableUnitId}</fieldReplaceableUnitId>
+            <TnPort xmlns="urn:com:ericsson:ecim:ReqTnPort">
+              <tnPortId>{tnPortId}</tnPortId>
+              <userLabel>{tnPortId}</userLabel>
+            </TnPort>
+          </FieldReplaceableUnit>
+        </Equipment>
         <Transport>
           <transportId>1</transportId>
           <EthernetPort xmlns="urn:com:ericsson:ecim:RtnL2EthernetPort">
@@ -1462,6 +3378,7 @@ DEL_SiteBasic_ipv6_6630 = """
             <admOperatingMode>1G_FULL</admOperatingMode>
             <autoNegEnable>true</autoNegEnable>
             <encapsulation>ManagedElement=1,Equipment=1,FieldReplaceableUnit={fieldReplaceableUnitId},TnPort={tnPortId}</encapsulation>
+            <lldpTransmit>DISABLED</lldpTransmit>
             <userLabel>{tnPortId}</userLabel>
           </EthernetPort>
           <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
@@ -1475,12 +3392,19 @@ DEL_SiteBasic_ipv6_6630 = """
             <routerId>OAM</routerId>
             <InterfaceIPv6 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv6">
               <interfaceIPv6Id>{tnPortId}_OAM</interfaceIPv6Id>
+              <bfdStaticRoutes>DISABLED</bfdStaticRoutes>
+              <dscpNdp>48</dscpNdp>
               <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_OAM</encapsulation>
               <mtu>1500</mtu>
+              <neighborDiscoveryTimeout>30000</neighborDiscoveryTimeout>
+              <neighborSolicitationInterval>1000</neighborSolicitationInterval>
               <userLabel>OAM</userLabel>
               <AddressIPv6>
                 <addressIPv6Id>{tnPortId}_OAM</addressIPv6Id>
                 <address>{OAM_IP}</address>
+                <configurationMode>MANUAL</configurationMode>
+                <duidType>DUID_LLT</duidType>
+                <primaryAddress>true</primaryAddress>
               </AddressIPv6>
             </InterfaceIPv6>
           </Router>
@@ -1500,76 +3424,82 @@ DEL_SiteBasic_ipv6_6630 = """
             <Snmp xmlns="urn:com:ericsson:ecim:RcsSnmp">
               <snmpId>1</snmpId>
               <administrativeState>UNLOCKED</administrativeState>
-              <agentAddress>
-                <host>0.0.0.0</host>
-                <port>161</port>
-              </agentAddress>
+              <enableSourceCheckForV1V2C>false</enableSourceCheckForV1V2C>
+              <port>161</port>
+              <portDtls>10161</portDtls>
               <SnmpTargetV2C>
-                <snmpTargetV2CId>1</snmpTargetV2CId>
-                <community>public</community>
-                <address>10.19.109.40</address>
+                <snmpTargetV2CId>ENMFM</snmpTargetV2CId>
+                <community>enm-public</community>
+                <informRetryCount>1</informRetryCount>
+                <address>2401:4900:0:133:0:0:2:B821</address>
                 <port>162</port>
+                <informTimeout>300</informTimeout>
+                <transportMethod>TRAP</transportMethod>
+                <isMibWritable>true</isMibWritable>
                 <administrativeState>UNLOCKED</administrativeState>
               </SnmpTargetV2C>
             </Snmp>
+            <TimeM xmlns="urn:com:ericsson:ecim:RcsTimeM">
+              <timeMId>1</timeMId>
+              <Ntp>
+                <ntpId>1</ntpId>
+                <NtpServer>
+                  <ntpServerId>1</ntpServerId>
+                  <serverAddress>2401:4900:0024:0300:0000:0000:0000:0452</serverAddress>
+                  <administrativeState>UNLOCKED</administrativeState>
+                </NtpServer>
+                <NtpServer>
+                  <ntpServerId>2</ntpServerId>
+                  <serverAddress>2401:4900:0024:0300:0000:0000:0000:0453</serverAddress>
+                  <administrativeState>UNLOCKED</administrativeState>
+                </NtpServer>
+              </Ntp>
+            </TimeM>
           </SysM>
         </SystemFunctions>
         <Transport>
           <transportId>1</transportId>
-          <Ntp xmlns="urn:com:ericsson:ecim:RsyncNtp">
-            <ntpId>1</ntpId>
-          </Ntp>
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>LTECP</routerId>
+            <hopLimit>64</hopLimit>
+            <pathMtuExpiresIPv6>86400</pathMtuExpiresIPv6>
             <ttl>64</ttl>
           </Router>
-          <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
-            <vlanPortId>{tnPortId}_CP</vlanPortId>
-            <encapsulation>ManagedElement=1,Transport=1,EthernetPort={tnPortId}</encapsulation>
-            <isTagged>true</isTagged>
-            <userLabel>Control Plane</userLabel>
-            <vlanId>{LTE_S1_vlan}</vlanId>
-          </VlanPort>
-          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
-            <routerId>LTECP</routerId>
-            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
-              <interfaceIPv4Id>{tnPortId}_CP</interfaceIPv4Id>
-              <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_CP</encapsulation>
-              <mtu>1500</mtu>
-              <userLabel>Control Plane</userLabel>
-              <AddressIPv4>
-                <addressIPv4Id>{tnPortId}_CP</addressIPv4Id>
-                <address>{LTE_S1_IP}</address>
-              </AddressIPv4>
-            </InterfaceIPv4>
-          </Router>
-          <Ntp xmlns="urn:com:ericsson:ecim:RsyncNtp">
-            <ntpId>1</ntpId>
-            <NtpFrequencySync>
-              <ntpFrequencySyncId>NTP1</ntpFrequencySyncId>
-              <addressIPv4Reference>ManagedElement=1,Transport=1,Router=LTECP,InterfaceIPv4={tnPortId}_CP,AddressIPv4={tnPortId}_CP</addressIPv4Reference>
-              <dscp>46</dscp>
-              <syncServerNtpIpAddress>10.71.26.24</syncServerNtpIpAddress>
-            </NtpFrequencySync>
-            <NtpFrequencySync>
-              <ntpFrequencySyncId>NTP2</ntpFrequencySyncId>
-              <addressIPv4Reference>ManagedElement=1,Transport=1,Router=LTECP,InterfaceIPv4={tnPortId}_CP,AddressIPv4={tnPortId}_CP</addressIPv4Reference>
-              <dscp>46</dscp>
-              <syncServerNtpIpAddress>10.71.26.26</syncServerNtpIpAddress>
-            </NtpFrequencySync>
-          </Ntp>
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>LTEUP</routerId>
+            <hopLimit>64</hopLimit>
+            <pathMtuExpiresIPv6>86400</pathMtuExpiresIPv6>
             <ttl>64</ttl>
           </Router>
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>OAM</routerId>
             <DnsClient xmlns="urn:com:ericsson:ecim:RtnDnsClient">
               <dnsClientId>1</dnsClientId>
+              <configurationMode>MANUAL</configurationMode>
               <dscp>28</dscp>
-              <serverAddress>10.19.109.12</serverAddress>
-              <serverAddress>10.19.109.13</serverAddress>
+              <serverAddress>2401:4900:0024:0300:0000:0000:0000:0452</serverAddress>
+              <serverAddress>2401:4900:0024:0300:0000:0000:0000:0453</serverAddress>
             </DnsClient>
+          </Router>
+          <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
+            <vlanPortId>{tnPortId}_CP</vlanPortId>
+            <encapsulation>ManagedElement=1,Transport=1,EthernetPort={tnPortId}</encapsulation>
+            <isTagged>true</isTagged>
+            <userLabel>User Plane</userLabel>
+            <vlanId>{LTE_S1_vlan}</vlanId>
+          </VlanPort>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTECP</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_CP</interfaceIPv4Id>
+              <arpTimeout>300</arpTimeout>
+              <bfdStaticRoutes>DISABLED</bfdStaticRoutes>
+              <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_CP</encapsulation>
+              <ipOptionsDisabled>false</ipOptionsDisabled>
+              <mtu>1500</mtu>
+              <pcpArp>6</pcpArp>
+              <userLabel>Control Plane</userLabel>
+            </InterfaceIPv4>
           </Router>
           <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
             <vlanPortId>{tnPortId}_UP</vlanPortId>
@@ -1582,71 +3512,450 @@ DEL_SiteBasic_ipv6_6630 = """
             <routerId>LTEUP</routerId>
             <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
               <interfaceIPv4Id>{tnPortId}_UP</interfaceIPv4Id>
+              <arpTimeout>300</arpTimeout>
+              <bfdStaticRoutes>DISABLED</bfdStaticRoutes>
               <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_UP</encapsulation>
+              <ipOptionsDisabled>false</ipOptionsDisabled>
               <mtu>1500</mtu>
+              <pcpArp>6</pcpArp>
               <userLabel>User Plane</userLabel>
+            </InterfaceIPv4>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTECP</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_CP</interfaceIPv4Id>
               <AddressIPv4>
-                <addressIPv4Id>{tnPortId}_UP</addressIPv4Id>
-                <address>{LTE_UP_IP}</address>
+                <addressIPv4Id>{tnPortId}_CP</addressIPv4Id>
+                <address>{LTE_S1_IP}</address>
+                <configurationMode>MANUAL</configurationMode>
+                <dhcpClientIdentifierType>AUTOMATIC</dhcpClientIdentifierType>
+                <primaryAddress>true</primaryAddress>
               </AddressIPv4>
             </InterfaceIPv4>
           </Router>
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
-            <routerId>OAM</routerId>
-            <RouteTableIPv6Static xmlns="urn:com:ericsson:ecim:RtnRoutesStaticRouteIPv6">
-              <routeTableIPv6StaticId>1</routeTableIPv6StaticId>
-              <Dst>
-                <dstId>OAM</dstId>
-                <dst>::/0</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{OAM_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              </RouteTableIPv6Static>
-          </Router>
-          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>LTEUP</routerId>
-            <RouteTableIPv4Static xmlns="urn:com:ericsson:ecim:RtnRoutesStaticRouteIPv4">
-              <routeTableIPv4StaticId>2</routeTableIPv4StaticId>
-              <Dst>
-                <dstId>LTEUP</dstId>
-                <dst>0.0.0.0/0</dst>
-                <NextHop>
-                  <nextHopId>2</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-            </RouteTableIPv4Static>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_UP</interfaceIPv4Id>
+              <AddressIPv4>
+                <addressIPv4Id>{tnPortId}_UP</addressIPv4Id>
+                <address>{LTE_UP_IP}</address>
+                <configurationMode>MANUAL</configurationMode>
+                <dhcpClientIdentifierType>AUTOMATIC</dhcpClientIdentifierType>
+                <primaryAddress>true</primaryAddress>
+              </AddressIPv4>
+            </InterfaceIPv4>
           </Router>
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>LTECP</routerId>
             <RouteTableIPv4Static xmlns="urn:com:ericsson:ecim:RtnRoutesStaticRouteIPv4">
               <routeTableIPv4StaticId>3</routeTableIPv4StaticId>
               <Dst>
-                <dstId>LTECP</dstId>
+                <dstId>MME10-Pri</dstId>
+                <dst>10.103.44.12/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>MME10-Sec</dstId>
+                <dst>10.103.44.13/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>MME11-Pri</dstId>
+                <dst>10.103.44.23/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>MME11-Sec</dstId>
+                <dst>10.103.44.24/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>MME12-Pri</dstId>
+                <dst>10.103.44.1/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>MME12-Sec</dstId>
+                <dst>10.103.44.2/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>MME13-Pri</dstId>
+                <dst>10.103.44.34/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>MME13-Sec</dstId>
+                <dst>10.103.44.35/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>RNC</dstId>
+                <dst>10.160.190.0/24</dst>
+                <NextHop>
+                  <nextHopId>34</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-CP</dstId>
                 <dst>0.0.0.0/0</dst>
                 <NextHop>
                   <nextHopId>3</nextHopId>
                   <address>{LTE_S1_GW}</address>
                   <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
                 </NextHop>
               </Dst>
             </RouteTableIPv4Static>
           </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTEUP</routerId>
+            <RouteTableIPv4Static xmlns="urn:com:ericsson:ecim:RtnRoutesStaticRouteIPv4">
+              <routeTableIPv4StaticId>2</routeTableIPv4StaticId>
+              <Dst>
+                <dstId>DEL-NOI-S87-SAE-CUPS-IMS-01</dstId>
+                <dst>10.1.159.80/30</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>DEL-NOI-S87-SAEGW-UP-01</dstId>
+                <dst>10.1.159.66/31</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>DEL-NOI-S87-SAEGW-UP-03</dstId>
+                <dst>10.1.159.68/30</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>DEL-NOI-S87-SAEGW-UP-07</dstId>
+                <dst>10.1.159.72/29</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>Google_POD4_V4</dstId>
+                <dst>10.58.104.165/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>Google_POD5_V4</dstId>
+                <dst>10.58.104.181/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>POD1</dstId>
+                <dst>10.58.96.101/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>POD2</dstId>
+                <dst>10.58.96.117/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>POD3</dstId>
+                <dst>10.58.96.133/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW10</dstId>
+                <dst>10.0.166.37/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW11</dstId>
+                <dst>10.0.232.5/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW12</dstId>
+                <dst>10.50.96.5/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW13</dstId>
+                <dst>10.50.96.17/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW14</dstId>
+                <dst>10.50.97.5/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW15</dstId>
+                <dst>10.75.212.97/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW16</dstId>
+                <dst>10.75.212.176/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW17</dstId>
+                <dst>10.92.7.86/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW2</dstId>
+                <dst>10.155.68.224/27</dst>
+                <NextHop>
+                  <nextHopId>{fieldReplaceableUnitId}</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW3</dstId>
+                <dst>10.206.16.79/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW4</dstId>
+                <dst>10.206.17.12/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW5</dstId>
+                <dst>10.206.17.1/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW6</dstId>
+                <dst>10.0.123.5/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW7</dstId>
+                <dst>10.206.31.2/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW8</dstId>
+                <dst>10.0.123.37/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW9</dstId>
+                <dst>10.0.166.5/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>Twamp4</dstId>
+                <dst>10.61.112.168/29</dst>
+                <NextHop>
+                  <nextHopId>7</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>Twamp5</dstId>
+                <dst>10.188.27.112/29</dst>
+                <NextHop>
+                  <nextHopId>7</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-UP</dstId>
+                <dst>0.0.0.0/0</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+            </RouteTableIPv4Static>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>OAM</routerId>
+            <RouteTableIPv6Static xmlns="urn:com:ericsson:ecim:RtnRoutesStaticRouteIPv6">
+              <routeTableIPv6StaticId>1</routeTableIPv6StaticId>
+              <Dst>
+                <dstId>OSS</dstId>
+                <dst>::/0</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{OAM_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+            </RouteTableIPv6Static>
+          </Router>
         </Transport>
-        <Equipment xmlns="urn:com:ericsson:ecim:ReqEquipment">
-          <equipmentId>1</equipmentId>
-          <FieldReplaceableUnit xmlns="urn:com:ericsson:ecim:ReqFieldReplaceableUnit">
-            <fieldReplaceableUnitId>{fieldReplaceableUnitId}</fieldReplaceableUnitId>
-            <TnPort xmlns="urn:com:ericsson:ecim:ReqTnPort">
-              <tnPortId>{tnPortId}</tnPortId>
-              <userLabel>{tnPortId}</userLabel>
-            </TnPort>
-          </FieldReplaceableUnit>
-        </Equipment>
       </ManagedElement>
     </config>
   </edit-config>
@@ -1656,6 +3965,7 @@ DEL_SiteBasic_ipv6_6630 = """
   <close-session></close-session>
 </rpc>
 ]]>]]>
+<?xml version="1.0" encoding="UTF-8"?>
 <hello xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
   <capabilities>
     <capability>urn:ietf:params:netconf:base:1.0</capability>
@@ -1670,7 +3980,7 @@ DEL_SiteBasic_ipv6_6630 = """
     <config xmlns:xc="urn:ietf:params:xml:ns:netconf:base:1.0">
       <ManagedElement xmlns="urn:com:ericsson:ecim:ComTop">
         <managedElementId>1</managedElementId>
-        <networkManagedElementId>{eNodeBName}</networkManagedElementId>
+        <networkManagedElementId></networkManagedElementId>
       </ManagedElement>
     </config>
   </edit-config>
@@ -1680,9 +3990,11 @@ DEL_SiteBasic_ipv6_6630 = """
   <close-session></close-session>
 </rpc>
 ]]>]]>
+
 """
 
 DEL_SiteBasic_ipv6_6339 = """
+<?xml version="1.0" encoding="UTF-8"?>
 <hello xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
   <capabilities>
     <capability>urn:ietf:params:netconf:base:1.0</capability>
@@ -1697,7 +4009,7 @@ DEL_SiteBasic_ipv6_6339 = """
     <config xmlns:xc="urn:ietf:params:xml:ns:netconf:base:1.0">
       <ManagedElement xmlns="urn:com:ericsson:ecim:ComTop">
         <managedElementId>1</managedElementId>
-        <dnPrefix>SubNetwork=ONRM_ROOT_MO,SubNetwork=LTE,MeContext={eNodeBName}</dnPrefix>
+        <dnPrefix>SubNetwork=ONRM_ROOT_MO,SubNetwork=LTE,SubNetwork=Baseband,MeContext={eNodeBName}</dnPrefix>
         <SystemFunctions>
           <systemFunctionsId>1</systemFunctionsId>
           <Lm xmlns="urn:com:ericsson:ecim:RcsLM">
@@ -1708,15 +4020,12 @@ DEL_SiteBasic_ipv6_6339 = """
             <secMId>1</secMId>
             <UserManagement>
               <userManagementId>1</userManagementId>
-              <LdapAuthenticationMethod xmlns="urn:com:ericsson:ecim:RcsLdapAuthentication">
-                <ldapAuthenticationMethodId>1</ldapAuthenticationMethodId>
-                <administrativeState>UNLOCKED</administrativeState>
-              </LdapAuthenticationMethod>
               <UserIdentity xmlns="urn:com:ericsson:ecim:RcsUser">
                 <userIdentityId>1</userIdentityId>
                 <MaintenanceUser>
                   <maintenanceUserId>1</maintenanceUserId>
                   <userName>rbs</userName>
+                  <userType>MAINTENANCE_USER</userType>
                   <password>
                     <cleartext />
                     <password>rbs</password>
@@ -1731,21 +4040,27 @@ DEL_SiteBasic_ipv6_6339 = """
               <cliTlsId>1</cliTlsId>
               <administrativeState>UNLOCKED</administrativeState>
             </CliTls>
-            <NtpServer>
-              <ntpServerId>1</ntpServerId>
-              <userLabel>NTP TOD1</userLabel>
-              <serverAddress>10.19.109.12</serverAddress>
-              <administrativeState>UNLOCKED</administrativeState>
-            </NtpServer>
-            </SysM>
+          </SysM>
         </SystemFunctions>
         <Transport>
           <transportId>1</transportId>
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>OAM</routerId>
+            <hopLimit>64</hopLimit>
+            <pathMtuExpiresIPv6>86400</pathMtuExpiresIPv6>
             <ttl>64</ttl>
           </Router>
         </Transport>
+        <Equipment xmlns="urn:com:ericsson:ecim:ReqEquipment">
+          <equipmentId>1</equipmentId>
+          <FieldReplaceableUnit xmlns="urn:com:ericsson:ecim:ReqFieldReplaceableUnit">
+            <fieldReplaceableUnitId>{fieldReplaceableUnitId}</fieldReplaceableUnitId>
+            <TnPort xmlns="urn:com:ericsson:ecim:ReqTnPort">
+              <tnPortId>{tnPortId}</tnPortId>
+              <userLabel>{tnPortId}</userLabel>
+            </TnPort>
+          </FieldReplaceableUnit>
+        </Equipment>
         <Transport>
           <transportId>1</transportId>
           <EthernetPort xmlns="urn:com:ericsson:ecim:RtnL2EthernetPort">
@@ -1754,6 +4069,7 @@ DEL_SiteBasic_ipv6_6339 = """
             <admOperatingMode>1G_FULL</admOperatingMode>
             <autoNegEnable>true</autoNegEnable>
             <encapsulation>ManagedElement=1,Equipment=1,FieldReplaceableUnit={fieldReplaceableUnitId},TnPort={tnPortId}</encapsulation>
+            <lldpTransmit>DISABLED</lldpTransmit>
             <userLabel>{tnPortId}</userLabel>
           </EthernetPort>
           <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
@@ -1767,12 +4083,19 @@ DEL_SiteBasic_ipv6_6339 = """
             <routerId>OAM</routerId>
             <InterfaceIPv6 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv6">
               <interfaceIPv6Id>{tnPortId}_OAM</interfaceIPv6Id>
+              <bfdStaticRoutes>DISABLED</bfdStaticRoutes>
+              <dscpNdp>48</dscpNdp>
               <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_OAM</encapsulation>
               <mtu>1500</mtu>
+              <neighborDiscoveryTimeout>30000</neighborDiscoveryTimeout>
+              <neighborSolicitationInterval>1000</neighborSolicitationInterval>
               <userLabel>OAM</userLabel>
               <AddressIPv6>
                 <addressIPv6Id>{tnPortId}_OAM</addressIPv6Id>
                 <address>{OAM_IP}</address>
+                <configurationMode>MANUAL</configurationMode>
+                <duidType>DUID_LLT</duidType>
+                <primaryAddress>true</primaryAddress>
               </AddressIPv6>
             </InterfaceIPv6>
           </Router>
@@ -1792,76 +4115,82 @@ DEL_SiteBasic_ipv6_6339 = """
             <Snmp xmlns="urn:com:ericsson:ecim:RcsSnmp">
               <snmpId>1</snmpId>
               <administrativeState>UNLOCKED</administrativeState>
-              <agentAddress>
-                <host>0.0.0.0</host>
-                <port>161</port>
-              </agentAddress>
+              <enableSourceCheckForV1V2C>false</enableSourceCheckForV1V2C>
+              <port>161</port>
+              <portDtls>10161</portDtls>
               <SnmpTargetV2C>
-                <snmpTargetV2CId>1</snmpTargetV2CId>
-                <community>public</community>
-                <address>10.19.109.40</address>
+                <snmpTargetV2CId>ENMFM</snmpTargetV2CId>
+                <community>enm-public</community>
+                <informRetryCount>1</informRetryCount>
+                <address>2401:4900:0:133:0:0:2:B821</address>
                 <port>162</port>
+                <informTimeout>300</informTimeout>
+                <transportMethod>TRAP</transportMethod>
+                <isMibWritable>true</isMibWritable>
                 <administrativeState>UNLOCKED</administrativeState>
               </SnmpTargetV2C>
             </Snmp>
+            <TimeM xmlns="urn:com:ericsson:ecim:RcsTimeM">
+              <timeMId>1</timeMId>
+              <Ntp>
+                <ntpId>1</ntpId>
+                <NtpServer>
+                  <ntpServerId>1</ntpServerId>
+                  <serverAddress>2401:4900:0024:0300:0000:0000:0000:0452</serverAddress>
+                  <administrativeState>UNLOCKED</administrativeState>
+                </NtpServer>
+                <NtpServer>
+                  <ntpServerId>2</ntpServerId>
+                  <serverAddress>2401:4900:0024:0300:0000:0000:0000:0453</serverAddress>
+                  <administrativeState>UNLOCKED</administrativeState>
+                </NtpServer>
+              </Ntp>
+            </TimeM>
           </SysM>
         </SystemFunctions>
         <Transport>
           <transportId>1</transportId>
-          <Ntp xmlns="urn:com:ericsson:ecim:RsyncNtp">
-            <ntpId>1</ntpId>
-          </Ntp>
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>LTECP</routerId>
+            <hopLimit>64</hopLimit>
+            <pathMtuExpiresIPv6>86400</pathMtuExpiresIPv6>
             <ttl>64</ttl>
           </Router>
-          <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
-            <vlanPortId>{tnPortId}_CP</vlanPortId>
-            <encapsulation>ManagedElement=1,Transport=1,EthernetPort={tnPortId}</encapsulation>
-            <isTagged>true</isTagged>
-            <userLabel>Control Plane</userLabel>
-            <vlanId>{LTE_S1_vlan}</vlanId>
-          </VlanPort>
-          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
-            <routerId>LTECP</routerId>
-            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
-              <interfaceIPv4Id>{tnPortId}_CP</interfaceIPv4Id>
-              <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_CP</encapsulation>
-              <mtu>1500</mtu>
-              <userLabel>Control Plane</userLabel>
-              <AddressIPv4>
-                <addressIPv4Id>{tnPortId}_CP</addressIPv4Id>
-                <address>{LTE_S1_IP}</address>
-              </AddressIPv4>
-            </InterfaceIPv4>
-          </Router>
-          <Ntp xmlns="urn:com:ericsson:ecim:RsyncNtp">
-            <ntpId>1</ntpId>
-            <NtpFrequencySync>
-              <ntpFrequencySyncId>NTP1</ntpFrequencySyncId>
-              <addressIPv4Reference>ManagedElement=1,Transport=1,Router=LTECP,InterfaceIPv4={tnPortId}_CP,AddressIPv4={tnPortId}_CP</addressIPv4Reference>
-              <dscp>46</dscp>
-              <syncServerNtpIpAddress>10.71.26.24</syncServerNtpIpAddress>
-            </NtpFrequencySync>
-            <NtpFrequencySync>
-              <ntpFrequencySyncId>NTP2</ntpFrequencySyncId>
-              <addressIPv4Reference>ManagedElement=1,Transport=1,Router=LTECP,InterfaceIPv4={tnPortId}_CP,AddressIPv4={tnPortId}_CP</addressIPv4Reference>
-              <dscp>46</dscp>
-              <syncServerNtpIpAddress>10.71.26.26</syncServerNtpIpAddress>
-            </NtpFrequencySync>
-          </Ntp>
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>LTEUP</routerId>
+            <hopLimit>64</hopLimit>
+            <pathMtuExpiresIPv6>86400</pathMtuExpiresIPv6>
             <ttl>64</ttl>
           </Router>
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>OAM</routerId>
             <DnsClient xmlns="urn:com:ericsson:ecim:RtnDnsClient">
               <dnsClientId>1</dnsClientId>
+              <configurationMode>MANUAL</configurationMode>
               <dscp>28</dscp>
-              <serverAddress>10.19.109.12</serverAddress>
-              <serverAddress>10.19.109.13</serverAddress>
+              <serverAddress>2401:4900:0024:0300:0000:0000:0000:0452</serverAddress>
+              <serverAddress>2401:4900:0024:0300:0000:0000:0000:0453</serverAddress>
             </DnsClient>
+          </Router>
+          <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
+            <vlanPortId>{tnPortId}_CP</vlanPortId>
+            <encapsulation>ManagedElement=1,Transport=1,EthernetPort={tnPortId}</encapsulation>
+            <isTagged>true</isTagged>
+            <userLabel>User Plane</userLabel>
+            <vlanId>{LTE_S1_vlan}</vlanId>
+          </VlanPort>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTECP</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_CP</interfaceIPv4Id>
+              <arpTimeout>300</arpTimeout>
+              <bfdStaticRoutes>DISABLED</bfdStaticRoutes>
+              <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_CP</encapsulation>
+              <ipOptionsDisabled>false</ipOptionsDisabled>
+              <mtu>1500</mtu>
+              <pcpArp>6</pcpArp>
+              <userLabel>Control Plane</userLabel>
+            </InterfaceIPv4>
           </Router>
           <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
             <vlanPortId>{tnPortId}_UP</vlanPortId>
@@ -1874,71 +4203,450 @@ DEL_SiteBasic_ipv6_6339 = """
             <routerId>LTEUP</routerId>
             <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
               <interfaceIPv4Id>{tnPortId}_UP</interfaceIPv4Id>
+              <arpTimeout>300</arpTimeout>
+              <bfdStaticRoutes>DISABLED</bfdStaticRoutes>
               <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_UP</encapsulation>
+              <ipOptionsDisabled>false</ipOptionsDisabled>
               <mtu>1500</mtu>
+              <pcpArp>6</pcpArp>
               <userLabel>User Plane</userLabel>
+            </InterfaceIPv4>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTECP</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_CP</interfaceIPv4Id>
               <AddressIPv4>
-                <addressIPv4Id>{tnPortId}_UP</addressIPv4Id>
-                <address>{LTE_UP_IP}</address>
+                <addressIPv4Id>{tnPortId}_CP</addressIPv4Id>
+                <address>{LTE_S1_IP}</address>
+                <configurationMode>MANUAL</configurationMode>
+                <dhcpClientIdentifierType>AUTOMATIC</dhcpClientIdentifierType>
+                <primaryAddress>true</primaryAddress>
               </AddressIPv4>
             </InterfaceIPv4>
           </Router>
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
-            <routerId>OAM</routerId>
-            <RouteTableIPv6Static xmlns="urn:com:ericsson:ecim:RtnRoutesStaticRouteIPv6">
-              <routeTableIPv6StaticId>1</routeTableIPv6StaticId>
-              <Dst>
-                <dstId>OAM</dstId>
-                <dst>::/0</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{OAM_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              </RouteTableIPv6Static>
-          </Router>
-          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>LTEUP</routerId>
-            <RouteTableIPv4Static xmlns="urn:com:ericsson:ecim:RtnRoutesStaticRouteIPv4">
-              <routeTableIPv4StaticId>2</routeTableIPv4StaticId>
-              <Dst>
-                <dstId>LTEUP</dstId>
-                <dst>0.0.0.0/0</dst>
-                <NextHop>
-                  <nextHopId>2</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-            </RouteTableIPv4Static>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_UP</interfaceIPv4Id>
+              <AddressIPv4>
+                <addressIPv4Id>{tnPortId}_UP</addressIPv4Id>
+                <address>{LTE_UP_IP}</address>
+                <configurationMode>MANUAL</configurationMode>
+                <dhcpClientIdentifierType>AUTOMATIC</dhcpClientIdentifierType>
+                <primaryAddress>true</primaryAddress>
+              </AddressIPv4>
+            </InterfaceIPv4>
           </Router>
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>LTECP</routerId>
             <RouteTableIPv4Static xmlns="urn:com:ericsson:ecim:RtnRoutesStaticRouteIPv4">
               <routeTableIPv4StaticId>3</routeTableIPv4StaticId>
               <Dst>
-                <dstId>LTECP</dstId>
+                <dstId>MME10-Pri</dstId>
+                <dst>10.103.44.12/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>MME10-Sec</dstId>
+                <dst>10.103.44.13/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>MME11-Pri</dstId>
+                <dst>10.103.44.23/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>MME11-Sec</dstId>
+                <dst>10.103.44.24/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>MME12-Pri</dstId>
+                <dst>10.103.44.1/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>MME12-Sec</dstId>
+                <dst>10.103.44.2/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>MME13-Pri</dstId>
+                <dst>10.103.44.34/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>MME13-Sec</dstId>
+                <dst>10.103.44.35/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>RNC</dstId>
+                <dst>10.160.190.0/24</dst>
+                <NextHop>
+                  <nextHopId>34</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-CP</dstId>
                 <dst>0.0.0.0/0</dst>
                 <NextHop>
                   <nextHopId>3</nextHopId>
                   <address>{LTE_S1_GW}</address>
                   <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
                 </NextHop>
               </Dst>
             </RouteTableIPv4Static>
           </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTEUP</routerId>
+            <RouteTableIPv4Static xmlns="urn:com:ericsson:ecim:RtnRoutesStaticRouteIPv4">
+              <routeTableIPv4StaticId>2</routeTableIPv4StaticId>
+              <Dst>
+                <dstId>DEL-NOI-S87-SAE-CUPS-IMS-01</dstId>
+                <dst>10.1.159.80/30</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>DEL-NOI-S87-SAEGW-UP-01</dstId>
+                <dst>10.1.159.66/31</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>DEL-NOI-S87-SAEGW-UP-03</dstId>
+                <dst>10.1.159.68/30</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>DEL-NOI-S87-SAEGW-UP-07</dstId>
+                <dst>10.1.159.72/29</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>Google_POD4_V4</dstId>
+                <dst>10.58.104.165/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>Google_POD5_V4</dstId>
+                <dst>10.58.104.181/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>POD1</dstId>
+                <dst>10.58.96.101/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>POD2</dstId>
+                <dst>10.58.96.117/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>POD3</dstId>
+                <dst>10.58.96.133/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW10</dstId>
+                <dst>10.0.166.37/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW11</dstId>
+                <dst>10.0.232.5/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW12</dstId>
+                <dst>10.50.96.5/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW13</dstId>
+                <dst>10.50.96.17/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW14</dstId>
+                <dst>10.50.97.5/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW15</dstId>
+                <dst>10.75.212.97/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW16</dstId>
+                <dst>10.75.212.176/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW17</dstId>
+                <dst>10.92.7.86/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW2</dstId>
+                <dst>10.155.68.224/27</dst>
+                <NextHop>
+                  <nextHopId>{fieldReplaceableUnitId}</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW3</dstId>
+                <dst>10.206.16.79/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW4</dstId>
+                <dst>10.206.17.12/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW5</dstId>
+                <dst>10.206.17.1/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW6</dstId>
+                <dst>10.0.123.5/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW7</dstId>
+                <dst>10.206.31.2/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW8</dstId>
+                <dst>10.0.123.37/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW9</dstId>
+                <dst>10.0.166.5/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>Twamp4</dstId>
+                <dst>10.61.112.168/29</dst>
+                <NextHop>
+                  <nextHopId>7</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>Twamp5</dstId>
+                <dst>10.188.27.112/29</dst>
+                <NextHop>
+                  <nextHopId>7</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-UP</dstId>
+                <dst>0.0.0.0/0</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+            </RouteTableIPv4Static>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>OAM</routerId>
+            <RouteTableIPv6Static xmlns="urn:com:ericsson:ecim:RtnRoutesStaticRouteIPv6">
+              <routeTableIPv6StaticId>1</routeTableIPv6StaticId>
+              <Dst>
+                <dstId>OSS</dstId>
+                <dst>::/0</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{OAM_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+            </RouteTableIPv6Static>
+          </Router>
         </Transport>
-        <Equipment xmlns="urn:com:ericsson:ecim:ReqEquipment">
-          <equipmentId>1</equipmentId>
-          <FieldReplaceableUnit xmlns="urn:com:ericsson:ecim:ReqFieldReplaceableUnit">
-            <fieldReplaceableUnitId>{fieldReplaceableUnitId}</fieldReplaceableUnitId>
-            <TnPort xmlns="urn:com:ericsson:ecim:ReqTnPort">
-              <tnPortId>{tnPortId}</tnPortId>
-              <userLabel>{tnPortId}</userLabel>
-            </TnPort>
-          </FieldReplaceableUnit>
-        </Equipment>
       </ManagedElement>
     </config>
   </edit-config>
@@ -1948,6 +4656,7 @@ DEL_SiteBasic_ipv6_6339 = """
   <close-session></close-session>
 </rpc>
 ]]>]]>
+<?xml version="1.0" encoding="UTF-8"?>
 <hello xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
   <capabilities>
     <capability>urn:ietf:params:netconf:base:1.0</capability>
@@ -1962,7 +4671,7 @@ DEL_SiteBasic_ipv6_6339 = """
     <config xmlns:xc="urn:ietf:params:xml:ns:netconf:base:1.0">
       <ManagedElement xmlns="urn:com:ericsson:ecim:ComTop">
         <managedElementId>1</managedElementId>
-        <networkManagedElementId>{eNodeBName}</networkManagedElementId>
+        <networkManagedElementId></networkManagedElementId>
       </ManagedElement>
     </config>
   </edit-config>
@@ -1992,14 +4701,644 @@ DEL_SiteBasic_ipv6_6303 = """
     <config xmlns:xc="urn:ietf:params:xml:ns:netconf:base:1.0">
       <ManagedElement xmlns="urn:com:ericsson:ecim:ComTop">
         <managedElementId>1</managedElementId>
-        <dnPrefix>SubNetwork=ONRM_ROOT_MO_R,SubNetwork=LTE,MeContext={eNodeBName}</dnPrefix>
+        <dnPrefix>SubNetwork=ONRM_ROOT_MO,SubNetwork=LTE,SubNetwork=Baseband,MeContext={eNodeBName}</dnPrefix>
         <SystemFunctions>
           <systemFunctionsId>1</systemFunctionsId>
           <Lm xmlns="urn:com:ericsson:ecim:RcsLM">
             <lmId>1</lmId>
             <fingerprint>{fingerprint}</fingerprint>
           </Lm>
+          <SecM xmlns="urn:com:ericsson:ecim:RcsSecM">
+            <secMId>1</secMId>
+            <UserManagement>
+              <userManagementId>1</userManagementId>
+              <UserIdentity xmlns="urn:com:ericsson:ecim:RcsUser">
+                <userIdentityId>1</userIdentityId>
+                <MaintenanceUser>
+                  <maintenanceUserId>1</maintenanceUserId>
+                  <userName>rbs</userName>
+                  <userType>MAINTENANCE_USER</userType>
+                  <password>
+                    <cleartext />
+                    <password>rbs</password>
+                  </password>
+                </MaintenanceUser>
+              </UserIdentity>
+            </UserManagement>
+          </SecM>
+          <SysM xmlns="urn:com:ericsson:ecim:RcsSysM">
+            <sysMId>1</sysMId>
+            <CliTls>
+              <cliTlsId>1</cliTlsId>
+              <administrativeState>UNLOCKED</administrativeState>
+            </CliTls>
+          </SysM>
         </SystemFunctions>
+        <Transport>
+          <transportId>1</transportId>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>OAM</routerId>
+            <hopLimit>64</hopLimit>
+            <pathMtuExpiresIPv6>86400</pathMtuExpiresIPv6>
+            <ttl>64</ttl>
+          </Router>
+        </Transport>
+        <Equipment xmlns="urn:com:ericsson:ecim:ReqEquipment">
+          <equipmentId>1</equipmentId>
+          <FieldReplaceableUnit xmlns="urn:com:ericsson:ecim:ReqFieldReplaceableUnit">
+            <fieldReplaceableUnitId>{fieldReplaceableUnitId}</fieldReplaceableUnitId>
+            <TnPort xmlns="urn:com:ericsson:ecim:ReqTnPort">
+              <tnPortId>{tnPortId}</tnPortId>
+              <userLabel>{tnPortId}</userLabel>
+            </TnPort>
+          </FieldReplaceableUnit>
+        </Equipment>
+        <Transport>
+          <transportId>1</transportId>
+          <EthernetPort xmlns="urn:com:ericsson:ecim:RtnL2EthernetPort">
+            <ethernetPortId>{tnPortId}</ethernetPortId>
+            <administrativeState>UNLOCKED</administrativeState>
+            <admOperatingMode>1G_FULL</admOperatingMode>
+            <autoNegEnable>true</autoNegEnable>
+            <encapsulation>ManagedElement=1,Equipment=1,FieldReplaceableUnit={fieldReplaceableUnitId},TnPort={tnPortId}</encapsulation>
+            <lldpTransmit>DISABLED</lldpTransmit>
+            <userLabel>{tnPortId}</userLabel>
+          </EthernetPort>
+          <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
+            <vlanPortId>{tnPortId}_OAM</vlanPortId>
+            <encapsulation>ManagedElement=1,Transport=1,EthernetPort={tnPortId}</encapsulation>
+            <isTagged>true</isTagged>
+            <userLabel>OAM</userLabel>
+            <vlanId>{OAM_vlan}</vlanId>
+          </VlanPort>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>OAM</routerId>
+            <InterfaceIPv6 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv6">
+              <interfaceIPv6Id>{tnPortId}_OAM</interfaceIPv6Id>
+              <bfdStaticRoutes>DISABLED</bfdStaticRoutes>
+              <dscpNdp>48</dscpNdp>
+              <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_OAM</encapsulation>
+              <mtu>1500</mtu>
+              <neighborDiscoveryTimeout>30000</neighborDiscoveryTimeout>
+              <neighborSolicitationInterval>1000</neighborSolicitationInterval>
+              <userLabel>OAM</userLabel>
+              <AddressIPv6>
+                <addressIPv6Id>{tnPortId}_OAM</addressIPv6Id>
+                <address>{OAM_IP}</address>
+                <configurationMode>MANUAL</configurationMode>
+                <duidType>DUID_LLT</duidType>
+                <primaryAddress>true</primaryAddress>
+              </AddressIPv6>
+            </InterfaceIPv6>
+          </Router>
+        </Transport>
+        <SystemFunctions>
+          <systemFunctionsId>1</systemFunctionsId>
+          <SysM xmlns="urn:com:ericsson:ecim:RcsSysM">
+            <sysMId>1</sysMId>
+            <OamAccessPoint>
+              <oamAccessPointId>1</oamAccessPointId>
+              <accessPoint>ManagedElement=1,Transport=1,Router=OAM,InterfaceIPv6={tnPortId}_OAM,AddressIPv6={tnPortId}_OAM</accessPoint>
+            </OamAccessPoint>
+            <OamTrafficClass>
+              <oamTrafficClassId>1</oamTrafficClassId>
+              <dscp>28</dscp>
+            </OamTrafficClass>
+            <Snmp xmlns="urn:com:ericsson:ecim:RcsSnmp">
+              <snmpId>1</snmpId>
+              <administrativeState>UNLOCKED</administrativeState>
+              <enableSourceCheckForV1V2C>false</enableSourceCheckForV1V2C>
+              <port>161</port>
+              <portDtls>10161</portDtls>
+              <SnmpTargetV2C>
+                <snmpTargetV2CId>ENMFM</snmpTargetV2CId>
+                <community>enm-public</community>
+                <informRetryCount>1</informRetryCount>
+                <address>2401:4900:0:133:0:0:2:B821</address>
+                <port>162</port>
+                <informTimeout>300</informTimeout>
+                <transportMethod>TRAP</transportMethod>
+                <isMibWritable>true</isMibWritable>
+                <administrativeState>UNLOCKED</administrativeState>
+              </SnmpTargetV2C>
+            </Snmp>
+            <TimeM xmlns="urn:com:ericsson:ecim:RcsTimeM">
+              <timeMId>1</timeMId>
+              <Ntp>
+                <ntpId>1</ntpId>
+                <NtpServer>
+                  <ntpServerId>1</ntpServerId>
+                  <serverAddress>2401:4900:0024:0300:0000:0000:0000:0452</serverAddress>
+                  <administrativeState>UNLOCKED</administrativeState>
+                </NtpServer>
+                <NtpServer>
+                  <ntpServerId>2</ntpServerId>
+                  <serverAddress>2401:4900:0024:0300:0000:0000:0000:0453</serverAddress>
+                  <administrativeState>UNLOCKED</administrativeState>
+                </NtpServer>
+              </Ntp>
+            </TimeM>
+          </SysM>
+        </SystemFunctions>
+        <Transport>
+          <transportId>1</transportId>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTECP</routerId>
+            <hopLimit>64</hopLimit>
+            <pathMtuExpiresIPv6>86400</pathMtuExpiresIPv6>
+            <ttl>64</ttl>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTEUP</routerId>
+            <hopLimit>64</hopLimit>
+            <pathMtuExpiresIPv6>86400</pathMtuExpiresIPv6>
+            <ttl>64</ttl>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>OAM</routerId>
+            <DnsClient xmlns="urn:com:ericsson:ecim:RtnDnsClient">
+              <dnsClientId>1</dnsClientId>
+              <configurationMode>MANUAL</configurationMode>
+              <dscp>28</dscp>
+              <serverAddress>2401:4900:0024:0300:0000:0000:0000:0452</serverAddress>
+              <serverAddress>2401:4900:0024:0300:0000:0000:0000:0453</serverAddress>
+            </DnsClient>
+          </Router>
+          <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
+            <vlanPortId>{tnPortId}_CP</vlanPortId>
+            <encapsulation>ManagedElement=1,Transport=1,EthernetPort={tnPortId}</encapsulation>
+            <isTagged>true</isTagged>
+            <userLabel>User Plane</userLabel>
+            <vlanId>{LTE_S1_vlan}</vlanId>
+          </VlanPort>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTECP</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_CP</interfaceIPv4Id>
+              <arpTimeout>300</arpTimeout>
+              <bfdStaticRoutes>DISABLED</bfdStaticRoutes>
+              <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_CP</encapsulation>
+              <ipOptionsDisabled>false</ipOptionsDisabled>
+              <mtu>1500</mtu>
+              <pcpArp>6</pcpArp>
+              <userLabel>Control Plane</userLabel>
+            </InterfaceIPv4>
+          </Router>
+          <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
+            <vlanPortId>{tnPortId}_UP</vlanPortId>
+            <encapsulation>ManagedElement=1,Transport=1,EthernetPort={tnPortId}</encapsulation>
+            <isTagged>true</isTagged>
+            <userLabel>User Plane</userLabel>
+            <vlanId>{LTE_UP_vlan}</vlanId>
+          </VlanPort>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTEUP</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_UP</interfaceIPv4Id>
+              <arpTimeout>300</arpTimeout>
+              <bfdStaticRoutes>DISABLED</bfdStaticRoutes>
+              <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_UP</encapsulation>
+              <ipOptionsDisabled>false</ipOptionsDisabled>
+              <mtu>1500</mtu>
+              <pcpArp>6</pcpArp>
+              <userLabel>User Plane</userLabel>
+            </InterfaceIPv4>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTECP</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_CP</interfaceIPv4Id>
+              <AddressIPv4>
+                <addressIPv4Id>{tnPortId}_CP</addressIPv4Id>
+                <address>{LTE_S1_IP}</address>
+                <configurationMode>MANUAL</configurationMode>
+                <dhcpClientIdentifierType>AUTOMATIC</dhcpClientIdentifierType>
+                <primaryAddress>true</primaryAddress>
+              </AddressIPv4>
+            </InterfaceIPv4>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTEUP</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_UP</interfaceIPv4Id>
+              <AddressIPv4>
+                <addressIPv4Id>{tnPortId}_UP</addressIPv4Id>
+                <address>{LTE_UP_IP}</address>
+                <configurationMode>MANUAL</configurationMode>
+                <dhcpClientIdentifierType>AUTOMATIC</dhcpClientIdentifierType>
+                <primaryAddress>true</primaryAddress>
+              </AddressIPv4>
+            </InterfaceIPv4>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTECP</routerId>
+            <RouteTableIPv4Static xmlns="urn:com:ericsson:ecim:RtnRoutesStaticRouteIPv4">
+              <routeTableIPv4StaticId>3</routeTableIPv4StaticId>
+              <Dst>
+                <dstId>MME10-Pri</dstId>
+                <dst>10.103.44.12/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>MME10-Sec</dstId>
+                <dst>10.103.44.13/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>MME11-Pri</dstId>
+                <dst>10.103.44.23/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>MME11-Sec</dstId>
+                <dst>10.103.44.24/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>MME12-Pri</dstId>
+                <dst>10.103.44.1/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>MME12-Sec</dstId>
+                <dst>10.103.44.2/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>MME13-Pri</dstId>
+                <dst>10.103.44.34/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>MME13-Sec</dstId>
+                <dst>10.103.44.35/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>RNC</dstId>
+                <dst>10.160.190.0/24</dst>
+                <NextHop>
+                  <nextHopId>34</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-CP</dstId>
+                <dst>0.0.0.0/0</dst>
+                <NextHop>
+                  <nextHopId>3</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+            </RouteTableIPv4Static>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTEUP</routerId>
+            <RouteTableIPv4Static xmlns="urn:com:ericsson:ecim:RtnRoutesStaticRouteIPv4">
+              <routeTableIPv4StaticId>2</routeTableIPv4StaticId>
+              <Dst>
+                <dstId>DEL-NOI-S87-SAE-CUPS-IMS-01</dstId>
+                <dst>10.1.159.80/30</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>DEL-NOI-S87-SAEGW-UP-01</dstId>
+                <dst>10.1.159.66/31</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>DEL-NOI-S87-SAEGW-UP-03</dstId>
+                <dst>10.1.159.68/30</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>DEL-NOI-S87-SAEGW-UP-07</dstId>
+                <dst>10.1.159.72/29</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>Google_POD4_V4</dstId>
+                <dst>10.58.104.165/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>Google_POD5_V4</dstId>
+                <dst>10.58.104.181/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>POD1</dstId>
+                <dst>10.58.96.101/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>POD2</dstId>
+                <dst>10.58.96.117/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>POD3</dstId>
+                <dst>10.58.96.133/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW10</dstId>
+                <dst>10.0.166.37/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW11</dstId>
+                <dst>10.0.232.5/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW12</dstId>
+                <dst>10.50.96.5/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW13</dstId>
+                <dst>10.50.96.17/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW14</dstId>
+                <dst>10.50.97.5/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW15</dstId>
+                <dst>10.75.212.97/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW16</dstId>
+                <dst>10.75.212.176/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW17</dstId>
+                <dst>10.92.7.86/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW2</dstId>
+                <dst>10.155.68.224/27</dst>
+                <NextHop>
+                  <nextHopId>{fieldReplaceableUnitId}</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW3</dstId>
+                <dst>10.206.16.79/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW4</dstId>
+                <dst>10.206.17.12/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW5</dstId>
+                <dst>10.206.17.1/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW6</dstId>
+                <dst>10.0.123.5/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW7</dstId>
+                <dst>10.206.31.2/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW8</dstId>
+                <dst>10.0.123.37/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW9</dstId>
+                <dst>10.0.166.5/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>Twamp4</dstId>
+                <dst>10.61.112.168/29</dst>
+                <NextHop>
+                  <nextHopId>7</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>Twamp5</dstId>
+                <dst>10.188.27.112/29</dst>
+                <NextHop>
+                  <nextHopId>7</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-UP</dstId>
+                <dst>0.0.0.0/0</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+            </RouteTableIPv4Static>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>OAM</routerId>
+            <RouteTableIPv6Static xmlns="urn:com:ericsson:ecim:RtnRoutesStaticRouteIPv6">
+              <routeTableIPv6StaticId>1</routeTableIPv6StaticId>
+              <Dst>
+                <dstId>OSS</dstId>
+                <dst>::/0</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{OAM_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+            </RouteTableIPv6Static>
+          </Router>
+        </Transport>
       </ManagedElement>
     </config>
   </edit-config>
@@ -2024,16 +5363,674 @@ DEL_SiteBasic_ipv6_6303 = """
     <config xmlns:xc="urn:ietf:params:xml:ns:netconf:base:1.0">
       <ManagedElement xmlns="urn:com:ericsson:ecim:ComTop">
         <managedElementId>1</managedElementId>
+        <networkManagedElementId></networkManagedElementId>
+      </ManagedElement>
+    </config>
+  </edit-config>
+</rpc>
+]]>]]>
+<rpc message-id="Closing" xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+  <close-session></close-session>
+</rpc>
+]]>]]>
+
+
+"""
+
+DEL_SiteBasic_ipv6_6353 = """
+<?xml version="1.0" encoding="UTF-8"?>
+<hello xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+  <capabilities>
+    <capability>urn:ietf:params:netconf:base:1.0</capability>
+  </capabilities>
+</hello>
+]]>]]>
+<rpc message-id="1" xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+  <edit-config>
+    <target>
+      <running />
+    </target>
+    <config xmlns:xc="urn:ietf:params:xml:ns:netconf:base:1.0">
+      <ManagedElement xmlns="urn:com:ericsson:ecim:ComTop">
+        <managedElementId>1</managedElementId>
+        <dnPrefix>SubNetwork=ONRM_ROOT_MO,SubNetwork=LTE,SubNetwork=Baseband,MeContext={eNodeBName}</dnPrefix>
         <SystemFunctions>
           <systemFunctionsId>1</systemFunctionsId>
           <Lm xmlns="urn:com:ericsson:ecim:RcsLM">
             <lmId>1</lmId>
-            <FeatureState>
-              <featureStateId>CXC4040006</featureStateId>
-              <featureState>ACTIVATED</featureState>
-            </FeatureState>
+            <fingerprint>{fingerprint}</fingerprint>
           </Lm>
+          <SecM xmlns="urn:com:ericsson:ecim:RcsSecM">
+            <secMId>1</secMId>
+            <UserManagement>
+              <userManagementId>1</userManagementId>
+              <UserIdentity xmlns="urn:com:ericsson:ecim:RcsUser">
+                <userIdentityId>1</userIdentityId>
+                <MaintenanceUser>
+                  <maintenanceUserId>1</maintenanceUserId>
+                  <userName>rbs</userName>
+                  <userType>MAINTENANCE_USER</userType>
+                  <password>
+                    <cleartext />
+                    <password>rbs</password>
+                  </password>
+                </MaintenanceUser>
+              </UserIdentity>
+            </UserManagement>
+          </SecM>
+          <SysM xmlns="urn:com:ericsson:ecim:RcsSysM">
+            <sysMId>1</sysMId>
+            <CliTls>
+              <cliTlsId>1</cliTlsId>
+              <administrativeState>UNLOCKED</administrativeState>
+            </CliTls>
+          </SysM>
         </SystemFunctions>
+        <Transport>
+          <transportId>1</transportId>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>OAM</routerId>
+            <hopLimit>64</hopLimit>
+            <pathMtuExpiresIPv6>86400</pathMtuExpiresIPv6>
+            <ttl>64</ttl>
+          </Router>
+        </Transport>
+        <Equipment xmlns="urn:com:ericsson:ecim:ReqEquipment">
+          <equipmentId>1</equipmentId>
+          <FieldReplaceableUnit xmlns="urn:com:ericsson:ecim:ReqFieldReplaceableUnit">
+            <fieldReplaceableUnitId>{fieldReplaceableUnitId}</fieldReplaceableUnitId>
+            <TnPort xmlns="urn:com:ericsson:ecim:ReqTnPort">
+              <tnPortId>{tnPortId}</tnPortId>
+              <userLabel>{tnPortId}</userLabel>
+            </TnPort>
+          </FieldReplaceableUnit>
+        </Equipment>
+        <Transport>
+          <transportId>1</transportId>
+          <EthernetPort xmlns="urn:com:ericsson:ecim:RtnL2EthernetPort">
+            <ethernetPortId>{tnPortId}</ethernetPortId>
+            <administrativeState>UNLOCKED</administrativeState>
+            <admOperatingMode>1G_FULL</admOperatingMode>
+            <autoNegEnable>true</autoNegEnable>
+            <encapsulation>ManagedElement=1,Equipment=1,FieldReplaceableUnit={fieldReplaceableUnitId},TnPort={tnPortId}</encapsulation>
+            <lldpTransmit>DISABLED</lldpTransmit>
+            <userLabel>{tnPortId}</userLabel>
+          </EthernetPort>
+          <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
+            <vlanPortId>{tnPortId}_OAM</vlanPortId>
+            <encapsulation>ManagedElement=1,Transport=1,EthernetPort={tnPortId}</encapsulation>
+            <isTagged>true</isTagged>
+            <userLabel>OAM</userLabel>
+            <vlanId>{OAM_vlan}</vlanId>
+          </VlanPort>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>OAM</routerId>
+            <InterfaceIPv6 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv6">
+              <interfaceIPv6Id>{tnPortId}_OAM</interfaceIPv6Id>
+              <bfdStaticRoutes>DISABLED</bfdStaticRoutes>
+              <dscpNdp>48</dscpNdp>
+              <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_OAM</encapsulation>
+              <mtu>1500</mtu>
+              <neighborDiscoveryTimeout>30000</neighborDiscoveryTimeout>
+              <neighborSolicitationInterval>1000</neighborSolicitationInterval>
+              <userLabel>OAM</userLabel>
+              <AddressIPv6>
+                <addressIPv6Id>{tnPortId}_OAM</addressIPv6Id>
+                <address>{OAM_IP}</address>
+                <configurationMode>MANUAL</configurationMode>
+                <duidType>DUID_LLT</duidType>
+                <primaryAddress>true</primaryAddress>
+              </AddressIPv6>
+            </InterfaceIPv6>
+          </Router>
+        </Transport>
+        <SystemFunctions>
+          <systemFunctionsId>1</systemFunctionsId>
+          <SysM xmlns="urn:com:ericsson:ecim:RcsSysM">
+            <sysMId>1</sysMId>
+            <OamAccessPoint>
+              <oamAccessPointId>1</oamAccessPointId>
+              <accessPoint>ManagedElement=1,Transport=1,Router=OAM,InterfaceIPv6={tnPortId}_OAM,AddressIPv6={tnPortId}_OAM</accessPoint>
+            </OamAccessPoint>
+            <OamTrafficClass>
+              <oamTrafficClassId>1</oamTrafficClassId>
+              <dscp>28</dscp>
+            </OamTrafficClass>
+            <Snmp xmlns="urn:com:ericsson:ecim:RcsSnmp">
+              <snmpId>1</snmpId>
+              <administrativeState>UNLOCKED</administrativeState>
+              <enableSourceCheckForV1V2C>false</enableSourceCheckForV1V2C>
+              <port>161</port>
+              <portDtls>10161</portDtls>
+              <SnmpTargetV2C>
+                <snmpTargetV2CId>ENMFM</snmpTargetV2CId>
+                <community>enm-public</community>
+                <informRetryCount>1</informRetryCount>
+                <address>2401:4900:0:133:0:0:2:B821</address>
+                <port>162</port>
+                <informTimeout>300</informTimeout>
+                <transportMethod>TRAP</transportMethod>
+                <isMibWritable>true</isMibWritable>
+                <administrativeState>UNLOCKED</administrativeState>
+              </SnmpTargetV2C>
+            </Snmp>
+            <TimeM xmlns="urn:com:ericsson:ecim:RcsTimeM">
+              <timeMId>1</timeMId>
+              <Ntp>
+                <ntpId>1</ntpId>
+                <NtpServer>
+                  <ntpServerId>1</ntpServerId>
+                  <serverAddress>2401:4900:0024:0300:0000:0000:0000:0452</serverAddress>
+                  <administrativeState>UNLOCKED</administrativeState>
+                </NtpServer>
+                <NtpServer>
+                  <ntpServerId>2</ntpServerId>
+                  <serverAddress>2401:4900:0024:0300:0000:0000:0000:0453</serverAddress>
+                  <administrativeState>UNLOCKED</administrativeState>
+                </NtpServer>
+              </Ntp>
+            </TimeM>
+          </SysM>
+        </SystemFunctions>
+        <Transport>
+          <transportId>1</transportId>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTECP</routerId>
+            <hopLimit>64</hopLimit>
+            <pathMtuExpiresIPv6>86400</pathMtuExpiresIPv6>
+            <ttl>64</ttl>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTEUP</routerId>
+            <hopLimit>64</hopLimit>
+            <pathMtuExpiresIPv6>86400</pathMtuExpiresIPv6>
+            <ttl>64</ttl>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>OAM</routerId>
+            <DnsClient xmlns="urn:com:ericsson:ecim:RtnDnsClient">
+              <dnsClientId>1</dnsClientId>
+              <configurationMode>MANUAL</configurationMode>
+              <dscp>28</dscp>
+              <serverAddress>2401:4900:0024:0300:0000:0000:0000:0452</serverAddress>
+              <serverAddress>2401:4900:0024:0300:0000:0000:0000:0453</serverAddress>
+            </DnsClient>
+          </Router>
+          <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
+            <vlanPortId>{tnPortId}_CP</vlanPortId>
+            <encapsulation>ManagedElement=1,Transport=1,EthernetPort={tnPortId}</encapsulation>
+            <isTagged>true</isTagged>
+            <userLabel>User Plane</userLabel>
+            <vlanId>{LTE_S1_vlan}</vlanId>
+          </VlanPort>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTECP</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_CP</interfaceIPv4Id>
+              <arpTimeout>300</arpTimeout>
+              <bfdStaticRoutes>DISABLED</bfdStaticRoutes>
+              <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_CP</encapsulation>
+              <ipOptionsDisabled>false</ipOptionsDisabled>
+              <mtu>1500</mtu>
+              <pcpArp>6</pcpArp>
+              <userLabel>Control Plane</userLabel>
+            </InterfaceIPv4>
+          </Router>
+          <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
+            <vlanPortId>{tnPortId}_UP</vlanPortId>
+            <encapsulation>ManagedElement=1,Transport=1,EthernetPort={tnPortId}</encapsulation>
+            <isTagged>true</isTagged>
+            <userLabel>User Plane</userLabel>
+            <vlanId>{LTE_UP_vlan}</vlanId>
+          </VlanPort>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTEUP</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_UP</interfaceIPv4Id>
+              <arpTimeout>300</arpTimeout>
+              <bfdStaticRoutes>DISABLED</bfdStaticRoutes>
+              <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_UP</encapsulation>
+              <ipOptionsDisabled>false</ipOptionsDisabled>
+              <mtu>1500</mtu>
+              <pcpArp>6</pcpArp>
+              <userLabel>User Plane</userLabel>
+            </InterfaceIPv4>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTECP</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_CP</interfaceIPv4Id>
+              <AddressIPv4>
+                <addressIPv4Id>{tnPortId}_CP</addressIPv4Id>
+                <address>{LTE_S1_IP}</address>
+                <configurationMode>MANUAL</configurationMode>
+                <dhcpClientIdentifierType>AUTOMATIC</dhcpClientIdentifierType>
+                <primaryAddress>true</primaryAddress>
+              </AddressIPv4>
+            </InterfaceIPv4>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTEUP</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_UP</interfaceIPv4Id>
+              <AddressIPv4>
+                <addressIPv4Id>{tnPortId}_UP</addressIPv4Id>
+                <address>{LTE_UP_IP}</address>
+                <configurationMode>MANUAL</configurationMode>
+                <dhcpClientIdentifierType>AUTOMATIC</dhcpClientIdentifierType>
+                <primaryAddress>true</primaryAddress>
+              </AddressIPv4>
+            </InterfaceIPv4>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTECP</routerId>
+            <RouteTableIPv4Static xmlns="urn:com:ericsson:ecim:RtnRoutesStaticRouteIPv4">
+              <routeTableIPv4StaticId>3</routeTableIPv4StaticId>
+              <Dst>
+                <dstId>MME10-Pri</dstId>
+                <dst>10.103.44.12/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>MME10-Sec</dstId>
+                <dst>10.103.44.13/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>MME11-Pri</dstId>
+                <dst>10.103.44.23/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>MME11-Sec</dstId>
+                <dst>10.103.44.24/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>MME12-Pri</dstId>
+                <dst>10.103.44.1/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>MME12-Sec</dstId>
+                <dst>10.103.44.2/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>MME13-Pri</dstId>
+                <dst>10.103.44.34/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>MME13-Sec</dstId>
+                <dst>10.103.44.35/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>RNC</dstId>
+                <dst>10.160.190.0/24</dst>
+                <NextHop>
+                  <nextHopId>34</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-CP</dstId>
+                <dst>0.0.0.0/0</dst>
+                <NextHop>
+                  <nextHopId>3</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+            </RouteTableIPv4Static>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTEUP</routerId>
+            <RouteTableIPv4Static xmlns="urn:com:ericsson:ecim:RtnRoutesStaticRouteIPv4">
+              <routeTableIPv4StaticId>2</routeTableIPv4StaticId>
+              <Dst>
+                <dstId>DEL-NOI-S87-SAE-CUPS-IMS-01</dstId>
+                <dst>10.1.159.80/30</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>DEL-NOI-S87-SAEGW-UP-01</dstId>
+                <dst>10.1.159.66/31</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>DEL-NOI-S87-SAEGW-UP-03</dstId>
+                <dst>10.1.159.68/30</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>DEL-NOI-S87-SAEGW-UP-07</dstId>
+                <dst>10.1.159.72/29</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>Google_POD4_V4</dstId>
+                <dst>10.58.104.165/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>Google_POD5_V4</dstId>
+                <dst>10.58.104.181/32</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>POD1</dstId>
+                <dst>10.58.96.101/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>POD2</dstId>
+                <dst>10.58.96.117/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>POD3</dstId>
+                <dst>10.58.96.133/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW10</dstId>
+                <dst>10.0.166.37/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW11</dstId>
+                <dst>10.0.232.5/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW12</dstId>
+                <dst>10.50.96.5/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW13</dstId>
+                <dst>10.50.96.17/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW14</dstId>
+                <dst>10.50.97.5/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW15</dstId>
+                <dst>10.75.212.97/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW16</dstId>
+                <dst>10.75.212.176/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW17</dstId>
+                <dst>10.92.7.86/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW2</dstId>
+                <dst>10.155.68.224/27</dst>
+                <NextHop>
+                  <nextHopId>{fieldReplaceableUnitId}</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW3</dstId>
+                <dst>10.206.16.79/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW4</dstId>
+                <dst>10.206.17.12/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW5</dstId>
+                <dst>10.206.17.1/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW6</dstId>
+                <dst>10.0.123.5/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW7</dstId>
+                <dst>10.206.31.2/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW8</dstId>
+                <dst>10.0.123.37/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW9</dstId>
+                <dst>10.0.166.5/32</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>Twamp4</dstId>
+                <dst>10.61.112.168/29</dst>
+                <NextHop>
+                  <nextHopId>7</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>Twamp5</dstId>
+                <dst>10.188.27.112/29</dst>
+                <NextHop>
+                  <nextHopId>7</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-UP</dstId>
+                <dst>0.0.0.0/0</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+            </RouteTableIPv4Static>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>OAM</routerId>
+            <RouteTableIPv6Static xmlns="urn:com:ericsson:ecim:RtnRoutesStaticRouteIPv6">
+              <routeTableIPv6StaticId>1</routeTableIPv6StaticId>
+              <Dst>
+                <dstId>OSS</dstId>
+                <dst>::/0</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{OAM_GW}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+            </RouteTableIPv6Static>
+          </Router>
+        </Transport>
       </ManagedElement>
     </config>
   </edit-config>
@@ -2050,7 +6047,7 @@ DEL_SiteBasic_ipv6_6303 = """
   </capabilities>
 </hello>
 ]]>]]>
-<rpc message-id="3" xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+<rpc message-id="2" xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
   <edit-config>
     <target>
       <running />
@@ -2058,9 +6055,44 @@ DEL_SiteBasic_ipv6_6303 = """
     <config xmlns:xc="urn:ietf:params:xml:ns:netconf:base:1.0">
       <ManagedElement xmlns="urn:com:ericsson:ecim:ComTop">
         <managedElementId>1</managedElementId>
+        <networkManagedElementId></networkManagedElementId>
+      </ManagedElement>
+    </config>
+  </edit-config>
+</rpc>
+]]>]]>
+<rpc message-id="Closing" xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+  <close-session></close-session>
+</rpc>
+]]>]]>
+
+
+"""
+
+DEL_SiteBasic_ipv4_6651 = """
+<?xml version="1.0" encoding="UTF-8"?>
+<hello xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+  <capabilities>
+    <capability>urn:ietf:params:netconf:base:1.0</capability>
+  </capabilities>
+</hello>
+]]>]]>
+<rpc message-id="1" xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+  <edit-config>
+    <target>
+      <running />
+    </target>
+    <config xmlns:xc="urn:ietf:params:xml:ns:netconf:base:1.0">
+      <ManagedElement xmlns="urn:com:ericsson:ecim:ComTop">
+        <managedElementId>1</managedElementId>
+        <dnPrefix>SubNetwork=ONRM_ROOT_MO_R,SubNetwork=LTE,MeContext={eNodeBName}</dnPrefix>
         <SystemFunctions>
           <systemFunctionsId>1</systemFunctionsId>
-          <SecM xmlns="urn:com:ericsson:ecim:RcsSecM">
+          <Lm xmlns="urn:com:ericsson:ecim:RcsLM">
+            <lmId>1</lmId>
+            <fingerprint>{fingerprint}</fingerprint>
+          </Lm>
+          <SecM xmlns="urn:com:ericsson:ecim:ComSecM">
             <secMId>1</secMId>
             <UserManagement>
               <userManagementId>1</userManagementId>
@@ -2089,8 +6121,12 @@ DEL_SiteBasic_ipv6_6303 = """
             </CliTls>
             <NtpServer>
               <ntpServerId>1</ntpServerId>
-              <userLabel>NTP TOD1</userLabel>
-              <serverAddress>10.19.105.6</serverAddress>
+              <serverAddress>10.3.35.116</serverAddress>
+              <administrativeState>UNLOCKED</administrativeState>
+            </NtpServer>
+            <NtpServer>
+              <ntpServerId>2</ntpServerId>
+              <serverAddress>10.3.35.119</serverAddress>
               <administrativeState>UNLOCKED</administrativeState>
             </NtpServer>
           </SysM>
@@ -2099,628 +6135,6 @@ DEL_SiteBasic_ipv6_6303 = """
           <transportId>1</transportId>
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>OAM</routerId>
-            <ttl>64</ttl>
-          </Router>
-        </Transport>
-        <Equipment xmlns="urn:com:ericsson:ecim:ReqEquipment">
-          <equipmentId>1</equipmentId>
-          <FieldReplaceableUnit xmlns="urn:com:ericsson:ecim:ReqFieldReplaceableUnit">
-            <fieldReplaceableUnitId>{fieldReplaceableUnitId}</fieldReplaceableUnitId>
-            <TnPort xmlns="urn:com:ericsson:ecim:ReqTnPort">
-              <tnPortId>{tnPortId}</tnPortId>
-              <userLabel>{tnPortId}</userLabel>
-            </TnPort>
-          </FieldReplaceableUnit>
-        </Equipment>
-        <Transport>
-          <transportId>1</transportId>
-          <EthernetPort xmlns="urn:com:ericsson:ecim:RtnL2EthernetPort">
-            <ethernetPortId>{tnPortId}</ethernetPortId>
-            <administrativeState>UNLOCKED</administrativeState>
-            <admOperatingMode>1G_FULL</admOperatingMode>
-            <autoNegEnable>true</autoNegEnable>
-            <encapsulation>ManagedElement=1,Equipment=1,FieldReplaceableUnit={fieldReplaceableUnitId},TnPort={tnPortId}</encapsulation>
-            <userLabel>{tnPortId}</userLabel>
-          </EthernetPort>
-          <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
-            <vlanPortId>{tnPortId}_OAM</vlanPortId>
-            <encapsulation>ManagedElement=1,Transport=1,EthernetPort={tnPortId}</encapsulation>
-            <isTagged>true</isTagged>
-            <userLabel>OAM</userLabel>
-            <vlanId>{OAM_vlan}</vlanId>
-          </VlanPort>
-          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
-            <routerId>OAM</routerId>
-            <InterfaceIPv6 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv6">
-              <interfaceIPv6Id>{tnPortId}_OAM</interfaceIPv6Id>
-              <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_OAM</encapsulation>
-              <mtu>1500</mtu>
-              <userLabel>OAM</userLabel>
-              <AddressIPv6>
-                <addressIPv6Id>{tnPortId}_OAM</addressIPv6Id>
-                <address>{OAM_IP}</address>
-              </AddressIPv6>
-            </InterfaceIPv6>
-          </Router>
-        </Transport>
-        <SystemFunctions>
-          <systemFunctionsId>1</systemFunctionsId>
-          <SysM xmlns="urn:com:ericsson:ecim:RcsSysM">
-            <sysMId>1</sysMId>
-            <OamAccessPoint>
-              <oamAccessPointId>1</oamAccessPointId>
-              <accessPoint>ManagedElement=1,Transport=1,Router=OAM,InterfaceIPv6={tnPortId}_OAM,AddressIPv6={tnPortId}_OAM</accessPoint>
-            </OamAccessPoint>
-            <OamTrafficClass>
-              <oamTrafficClassId>1</oamTrafficClassId>
-              <dscp>28</dscp>
-            </OamTrafficClass>
-          </SysM>
-        </SystemFunctions>
-        <Transport>
-          <transportId>1</transportId>
-          <Ntp xmlns="urn:com:ericsson:ecim:RsyncNtp">
-            <ntpId>1</ntpId>
-          </Ntp>
-          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
-            <routerId>LTECP</routerId>
-            <ttl>64</ttl>
-          </Router>
-          <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
-            <vlanPortId>{tnPortId}_CP</vlanPortId>
-            <encapsulation>ManagedElement=1,Transport=1,EthernetPort={tnPortId}</encapsulation>
-            <isTagged>true</isTagged>
-            <userLabel>Control Plane</userLabel>
-            <vlanId>{LTE_S1_vlan}</vlanId>
-          </VlanPort>
-          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
-            <routerId>LTECP</routerId>
-            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
-              <interfaceIPv4Id>{tnPortId}_CP</interfaceIPv4Id>
-              <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_CP</encapsulation>
-              <mtu>1500</mtu>
-              <userLabel>Control Plane</userLabel>
-              <AddressIPv4>
-                <addressIPv4Id>{tnPortId}_CP</addressIPv4Id>
-                <address>{LTE_S1_IP}</address>
-              </AddressIPv4>
-            </InterfaceIPv4>
-          </Router>	
-          <Ntp xmlns="urn:com:ericsson:ecim:RsyncNtp">
-            <ntpId>1</ntpId>
-            <NtpFrequencySync>
-              <ntpFrequencySyncId>NTP1</ntpFrequencySyncId>
-              <addressIPv4Reference>ManagedElement=1,Transport=1,Router=LTECP,InterfaceIPv4={tnPortId}_CP,AddressIPv4={tnPortId}_CP</addressIPv4Reference>
-              <dscp>54</dscp>
-              <syncServerNtpIpAddress>10.163.190.24</syncServerNtpIpAddress>
-            </NtpFrequencySync>
-            <NtpFrequencySync>
-              <ntpFrequencySyncId>NTP2</ntpFrequencySyncId>
-              <addressIPv4Reference>ManagedElement=1,Transport=1,Router=LTECP,InterfaceIPv4={tnPortId}_CP,AddressIPv4={tnPortId}_CP</addressIPv4Reference>
-              <dscp>54</dscp>
-              <syncServerNtpIpAddress>10.163.190.26</syncServerNtpIpAddress>
-            </NtpFrequencySync>
-          </Ntp>		  
-          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
-            <routerId>LTEUP</routerId>
-            <ttl>64</ttl>
-          </Router>
-          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
-            <routerId>OAM</routerId>
-            <DnsClient xmlns="urn:com:ericsson:ecim:RtnDnsClient">
-              <dnsClientId>1</dnsClientId>
-              <dscp>46</dscp>
-              <serverAddress>10.19.105.28</serverAddress>
-            </DnsClient>
-          </Router>
-          <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
-            <vlanPortId>{tnPortId}_UP</vlanPortId>
-            <encapsulation>ManagedElement=1,Transport=1,EthernetPort={tnPortId}</encapsulation>
-            <isTagged>true</isTagged>
-            <userLabel>User Plane</userLabel>
-            <vlanId>{LTE_UP_vlan}</vlanId>
-          </VlanPort>
-          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
-            <routerId>LTEUP</routerId>
-            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
-              <interfaceIPv4Id>{tnPortId}_UP</interfaceIPv4Id>
-              <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_UP</encapsulation>
-              <mtu>1500</mtu>
-              <userLabel>User Plane</userLabel>
-              <AddressIPv4>
-                <addressIPv4Id>{tnPortId}_UP</addressIPv4Id>
-                <address>{LTE_UP_IP}</address>
-              </AddressIPv4>
-            </InterfaceIPv4>
-            <RouteTableIPv4Static xmlns="urn:com:ericsson:ecim:RtnRoutesStaticRouteIPv4">
-              <routeTableIPv4StaticId>2</routeTableIPv4StaticId>
-              <Dst>
-                <dstId>SGW1</dstId>
-                <dst>10.206.0.0/19</dst>
-                <NextHop>
-                  <nextHopId>2</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_1</dstId>
-                <dst>10.29.40.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_2</dstId>
-                <dst>10.29.56.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>SGW2</dstId>
-                <dst>10.206.32.65/32</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>SGW3</dstId>
-                <dst>10.40.18.96/28</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>SGW4</dstId>
-                <dst>10.50.98.5/32</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>SGW5</dstId>
-                <dst>10.50.98.17/32</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_3</dstId>
-                <dst>10.29.8.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_4</dstId>
-                <dst>10.29.24.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_5</dstId>
-                <dst>10.29.80.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_6</dstId>
-                <dst>10.29.112.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_7</dstId>
-                <dst>10.72.48.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_8</dstId>
-                <dst>10.72.56.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_9</dstId>
-                <dst>10.80.160.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_10</dstId>
-                <dst>10.80.136.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_11</dstId>
-                <dst>10.97.90.0/23</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_12</dstId>
-                <dst>100.81.16.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_13</dstId>
-                <dst>10.72.16.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_14</dstId>
-                <dst>100.81.56.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_15</dstId>
-                <dst>100.83.192.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-            </RouteTableIPv4Static>
-          </Router>
-          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
-            <routerId>LTECP</routerId>
-            <RouteTableIPv4Static xmlns="urn:com:ericsson:ecim:RtnRoutesStaticRouteIPv4">
-              <routeTableIPv4StaticId>3</routeTableIPv4StaticId>
-              <Dst>
-                <dstId>MME1</dstId>
-                <dst>10.206.4.0/24</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>MME2</dstId>
-                <dst>10.206.20.0/24</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>MME3</dstId>
-                <dst>10.206.27.0/24</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>MME4</dstId>
-                <dst>10.206.32.0/24</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>RNC</dstId>
-                <dst>10.163.4.80/29</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>MM5</dstId>
-                <dst>10.0.235.0/24</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_16</dstId>
-                <dst>10.29.32.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_17</dstId>
-                <dst>10.29.0.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_18</dstId>
-                <dst>10.29.16.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_19</dstId>
-                <dst>10.72.32.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_20</dstId>
-                <dst>10.72.40.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_21</dstId>
-                <dst>10.80.152.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_22</dstId>
-                <dst>10.29.48.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_23</dstId>
-                <dst>10.80.128.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_24</dstId>
-                <dst>10.97.88.0/23</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_25</dstId>
-                <dst>100.81.0.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_26</dstId>
-                <dst>100.81.48.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_27</dstId>
-                <dst>10.72.0.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_28</dstId>
-                <dst>10.29.64.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_29</dstId>
-                <dst>10.29.96.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_30</dstId>
-                <dst>100.83.208.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-            </RouteTableIPv4Static>
-          </Router>
-          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
-            <routerId>OAM</routerId>
-            <RouteTableIPv6Static xmlns="urn:com:ericsson:ecim:RtnRoutesStaticRouteIPv6">
-              <routeTableIPv6StaticId>1</routeTableIPv6StaticId>
-              <Dst>
-                <dstId>OSS</dstId>
-                <dst>::/0</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{OAM_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-            </RouteTableIPv6Static>
-          </Router>
-        </Transport>
-      </ManagedElement>
-    </config>
-  </edit-config>
-</rpc>
-]]>]]>
-<rpc message-id="Closing" xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
-  <close-session></close-session>
-</rpc>
-]]>]]>
-<?xml version="1.0" encoding="UTF-8"?>
-<hello xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
-  <capabilities>
-    <capability>urn:ietf:params:netconf:base:1.0</capability>
-  </capabilities>
-</hello>
-]]>]]>
-<rpc message-id="4" xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
-  <edit-config>
-    <target>
-      <running />
-    </target>
-    <config xmlns:xc="urn:ietf:params:xml:ns:netconf:base:1.0">
-      <ManagedElement xmlns="urn:com:ericsson:ecim:ComTop">
-        <managedElementId>1</managedElementId>
-        <networkManagedElementId>{eNodeBName}</networkManagedElementId>
-      </ManagedElement>
-    </config>
-  </edit-config>
-</rpc>
-]]>]]>
-<rpc message-id="Closing" xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
-  <close-session></close-session>
-</rpc>
-]]>]]>
-
-"""
-
-DEL_SiteBasic_ipv4_6651 = """
-<?xml version="1.0" encoding="UTF-8"?>
-<hello xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
-  <capabilities>
-    <capability>urn:ietf:params:netconf:base:1.0</capability>
-  </capabilities>
-</hello>
-]]>]]>
-<rpc message-id="1" xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
-  <edit-config>
-    <target>
-      <running />
-    </target>
-    <config xmlns:xc="urn:ietf:params:xml:ns:netconf:base:1.0">
-      <ManagedElement xmlns="urn:com:ericsson:ecim:ComTop">
-        <managedElementId>1</managedElementId>
-        <dnPrefix>SubNetwork=ONRM_ROOT_MO_R,SubNetwork=LTE,MeContext={eNodeBName}</dnPrefix>
-        <SystemFunctions>
-          <systemFunctionsId>1</systemFunctionsId>
-          <Lm xmlns="urn:com:ericsson:ecim:RcsLM">
-            <lmId>1</lmId>
-            <fingerprint>{fingerprint}</fingerprint>
-          </Lm>
-          <SecM xmlns="urn:com:ericsson:ecim:RcsSecM">
-            <secMId>1</secMId>
-            <UserManagement>
-              <userManagementId>1</userManagementId>
-              <LdapAuthenticationMethod xmlns="urn:com:ericsson:ecim:RcsLdapAuthentication">
-                <ldapAuthenticationMethodId>1</ldapAuthenticationMethodId>
-                <administrativeState>UNLOCKED</administrativeState>
-              </LdapAuthenticationMethod>
-              <UserIdentity xmlns="urn:com:ericsson:ecim:RcsUser">
-                <userIdentityId>1</userIdentityId>
-                <MaintenanceUser>
-                  <maintenanceUserId>1</maintenanceUserId>
-                  <userName>rbs</userName>
-                  <password>
-                    <cleartext />
-                    <password>rbs</password>
-                  </password>
-                </MaintenanceUser>
-              </UserIdentity>
-            </UserManagement>
-          </SecM>
-          <SysM xmlns="urn:com:ericsson:ecim:RcsSysM">
-            <sysMId>1</sysMId>
-            <CliTls>
-              <cliTlsId>1</cliTlsId>
-              <administrativeState>UNLOCKED</administrativeState>
-            </CliTls>
-          </SysM>
-        </SystemFunctions>
-        <Transport>
-          <transportId>1</transportId>
-          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
-            <routerId>OAM</routerId>
-            <ttl>64</ttl>
           </Router>
         </Transport>
         <Equipment xmlns="urn:com:ericsson:ecim:ReqEquipment">
@@ -2755,7 +6169,6 @@ DEL_SiteBasic_ipv4_6651 = """
             <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
               <interfaceIPv4Id>{tnPortId}_OAM</interfaceIPv4Id>
               <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_OAM</encapsulation>
-              <mtu>1500</mtu>
               <userLabel>OAM</userLabel>
               <AddressIPv4>
                 <addressIPv4Id>{tnPortId}_OAM</addressIPv4Id>
@@ -2772,78 +6185,37 @@ DEL_SiteBasic_ipv4_6651 = """
               <oamAccessPointId>1</oamAccessPointId>
               <accessPoint>ManagedElement=1,Transport=1,Router=OAM,InterfaceIPv4={tnPortId}_OAM,AddressIPv4={tnPortId}_OAM</accessPoint>
             </OamAccessPoint>
-            <OamTrafficClass>
-              <oamTrafficClassId>1</oamTrafficClassId>
-              <dscp>28</dscp>
-            </OamTrafficClass>
-            <TimeM xmlns="urn:com:ericsson:ecim:RcsTimeM">
-              <timeMId>1</timeMId>
-              <Ntp>
-                <ntpId>1</ntpId>
-                <NtpServer>
-                  <ntpServerId>1</ntpServerId>
-                  <userLabel>NTP TOD</userLabel>
-                  <serverAddress>10.19.105.6</serverAddress>
-                  <administrativeState>UNLOCKED</administrativeState>
-                </NtpServer>
-              </Ntp>
-            </TimeM>
+            <Snmp xmlns="urn:com:ericsson:ecim:RcsSnmp">
+              <snmpId>1</snmpId>
+              <administrativeState>UNLOCKED</administrativeState>
+              <agentAddress>
+                <host>0.0.0.0</host>
+                <port>161</port>
+              </agentAddress>
+              <SnmpTargetV2C>
+                <snmpTargetV2CId>1</snmpTargetV2CId>
+                <community>public</community>
+                <address>10.3.34.138</address>
+                <port>162</port>
+                <administrativeState>UNLOCKED</administrativeState>
+              </SnmpTargetV2C>
+            </Snmp>
           </SysM>
         </SystemFunctions>
         <Transport>
           <transportId>1</transportId>
-          <Ntp xmlns="urn:com:ericsson:ecim:RsyncNtp">
-            <ntpId>1</ntpId>
-          </Ntp>
-          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
-            <routerId>LTECP</routerId>
-            <ttl>64</ttl>
-          </Router>
-          <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
-            <vlanPortId>{tnPortId}_CP</vlanPortId>
-            <encapsulation>ManagedElement=1,Transport=1,EthernetPort={tnPortId}</encapsulation>
-            <isTagged>true</isTagged>
-            <userLabel>Control Plane</userLabel>
-            <vlanId>{LTE_S1_vlan}</vlanId>
-          </VlanPort>
-          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
-            <routerId>LTECP</routerId>
-            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
-              <interfaceIPv4Id>{tnPortId}_CP</interfaceIPv4Id>
-              <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_CP</encapsulation>
-              <mtu>1500</mtu>
-              <userLabel>Control Plane</userLabel>
-              <AddressIPv4>
-                <addressIPv4Id>{tnPortId}_CP</addressIPv4Id>
-                <address>{LTE_S1_IP}</address>
-              </AddressIPv4>
-            </InterfaceIPv4>
-          </Router>
-          <Ntp xmlns="urn:com:ericsson:ecim:RsyncNtp">
-            <ntpId>1</ntpId>
-            <NtpFrequencySync>
-              <ntpFrequencySyncId>NTP1</ntpFrequencySyncId>
-              <addressIPv4Reference>ManagedElement=1,Transport=1,Router=LTECP,InterfaceIPv4={tnPortId}_CP,AddressIPv4={tnPortId}_CP</addressIPv4Reference>
-              <dscp>54</dscp>
-              <syncServerNtpIpAddress>10.163.190.24</syncServerNtpIpAddress>
-            </NtpFrequencySync>
-            <NtpFrequencySync>
-              <ntpFrequencySyncId>NTP2</ntpFrequencySyncId>
-              <addressIPv4Reference>ManagedElement=1,Transport=1,Router=LTECP,InterfaceIPv4={tnPortId}_CP,AddressIPv4={tnPortId}_CP</addressIPv4Reference>
-              <dscp>54</dscp>
-              <syncServerNtpIpAddress>10.163.190.26</syncServerNtpIpAddress>
-            </NtpFrequencySync>
-          </Ntp>
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>LTEUP</routerId>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTECP</routerId>
             <ttl>64</ttl>
           </Router>
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>OAM</routerId>
             <DnsClient xmlns="urn:com:ericsson:ecim:RtnDnsClient">
               <dnsClientId>1</dnsClientId>
-              <dscp>46</dscp>
-              <serverAddress>10.19.105.28</serverAddress>
+              <serverAddress>10.3.35.116</serverAddress>
             </DnsClient>
           </Router>
           <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
@@ -2858,11 +6230,42 @@ DEL_SiteBasic_ipv4_6651 = """
             <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
               <interfaceIPv4Id>{tnPortId}_UP</interfaceIPv4Id>
               <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_UP</encapsulation>
-              <mtu>1500</mtu>
               <userLabel>User Plane</userLabel>
+            </InterfaceIPv4>
+          </Router>
+          <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
+            <vlanPortId>{tnPortId}_CP</vlanPortId>
+            <encapsulation>ManagedElement=1,Transport=1,EthernetPort={tnPortId}</encapsulation>
+            <isTagged>true</isTagged>
+            <userLabel>User Plane</userLabel>
+            <vlanId>{LTE_S1_vlan}</vlanId>
+          </VlanPort>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTECP</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_CP</interfaceIPv4Id>
+              <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_CP</encapsulation>
+              <mtu>1500</mtu>
+              <userLabel>Control Plane</userLabel>
+            </InterfaceIPv4>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTEUP</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_UP</interfaceIPv4Id>
               <AddressIPv4>
                 <addressIPv4Id>{tnPortId}_UP</addressIPv4Id>
                 <address>{LTE_UP_IP}</address>
+              </AddressIPv4>
+            </InterfaceIPv4>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTECP</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_CP</interfaceIPv4Id>
+              <AddressIPv4>
+                <addressIPv4Id>{tnPortId}_CP</addressIPv4Id>
+                <address>{LTE_S1_IP}</address>
               </AddressIPv4>
             </InterfaceIPv4>
           </Router>
@@ -2871,12 +6274,19 @@ DEL_SiteBasic_ipv4_6651 = """
             <RouteTableIPv4Static xmlns="urn:com:ericsson:ecim:RtnRoutesStaticRouteIPv4">
               <routeTableIPv4StaticId>1</routeTableIPv4StaticId>
               <Dst>
-                <dstId>OSS</dstId>
-                <dst>0.0.0.0/0</dst>
+                <dstId>ENM1</dstId>
+                <dst>10.3.34.0/23</dst>
                 <NextHop>
                   <nextHopId>1</nextHopId>
                   <address>{OAM_GW}</address>
-                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>OSS2</dstId>
+                <dst>10.3.31.0/24</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{OAM_GW}</address>
                 </NextHop>
               </Dst>
             </RouteTableIPv4Static>
@@ -2887,182 +6297,122 @@ DEL_SiteBasic_ipv4_6651 = """
               <routeTableIPv4StaticId>2</routeTableIPv4StaticId>
               <Dst>
                 <dstId>SGW1</dstId>
-                <dst>10.206.0.0/19</dst>
+                <dst>10.155.72.32/27</dst>
                 <NextHop>
-                  <nextHopId>2</nextHopId>
+                  <nextHopId>3</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_1</dstId>
-                <dst>10.29.40.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_2</dstId>
-                <dst>10.29.56.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
                 <dstId>SGW2</dstId>
-                <dst>10.206.32.65/32</dst>
+                <dst>10.155.68.224/27</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>{fieldReplaceableUnitId}</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>SGW3</dstId>
-                <dst>10.40.18.96/28</dst>
+                <dstId>X2-1</dstId>
+                <dst>10.26.48.0/20</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>5</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>SGW4</dstId>
-                <dst>10.50.98.5/32</dst>
+                <dstId>X2-2</dstId>
+                <dst>10.26.80.0/20</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>6</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>SGW5</dstId>
-                <dst>10.50.98.17/32</dst>
+                <dstId>X2-3</dstId>
+                <dst>10.26.100.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>7</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_3</dstId>
-                <dst>10.29.8.0/21</dst>
+                <dstId>X2-4</dstId>
+                <dst>10.26.108.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>8</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_4</dstId>
-                <dst>10.29.24.0/21</dst>
+                <dstId>X2-5</dstId>
+                <dst>10.26.116.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>9</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_5</dstId>
-                <dst>10.29.80.0/20</dst>
+                <dstId>X2-6</dstId>
+                <dst>10.30.4.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>10</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_6</dstId>
-                <dst>10.29.112.0/20</dst>
+                <dstId>X2-7</dstId>
+                <dst>10.209.128.0/20</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>11</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_7</dstId>
-                <dst>10.72.48.0/21</dst>
+                <dstId>X2-8</dstId>
+                <dst>10.209.192.0/20</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>12</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_8</dstId>
-                <dst>10.72.56.0/21</dst>
+                <dstId>X2-9</dstId>
+                <dst>10.209.240.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>14</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_9</dstId>
-                <dst>10.80.160.0/21</dst>
+                <dstId>X2-10</dstId>
+                <dst>10.26.16.0/20</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>15</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_10</dstId>
-                <dst>10.80.136.0/21</dst>
+                <dstId>X2-11</dstId>
+                <dst>10.26.124.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>16</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_11</dstId>
-                <dst>10.97.90.0/23</dst>
+                <dstId>X2-12</dstId>
+                <dst>10.35.132.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>17</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_12</dstId>
-                <dst>100.81.16.0/20</dst>
+                <dstId>X2-13</dstId>
+                <dst>10.209.176.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>18</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_13</dstId>
-                <dst>10.72.16.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_14</dstId>
-                <dst>100.81.56.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_15</dstId>
-                <dst>100.83.192.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
             </RouteTableIPv4Static>
@@ -3073,189 +6423,144 @@ DEL_SiteBasic_ipv4_6651 = """
               <routeTableIPv4StaticId>3</routeTableIPv4StaticId>
               <Dst>
                 <dstId>MME1</dstId>
-                <dst>10.206.4.0/24</dst>
+                <dst>10.155.72.32/27</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>19</nextHopId>
                   <address>{LTE_S1_GW}</address>
                   <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
                 <dstId>MME2</dstId>
-                <dst>10.206.20.0/24</dst>
+                <dst>10.155.68.224/27</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>20</nextHopId>
                   <address>{LTE_S1_GW}</address>
                   <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>MME3</dstId>
-                <dst>10.206.27.0/24</dst>
+                <dstId>X2-14</dstId>
+                <dst>10.26.32.0/20</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>21</nextHopId>
                   <address>{LTE_S1_GW}</address>
                   <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>MME4</dstId>
-                <dst>10.206.32.0/24</dst>
+                <dstId>X2-15</dstId>
+                <dst>10.26.64.0/20</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>22</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-16</dstId>
+                <dst>10.26.96.0/22</dst>
+                <NextHop>
+                  <nextHopId>23</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-17</dstId>
+                <dst>10.26.104.0/22</dst>
+                <NextHop>
+                  <nextHopId>24</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-18</dstId>
+                <dst>10.26.112.0/22</dst>
+                <NextHop>
+                  <nextHopId>25</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-19</dstId>
+                <dst>10.30.0.0/22</dst>
+                <NextHop>
+                  <nextHopId>26</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-20</dstId>
+                <dst>10.209.144.0/20</dst>
+                <NextHop>
+                  <nextHopId>27</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-21</dstId>
+                <dst>10.209.208.0/20</dst>
+                <NextHop>
+                  <nextHopId>28</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-22</dstId>
+                <dst>10.209.244.0/22</dst>
+                <NextHop>
+                  <nextHopId>29</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-23</dstId>
+                <dst>10.26.0.0/20</dst>
+                <NextHop>
+                  <nextHopId>30</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-24</dstId>
+                <dst>10.26.120.0/22</dst>
+                <NextHop>
+                  <nextHopId>31</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-25</dstId>
+                <dst>10.35.128.0/20</dst>
+                <NextHop>
+                  <nextHopId>32</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-26</dstId>
+                <dst>10.209.180.0/22</dst>
+                <NextHop>
+                  <nextHopId>33</nextHopId>
                   <address>{LTE_S1_GW}</address>
                   <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
                 <dstId>RNC</dstId>
-                <dst>10.163.4.80/29</dst>
+                <dst>10.160.190.0/24</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>MM5</dstId>
-                <dst>10.0.235.0/24</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_16</dstId>
-                <dst>10.29.32.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_17</dstId>
-                <dst>10.29.0.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_18</dstId>
-                <dst>10.29.16.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_19</dstId>
-                <dst>10.72.32.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_20</dstId>
-                <dst>10.72.40.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_21</dstId>
-                <dst>10.80.152.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_22</dstId>
-                <dst>10.29.48.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_23</dstId>
-                <dst>10.80.128.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_24</dstId>
-                <dst>10.97.88.0/23</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_25</dstId>
-                <dst>100.81.0.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_26</dstId>
-                <dst>100.81.48.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_27</dstId>
-                <dst>10.72.0.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_28</dstId>
-                <dst>10.29.64.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_29</dstId>
-                <dst>10.29.96.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_30</dstId>
-                <dst>100.83.208.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>34</nextHopId>
                   <address>{LTE_S1_GW}</address>
                   <adminDistance>1</adminDistance>
                 </NextHop>
@@ -3299,6 +6604,542 @@ DEL_SiteBasic_ipv4_6651 = """
 ]]>]]>
 
 """
+DEL_SiteBasic_ipv4_6655 = """
+<?xml version="1.0" encoding="UTF-8"?>
+<hello xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+  <capabilities>
+    <capability>urn:ietf:params:netconf:base:1.0</capability>
+  </capabilities>
+</hello>
+]]>]]>
+<rpc message-id="1" xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+  <edit-config>
+    <target>
+      <running />
+    </target>
+    <config xmlns:xc="urn:ietf:params:xml:ns:netconf:base:1.0">
+      <ManagedElement xmlns="urn:com:ericsson:ecim:ComTop">
+        <managedElementId>1</managedElementId>
+        <dnPrefix>SubNetwork=ONRM_ROOT_MO_R,SubNetwork=LTE,MeContext={eNodeBName}</dnPrefix>
+        <SystemFunctions>
+          <systemFunctionsId>1</systemFunctionsId>
+          <Lm xmlns="urn:com:ericsson:ecim:RcsLM">
+            <lmId>1</lmId>
+            <fingerprint>{fingerprint}</fingerprint>
+          </Lm>
+          <SecM xmlns="urn:com:ericsson:ecim:ComSecM">
+            <secMId>1</secMId>
+            <UserManagement>
+              <userManagementId>1</userManagementId>
+              <LdapAuthenticationMethod xmlns="urn:com:ericsson:ecim:RcsLdapAuthentication">
+                <ldapAuthenticationMethodId>1</ldapAuthenticationMethodId>
+                <administrativeState>UNLOCKED</administrativeState>
+              </LdapAuthenticationMethod>
+              <UserIdentity xmlns="urn:com:ericsson:ecim:RcsUser">
+                <userIdentityId>1</userIdentityId>
+                <MaintenanceUser>
+                  <maintenanceUserId>1</maintenanceUserId>
+                  <userName>rbs</userName>
+                  <password>
+                    <cleartext />
+                    <password>rbs</password>
+                  </password>
+                </MaintenanceUser>
+              </UserIdentity>
+            </UserManagement>
+          </SecM>
+          <SysM xmlns="urn:com:ericsson:ecim:RcsSysM">
+            <sysMId>1</sysMId>
+            <CliTls>
+              <cliTlsId>1</cliTlsId>
+              <administrativeState>UNLOCKED</administrativeState>
+            </CliTls>
+            <NtpServer>
+              <ntpServerId>1</ntpServerId>
+              <serverAddress>10.3.35.116</serverAddress>
+              <administrativeState>UNLOCKED</administrativeState>
+            </NtpServer>
+            <NtpServer>
+              <ntpServerId>2</ntpServerId>
+              <serverAddress>10.3.35.119</serverAddress>
+              <administrativeState>UNLOCKED</administrativeState>
+            </NtpServer>
+          </SysM>
+        </SystemFunctions>
+        <Transport>
+          <transportId>1</transportId>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>OAM</routerId>
+          </Router>
+        </Transport>
+        <Equipment xmlns="urn:com:ericsson:ecim:ReqEquipment">
+          <equipmentId>1</equipmentId>
+          <FieldReplaceableUnit xmlns="urn:com:ericsson:ecim:ReqFieldReplaceableUnit">
+            <fieldReplaceableUnitId>{fieldReplaceableUnitId}</fieldReplaceableUnitId>
+            <TnPort xmlns="urn:com:ericsson:ecim:ReqTnPort">
+              <tnPortId>{tnPortId}</tnPortId>
+              <userLabel>{tnPortId}</userLabel>
+            </TnPort>
+          </FieldReplaceableUnit>
+        </Equipment>
+        <Transport>
+          <transportId>1</transportId>
+          <EthernetPort xmlns="urn:com:ericsson:ecim:RtnL2EthernetPort">
+            <ethernetPortId>{tnPortId}</ethernetPortId>
+            <administrativeState>UNLOCKED</administrativeState>
+            <admOperatingMode>1G_FULL</admOperatingMode>
+            <autoNegEnable>true</autoNegEnable>
+            <encapsulation>ManagedElement=1,Equipment=1,FieldReplaceableUnit={fieldReplaceableUnitId},TnPort={tnPortId}</encapsulation>
+            <userLabel>{tnPortId}</userLabel>
+          </EthernetPort>
+          <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
+            <vlanPortId>{tnPortId}_OAM</vlanPortId>
+            <encapsulation>ManagedElement=1,Transport=1,EthernetPort={tnPortId}</encapsulation>
+            <isTagged>true</isTagged>
+            <userLabel>OAM</userLabel>
+            <vlanId>{OAM_vlan}</vlanId>
+          </VlanPort>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>OAM</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_OAM</interfaceIPv4Id>
+              <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_OAM</encapsulation>
+              <userLabel>OAM</userLabel>
+              <AddressIPv4>
+                <addressIPv4Id>{tnPortId}_OAM</addressIPv4Id>
+                <address>{OAM_IP}</address>
+              </AddressIPv4>
+            </InterfaceIPv4>
+          </Router>
+        </Transport>
+        <SystemFunctions>
+          <systemFunctionsId>1</systemFunctionsId>
+          <SysM xmlns="urn:com:ericsson:ecim:RcsSysM">
+            <sysMId>1</sysMId>
+            <OamAccessPoint>
+              <oamAccessPointId>1</oamAccessPointId>
+              <accessPoint>ManagedElement=1,Transport=1,Router=OAM,InterfaceIPv4={tnPortId}_OAM,AddressIPv4={tnPortId}_OAM</accessPoint>
+            </OamAccessPoint>
+            <Snmp xmlns="urn:com:ericsson:ecim:RcsSnmp">
+              <snmpId>1</snmpId>
+              <administrativeState>UNLOCKED</administrativeState>
+              <agentAddress>
+                <host>0.0.0.0</host>
+                <port>161</port>
+              </agentAddress>
+              <SnmpTargetV2C>
+                <snmpTargetV2CId>1</snmpTargetV2CId>
+                <community>public</community>
+                <address>10.3.34.138</address>
+                <port>162</port>
+                <administrativeState>UNLOCKED</administrativeState>
+              </SnmpTargetV2C>
+            </Snmp>
+          </SysM>
+        </SystemFunctions>
+        <Transport>
+          <transportId>1</transportId>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTEUP</routerId>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTECP</routerId>
+            <ttl>64</ttl>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>OAM</routerId>
+            <DnsClient xmlns="urn:com:ericsson:ecim:RtnDnsClient">
+              <dnsClientId>1</dnsClientId>
+              <serverAddress>10.3.35.116</serverAddress>
+            </DnsClient>
+          </Router>
+          <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
+            <vlanPortId>{tnPortId}_UP</vlanPortId>
+            <encapsulation>ManagedElement=1,Transport=1,EthernetPort={tnPortId}</encapsulation>
+            <isTagged>true</isTagged>
+            <userLabel>User Plane</userLabel>
+            <vlanId>{LTE_UP_vlan}</vlanId>
+          </VlanPort>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTEUP</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_UP</interfaceIPv4Id>
+              <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_UP</encapsulation>
+              <userLabel>User Plane</userLabel>
+            </InterfaceIPv4>
+          </Router>
+          <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
+            <vlanPortId>{tnPortId}_CP</vlanPortId>
+            <encapsulation>ManagedElement=1,Transport=1,EthernetPort={tnPortId}</encapsulation>
+            <isTagged>true</isTagged>
+            <userLabel>User Plane</userLabel>
+            <vlanId>{LTE_S1_vlan}</vlanId>
+          </VlanPort>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTECP</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_CP</interfaceIPv4Id>
+              <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_CP</encapsulation>
+              <mtu>1500</mtu>
+              <userLabel>Control Plane</userLabel>
+            </InterfaceIPv4>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTEUP</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_UP</interfaceIPv4Id>
+              <AddressIPv4>
+                <addressIPv4Id>{tnPortId}_UP</addressIPv4Id>
+                <address>{LTE_UP_IP}</address>
+              </AddressIPv4>
+            </InterfaceIPv4>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTECP</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_CP</interfaceIPv4Id>
+              <AddressIPv4>
+                <addressIPv4Id>{tnPortId}_CP</addressIPv4Id>
+                <address>{LTE_S1_IP}</address>
+              </AddressIPv4>
+            </InterfaceIPv4>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>OAM</routerId>
+            <RouteTableIPv4Static xmlns="urn:com:ericsson:ecim:RtnRoutesStaticRouteIPv4">
+              <routeTableIPv4StaticId>1</routeTableIPv4StaticId>
+              <Dst>
+                <dstId>ENM1</dstId>
+                <dst>10.3.34.0/23</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{OAM_GW}</address>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>OSS2</dstId>
+                <dst>10.3.31.0/24</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{OAM_GW}</address>
+                </NextHop>
+              </Dst>
+            </RouteTableIPv4Static>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTEUP</routerId>
+            <RouteTableIPv4Static xmlns="urn:com:ericsson:ecim:RtnRoutesStaticRouteIPv4">
+              <routeTableIPv4StaticId>2</routeTableIPv4StaticId>
+              <Dst>
+                <dstId>SGW1</dstId>
+                <dst>10.155.72.32/27</dst>
+                <NextHop>
+                  <nextHopId>3</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>SGW2</dstId>
+                <dst>10.155.68.224/27</dst>
+                <NextHop>
+                  <nextHopId>{fieldReplaceableUnitId}</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-1</dstId>
+                <dst>10.26.48.0/20</dst>
+                <NextHop>
+                  <nextHopId>5</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-2</dstId>
+                <dst>10.26.80.0/20</dst>
+                <NextHop>
+                  <nextHopId>6</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-3</dstId>
+                <dst>10.26.100.0/22</dst>
+                <NextHop>
+                  <nextHopId>7</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-4</dstId>
+                <dst>10.26.108.0/22</dst>
+                <NextHop>
+                  <nextHopId>8</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-5</dstId>
+                <dst>10.26.116.0/22</dst>
+                <NextHop>
+                  <nextHopId>9</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-6</dstId>
+                <dst>10.30.4.0/22</dst>
+                <NextHop>
+                  <nextHopId>10</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-7</dstId>
+                <dst>10.209.128.0/20</dst>
+                <NextHop>
+                  <nextHopId>11</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-8</dstId>
+                <dst>10.209.192.0/20</dst>
+                <NextHop>
+                  <nextHopId>12</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-9</dstId>
+                <dst>10.209.240.0/22</dst>
+                <NextHop>
+                  <nextHopId>14</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-10</dstId>
+                <dst>10.26.16.0/20</dst>
+                <NextHop>
+                  <nextHopId>15</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-11</dstId>
+                <dst>10.26.124.0/22</dst>
+                <NextHop>
+                  <nextHopId>16</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-12</dstId>
+                <dst>10.35.132.0/22</dst>
+                <NextHop>
+                  <nextHopId>17</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-13</dstId>
+                <dst>10.209.176.0/22</dst>
+                <NextHop>
+                  <nextHopId>18</nextHopId>
+                  <address>{LTE_UP_GW}</address>
+                </NextHop>
+              </Dst>
+            </RouteTableIPv4Static>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTECP</routerId>
+            <RouteTableIPv4Static xmlns="urn:com:ericsson:ecim:RtnRoutesStaticRouteIPv4">
+              <routeTableIPv4StaticId>3</routeTableIPv4StaticId>
+              <Dst>
+                <dstId>MME1</dstId>
+                <dst>10.155.72.32/27</dst>
+                <NextHop>
+                  <nextHopId>19</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>MME2</dstId>
+                <dst>10.155.68.224/27</dst>
+                <NextHop>
+                  <nextHopId>20</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-14</dstId>
+                <dst>10.26.32.0/20</dst>
+                <NextHop>
+                  <nextHopId>21</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-15</dstId>
+                <dst>10.26.64.0/20</dst>
+                <NextHop>
+                  <nextHopId>22</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-16</dstId>
+                <dst>10.26.96.0/22</dst>
+                <NextHop>
+                  <nextHopId>23</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-17</dstId>
+                <dst>10.26.104.0/22</dst>
+                <NextHop>
+                  <nextHopId>24</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-18</dstId>
+                <dst>10.26.112.0/22</dst>
+                <NextHop>
+                  <nextHopId>25</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-19</dstId>
+                <dst>10.30.0.0/22</dst>
+                <NextHop>
+                  <nextHopId>26</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-20</dstId>
+                <dst>10.209.144.0/20</dst>
+                <NextHop>
+                  <nextHopId>27</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-21</dstId>
+                <dst>10.209.208.0/20</dst>
+                <NextHop>
+                  <nextHopId>28</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-22</dstId>
+                <dst>10.209.244.0/22</dst>
+                <NextHop>
+                  <nextHopId>29</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-23</dstId>
+                <dst>10.26.0.0/20</dst>
+                <NextHop>
+                  <nextHopId>30</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-24</dstId>
+                <dst>10.26.120.0/22</dst>
+                <NextHop>
+                  <nextHopId>31</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-25</dstId>
+                <dst>10.35.128.0/20</dst>
+                <NextHop>
+                  <nextHopId>32</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-26</dstId>
+                <dst>10.209.180.0/22</dst>
+                <NextHop>
+                  <nextHopId>33</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>RNC</dstId>
+                <dst>10.160.190.0/24</dst>
+                <NextHop>
+                  <nextHopId>34</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+            </RouteTableIPv4Static>
+          </Router>
+        </Transport>
+      </ManagedElement>
+    </config>
+  </edit-config>
+</rpc>
+]]>]]>
+<rpc message-id="Closing" xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+  <close-session></close-session>
+</rpc>
+]]>]]>
+<?xml version="1.0" encoding="UTF-8"?>
+<hello xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+  <capabilities>
+    <capability>urn:ietf:params:netconf:base:1.0</capability>
+  </capabilities>
+</hello>
+]]>]]>
+<rpc message-id="2" xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+  <edit-config>
+    <target>
+      <running />
+    </target>
+    <config xmlns:xc="urn:ietf:params:xml:ns:netconf:base:1.0">
+      <ManagedElement xmlns="urn:com:ericsson:ecim:ComTop">
+        <managedElementId>1</managedElementId>
+        <networkManagedElementId>{eNodeBName}</networkManagedElementId>
+      </ManagedElement>
+    </config>
+  </edit-config>
+</rpc>
+]]>]]>
+<rpc message-id="Closing" xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+  <close-session></close-session>
+</rpc>
+]]>]]>
+
+"""
+
 
 DEL_SiteBasic_ipv4_6631 = """
 <?xml version="1.0" encoding="UTF-8"?>
@@ -3323,7 +7164,7 @@ DEL_SiteBasic_ipv4_6631 = """
             <lmId>1</lmId>
             <fingerprint>{fingerprint}</fingerprint>
           </Lm>
-          <SecM xmlns="urn:com:ericsson:ecim:RcsSecM">
+          <SecM xmlns="urn:com:ericsson:ecim:ComSecM">
             <secMId>1</secMId>
             <UserManagement>
               <userManagementId>1</userManagementId>
@@ -3350,13 +7191,22 @@ DEL_SiteBasic_ipv4_6631 = """
               <cliTlsId>1</cliTlsId>
               <administrativeState>UNLOCKED</administrativeState>
             </CliTls>
+            <NtpServer>
+              <ntpServerId>1</ntpServerId>
+              <serverAddress>10.3.35.116</serverAddress>
+              <administrativeState>UNLOCKED</administrativeState>
+            </NtpServer>
+            <NtpServer>
+              <ntpServerId>2</ntpServerId>
+              <serverAddress>10.3.35.119</serverAddress>
+              <administrativeState>UNLOCKED</administrativeState>
+            </NtpServer>
           </SysM>
         </SystemFunctions>
         <Transport>
           <transportId>1</transportId>
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>OAM</routerId>
-            <ttl>64</ttl>
           </Router>
         </Transport>
         <Equipment xmlns="urn:com:ericsson:ecim:ReqEquipment">
@@ -3391,7 +7241,6 @@ DEL_SiteBasic_ipv4_6631 = """
             <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
               <interfaceIPv4Id>{tnPortId}_OAM</interfaceIPv4Id>
               <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_OAM</encapsulation>
-              <mtu>1500</mtu>
               <userLabel>OAM</userLabel>
               <AddressIPv4>
                 <addressIPv4Id>{tnPortId}_OAM</addressIPv4Id>
@@ -3408,78 +7257,37 @@ DEL_SiteBasic_ipv4_6631 = """
               <oamAccessPointId>1</oamAccessPointId>
               <accessPoint>ManagedElement=1,Transport=1,Router=OAM,InterfaceIPv4={tnPortId}_OAM,AddressIPv4={tnPortId}_OAM</accessPoint>
             </OamAccessPoint>
-            <OamTrafficClass>
-              <oamTrafficClassId>1</oamTrafficClassId>
-              <dscp>28</dscp>
-            </OamTrafficClass>
-            <TimeM xmlns="urn:com:ericsson:ecim:RcsTimeM">
-              <timeMId>1</timeMId>
-              <Ntp>
-                <ntpId>1</ntpId>
-                <NtpServer>
-                  <ntpServerId>1</ntpServerId>
-                  <userLabel>NTP TOD</userLabel>
-                  <serverAddress>10.19.105.6</serverAddress>
-                  <administrativeState>UNLOCKED</administrativeState>
-                </NtpServer>
-              </Ntp>
-            </TimeM>
+            <Snmp xmlns="urn:com:ericsson:ecim:RcsSnmp">
+              <snmpId>1</snmpId>
+              <administrativeState>UNLOCKED</administrativeState>
+              <agentAddress>
+                <host>0.0.0.0</host>
+                <port>161</port>
+              </agentAddress>
+              <SnmpTargetV2C>
+                <snmpTargetV2CId>1</snmpTargetV2CId>
+                <community>public</community>
+                <address>10.3.34.138</address>
+                <port>162</port>
+                <administrativeState>UNLOCKED</administrativeState>
+              </SnmpTargetV2C>
+            </Snmp>
           </SysM>
         </SystemFunctions>
         <Transport>
           <transportId>1</transportId>
-          <Ntp xmlns="urn:com:ericsson:ecim:RsyncNtp">
-            <ntpId>1</ntpId>
-          </Ntp>
-          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
-            <routerId>LTECP</routerId>
-            <ttl>64</ttl>
-          </Router>
-          <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
-            <vlanPortId>{tnPortId}_CP</vlanPortId>
-            <encapsulation>ManagedElement=1,Transport=1,EthernetPort={tnPortId}</encapsulation>
-            <isTagged>true</isTagged>
-            <userLabel>Control Plane</userLabel>
-            <vlanId>{LTE_S1_vlan}</vlanId>
-          </VlanPort>
-          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
-            <routerId>LTECP</routerId>
-            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
-              <interfaceIPv4Id>{tnPortId}_CP</interfaceIPv4Id>
-              <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_CP</encapsulation>
-              <mtu>1500</mtu>
-              <userLabel>Control Plane</userLabel>
-              <AddressIPv4>
-                <addressIPv4Id>{tnPortId}_CP</addressIPv4Id>
-                <address>{LTE_S1_IP}</address>
-              </AddressIPv4>
-            </InterfaceIPv4>
-          </Router>
-          <Ntp xmlns="urn:com:ericsson:ecim:RsyncNtp">
-            <ntpId>1</ntpId>
-            <NtpFrequencySync>
-              <ntpFrequencySyncId>NTP1</ntpFrequencySyncId>
-              <addressIPv4Reference>ManagedElement=1,Transport=1,Router=LTECP,InterfaceIPv4={tnPortId}_CP,AddressIPv4={tnPortId}_CP</addressIPv4Reference>
-              <dscp>54</dscp>
-              <syncServerNtpIpAddress>10.163.190.24</syncServerNtpIpAddress>
-            </NtpFrequencySync>
-            <NtpFrequencySync>
-              <ntpFrequencySyncId>NTP2</ntpFrequencySyncId>
-              <addressIPv4Reference>ManagedElement=1,Transport=1,Router=LTECP,InterfaceIPv4={tnPortId}_CP,AddressIPv4={tnPortId}_CP</addressIPv4Reference>
-              <dscp>54</dscp>
-              <syncServerNtpIpAddress>10.163.190.26</syncServerNtpIpAddress>
-            </NtpFrequencySync>
-          </Ntp>
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>LTEUP</routerId>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTECP</routerId>
             <ttl>64</ttl>
           </Router>
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>OAM</routerId>
             <DnsClient xmlns="urn:com:ericsson:ecim:RtnDnsClient">
               <dnsClientId>1</dnsClientId>
-              <dscp>46</dscp>
-              <serverAddress>10.19.105.28</serverAddress>
+              <serverAddress>10.3.35.116</serverAddress>
             </DnsClient>
           </Router>
           <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
@@ -3494,11 +7302,42 @@ DEL_SiteBasic_ipv4_6631 = """
             <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
               <interfaceIPv4Id>{tnPortId}_UP</interfaceIPv4Id>
               <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_UP</encapsulation>
-              <mtu>1500</mtu>
               <userLabel>User Plane</userLabel>
+            </InterfaceIPv4>
+          </Router>
+          <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
+            <vlanPortId>{tnPortId}_CP</vlanPortId>
+            <encapsulation>ManagedElement=1,Transport=1,EthernetPort={tnPortId}</encapsulation>
+            <isTagged>true</isTagged>
+            <userLabel>User Plane</userLabel>
+            <vlanId>{LTE_S1_vlan}</vlanId>
+          </VlanPort>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTECP</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_CP</interfaceIPv4Id>
+              <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_CP</encapsulation>
+              <mtu>1500</mtu>
+              <userLabel>Control Plane</userLabel>
+            </InterfaceIPv4>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTEUP</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_UP</interfaceIPv4Id>
               <AddressIPv4>
                 <addressIPv4Id>{tnPortId}_UP</addressIPv4Id>
                 <address>{LTE_UP_IP}</address>
+              </AddressIPv4>
+            </InterfaceIPv4>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTECP</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_CP</interfaceIPv4Id>
+              <AddressIPv4>
+                <addressIPv4Id>{tnPortId}_CP</addressIPv4Id>
+                <address>{LTE_S1_IP}</address>
               </AddressIPv4>
             </InterfaceIPv4>
           </Router>
@@ -3507,12 +7346,19 @@ DEL_SiteBasic_ipv4_6631 = """
             <RouteTableIPv4Static xmlns="urn:com:ericsson:ecim:RtnRoutesStaticRouteIPv4">
               <routeTableIPv4StaticId>1</routeTableIPv4StaticId>
               <Dst>
-                <dstId>OSS</dstId>
-                <dst>0.0.0.0/0</dst>
+                <dstId>ENM1</dstId>
+                <dst>10.3.34.0/23</dst>
                 <NextHop>
                   <nextHopId>1</nextHopId>
                   <address>{OAM_GW}</address>
-                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>OSS2</dstId>
+                <dst>10.3.31.0/24</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{OAM_GW}</address>
                 </NextHop>
               </Dst>
             </RouteTableIPv4Static>
@@ -3523,182 +7369,122 @@ DEL_SiteBasic_ipv4_6631 = """
               <routeTableIPv4StaticId>2</routeTableIPv4StaticId>
               <Dst>
                 <dstId>SGW1</dstId>
-                <dst>10.206.0.0/19</dst>
+                <dst>10.155.72.32/27</dst>
                 <NextHop>
-                  <nextHopId>2</nextHopId>
+                  <nextHopId>3</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_1</dstId>
-                <dst>10.29.40.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_2</dstId>
-                <dst>10.29.56.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
                 <dstId>SGW2</dstId>
-                <dst>10.206.32.65/32</dst>
+                <dst>10.155.68.224/27</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>{fieldReplaceableUnitId}</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>SGW3</dstId>
-                <dst>10.40.18.96/28</dst>
+                <dstId>X2-1</dstId>
+                <dst>10.26.48.0/20</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>5</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>SGW4</dstId>
-                <dst>10.50.98.5/32</dst>
+                <dstId>X2-2</dstId>
+                <dst>10.26.80.0/20</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>6</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>SGW5</dstId>
-                <dst>10.50.98.17/32</dst>
+                <dstId>X2-3</dstId>
+                <dst>10.26.100.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>7</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_3</dstId>
-                <dst>10.29.8.0/21</dst>
+                <dstId>X2-4</dstId>
+                <dst>10.26.108.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>8</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_4</dstId>
-                <dst>10.29.24.0/21</dst>
+                <dstId>X2-5</dstId>
+                <dst>10.26.116.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>9</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_5</dstId>
-                <dst>10.29.80.0/20</dst>
+                <dstId>X2-6</dstId>
+                <dst>10.30.4.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>10</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_6</dstId>
-                <dst>10.29.112.0/20</dst>
+                <dstId>X2-7</dstId>
+                <dst>10.209.128.0/20</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>11</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_7</dstId>
-                <dst>10.72.48.0/21</dst>
+                <dstId>X2-8</dstId>
+                <dst>10.209.192.0/20</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>12</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_8</dstId>
-                <dst>10.72.56.0/21</dst>
+                <dstId>X2-9</dstId>
+                <dst>10.209.240.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>14</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_9</dstId>
-                <dst>10.80.160.0/21</dst>
+                <dstId>X2-10</dstId>
+                <dst>10.26.16.0/20</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>15</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_10</dstId>
-                <dst>10.80.136.0/21</dst>
+                <dstId>X2-11</dstId>
+                <dst>10.26.124.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>16</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_11</dstId>
-                <dst>10.97.90.0/23</dst>
+                <dstId>X2-12</dstId>
+                <dst>10.35.132.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>17</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_12</dstId>
-                <dst>100.81.16.0/20</dst>
+                <dstId>X2-13</dstId>
+                <dst>10.209.176.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>18</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_13</dstId>
-                <dst>10.72.16.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_14</dstId>
-                <dst>100.81.56.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_15</dstId>
-                <dst>100.83.192.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
             </RouteTableIPv4Static>
@@ -3709,189 +7495,144 @@ DEL_SiteBasic_ipv4_6631 = """
               <routeTableIPv4StaticId>3</routeTableIPv4StaticId>
               <Dst>
                 <dstId>MME1</dstId>
-                <dst>10.206.4.0/24</dst>
+                <dst>10.155.72.32/27</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>19</nextHopId>
                   <address>{LTE_S1_GW}</address>
                   <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
                 <dstId>MME2</dstId>
-                <dst>10.206.20.0/24</dst>
+                <dst>10.155.68.224/27</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>20</nextHopId>
                   <address>{LTE_S1_GW}</address>
                   <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>MME3</dstId>
-                <dst>10.206.27.0/24</dst>
+                <dstId>X2-14</dstId>
+                <dst>10.26.32.0/20</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>21</nextHopId>
                   <address>{LTE_S1_GW}</address>
                   <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>MME4</dstId>
-                <dst>10.206.32.0/24</dst>
+                <dstId>X2-15</dstId>
+                <dst>10.26.64.0/20</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>22</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-16</dstId>
+                <dst>10.26.96.0/22</dst>
+                <NextHop>
+                  <nextHopId>23</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-17</dstId>
+                <dst>10.26.104.0/22</dst>
+                <NextHop>
+                  <nextHopId>24</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-18</dstId>
+                <dst>10.26.112.0/22</dst>
+                <NextHop>
+                  <nextHopId>25</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-19</dstId>
+                <dst>10.30.0.0/22</dst>
+                <NextHop>
+                  <nextHopId>26</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-20</dstId>
+                <dst>10.209.144.0/20</dst>
+                <NextHop>
+                  <nextHopId>27</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-21</dstId>
+                <dst>10.209.208.0/20</dst>
+                <NextHop>
+                  <nextHopId>28</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-22</dstId>
+                <dst>10.209.244.0/22</dst>
+                <NextHop>
+                  <nextHopId>29</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-23</dstId>
+                <dst>10.26.0.0/20</dst>
+                <NextHop>
+                  <nextHopId>30</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-24</dstId>
+                <dst>10.26.120.0/22</dst>
+                <NextHop>
+                  <nextHopId>31</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-25</dstId>
+                <dst>10.35.128.0/20</dst>
+                <NextHop>
+                  <nextHopId>32</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-26</dstId>
+                <dst>10.209.180.0/22</dst>
+                <NextHop>
+                  <nextHopId>33</nextHopId>
                   <address>{LTE_S1_GW}</address>
                   <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
                 <dstId>RNC</dstId>
-                <dst>10.163.4.80/29</dst>
+                <dst>10.160.190.0/24</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>MM5</dstId>
-                <dst>10.0.235.0/24</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_16</dstId>
-                <dst>10.29.32.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_17</dstId>
-                <dst>10.29.0.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_18</dstId>
-                <dst>10.29.16.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_19</dstId>
-                <dst>10.72.32.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_20</dstId>
-                <dst>10.72.40.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_21</dstId>
-                <dst>10.80.152.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_22</dstId>
-                <dst>10.29.48.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_23</dstId>
-                <dst>10.80.128.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_24</dstId>
-                <dst>10.97.88.0/23</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_25</dstId>
-                <dst>100.81.0.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_26</dstId>
-                <dst>100.81.48.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_27</dstId>
-                <dst>10.72.0.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_28</dstId>
-                <dst>10.29.64.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_29</dstId>
-                <dst>10.29.96.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_30</dstId>
-                <dst>100.83.208.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>34</nextHopId>
                   <address>{LTE_S1_GW}</address>
                   <adminDistance>1</adminDistance>
                 </NextHop>
@@ -3933,6 +7674,7 @@ DEL_SiteBasic_ipv4_6631 = """
   <close-session></close-session>
 </rpc>
 ]]>]]>
+
 
 """
 
@@ -3959,7 +7701,7 @@ DEL_SiteBasic_ipv4_6630 = """
             <lmId>1</lmId>
             <fingerprint>{fingerprint}</fingerprint>
           </Lm>
-          <SecM xmlns="urn:com:ericsson:ecim:RcsSecM">
+          <SecM xmlns="urn:com:ericsson:ecim:ComSecM">
             <secMId>1</secMId>
             <UserManagement>
               <userManagementId>1</userManagementId>
@@ -3986,13 +7728,22 @@ DEL_SiteBasic_ipv4_6630 = """
               <cliTlsId>1</cliTlsId>
               <administrativeState>UNLOCKED</administrativeState>
             </CliTls>
+            <NtpServer>
+              <ntpServerId>1</ntpServerId>
+              <serverAddress>10.3.35.116</serverAddress>
+              <administrativeState>UNLOCKED</administrativeState>
+            </NtpServer>
+            <NtpServer>
+              <ntpServerId>2</ntpServerId>
+              <serverAddress>10.3.35.119</serverAddress>
+              <administrativeState>UNLOCKED</administrativeState>
+            </NtpServer>
           </SysM>
         </SystemFunctions>
         <Transport>
           <transportId>1</transportId>
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>OAM</routerId>
-            <ttl>64</ttl>
           </Router>
         </Transport>
         <Equipment xmlns="urn:com:ericsson:ecim:ReqEquipment">
@@ -4027,7 +7778,6 @@ DEL_SiteBasic_ipv4_6630 = """
             <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
               <interfaceIPv4Id>{tnPortId}_OAM</interfaceIPv4Id>
               <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_OAM</encapsulation>
-              <mtu>1500</mtu>
               <userLabel>OAM</userLabel>
               <AddressIPv4>
                 <addressIPv4Id>{tnPortId}_OAM</addressIPv4Id>
@@ -4044,78 +7794,37 @@ DEL_SiteBasic_ipv4_6630 = """
               <oamAccessPointId>1</oamAccessPointId>
               <accessPoint>ManagedElement=1,Transport=1,Router=OAM,InterfaceIPv4={tnPortId}_OAM,AddressIPv4={tnPortId}_OAM</accessPoint>
             </OamAccessPoint>
-            <OamTrafficClass>
-              <oamTrafficClassId>1</oamTrafficClassId>
-              <dscp>28</dscp>
-            </OamTrafficClass>
-            <TimeM xmlns="urn:com:ericsson:ecim:RcsTimeM">
-              <timeMId>1</timeMId>
-              <Ntp>
-                <ntpId>1</ntpId>
-                <NtpServer>
-                  <ntpServerId>1</ntpServerId>
-                  <userLabel>NTP TOD</userLabel>
-                  <serverAddress>10.19.105.6</serverAddress>
-                  <administrativeState>UNLOCKED</administrativeState>
-                </NtpServer>
-              </Ntp>
-            </TimeM>
+            <Snmp xmlns="urn:com:ericsson:ecim:RcsSnmp">
+              <snmpId>1</snmpId>
+              <administrativeState>UNLOCKED</administrativeState>
+              <agentAddress>
+                <host>0.0.0.0</host>
+                <port>161</port>
+              </agentAddress>
+              <SnmpTargetV2C>
+                <snmpTargetV2CId>1</snmpTargetV2CId>
+                <community>public</community>
+                <address>10.3.34.138</address>
+                <port>162</port>
+                <administrativeState>UNLOCKED</administrativeState>
+              </SnmpTargetV2C>
+            </Snmp>
           </SysM>
         </SystemFunctions>
         <Transport>
           <transportId>1</transportId>
-          <Ntp xmlns="urn:com:ericsson:ecim:RsyncNtp">
-            <ntpId>1</ntpId>
-          </Ntp>
-          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
-            <routerId>LTECP</routerId>
-            <ttl>64</ttl>
-          </Router>
-          <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
-            <vlanPortId>{tnPortId}_CP</vlanPortId>
-            <encapsulation>ManagedElement=1,Transport=1,EthernetPort={tnPortId}</encapsulation>
-            <isTagged>true</isTagged>
-            <userLabel>Control Plane</userLabel>
-            <vlanId>{LTE_S1_vlan}</vlanId>
-          </VlanPort>
-          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
-            <routerId>LTECP</routerId>
-            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
-              <interfaceIPv4Id>{tnPortId}_CP</interfaceIPv4Id>
-              <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_CP</encapsulation>
-              <mtu>1500</mtu>
-              <userLabel>Control Plane</userLabel>
-              <AddressIPv4>
-                <addressIPv4Id>{tnPortId}_CP</addressIPv4Id>
-                <address>{LTE_S1_IP}</address>
-              </AddressIPv4>
-            </InterfaceIPv4>
-          </Router>
-          <Ntp xmlns="urn:com:ericsson:ecim:RsyncNtp">
-            <ntpId>1</ntpId>
-            <NtpFrequencySync>
-              <ntpFrequencySyncId>NTP1</ntpFrequencySyncId>
-              <addressIPv4Reference>ManagedElement=1,Transport=1,Router=LTECP,InterfaceIPv4={tnPortId}_CP,AddressIPv4={tnPortId}_CP</addressIPv4Reference>
-              <dscp>54</dscp>
-              <syncServerNtpIpAddress>10.163.190.24</syncServerNtpIpAddress>
-            </NtpFrequencySync>
-            <NtpFrequencySync>
-              <ntpFrequencySyncId>NTP2</ntpFrequencySyncId>
-              <addressIPv4Reference>ManagedElement=1,Transport=1,Router=LTECP,InterfaceIPv4={tnPortId}_CP,AddressIPv4={tnPortId}_CP</addressIPv4Reference>
-              <dscp>54</dscp>
-              <syncServerNtpIpAddress>10.163.190.26</syncServerNtpIpAddress>
-            </NtpFrequencySync>
-          </Ntp>
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>LTEUP</routerId>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTECP</routerId>
             <ttl>64</ttl>
           </Router>
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>OAM</routerId>
             <DnsClient xmlns="urn:com:ericsson:ecim:RtnDnsClient">
               <dnsClientId>1</dnsClientId>
-              <dscp>46</dscp>
-              <serverAddress>10.19.105.28</serverAddress>
+              <serverAddress>10.3.35.116</serverAddress>
             </DnsClient>
           </Router>
           <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
@@ -4130,11 +7839,42 @@ DEL_SiteBasic_ipv4_6630 = """
             <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
               <interfaceIPv4Id>{tnPortId}_UP</interfaceIPv4Id>
               <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_UP</encapsulation>
-              <mtu>1500</mtu>
               <userLabel>User Plane</userLabel>
+            </InterfaceIPv4>
+          </Router>
+          <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
+            <vlanPortId>{tnPortId}_CP</vlanPortId>
+            <encapsulation>ManagedElement=1,Transport=1,EthernetPort={tnPortId}</encapsulation>
+            <isTagged>true</isTagged>
+            <userLabel>User Plane</userLabel>
+            <vlanId>{LTE_S1_vlan}</vlanId>
+          </VlanPort>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTECP</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_CP</interfaceIPv4Id>
+              <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_CP</encapsulation>
+              <mtu>1500</mtu>
+              <userLabel>Control Plane</userLabel>
+            </InterfaceIPv4>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTEUP</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_UP</interfaceIPv4Id>
               <AddressIPv4>
                 <addressIPv4Id>{tnPortId}_UP</addressIPv4Id>
                 <address>{LTE_UP_IP}</address>
+              </AddressIPv4>
+            </InterfaceIPv4>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTECP</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_CP</interfaceIPv4Id>
+              <AddressIPv4>
+                <addressIPv4Id>{tnPortId}_CP</addressIPv4Id>
+                <address>{LTE_S1_IP}</address>
               </AddressIPv4>
             </InterfaceIPv4>
           </Router>
@@ -4143,12 +7883,19 @@ DEL_SiteBasic_ipv4_6630 = """
             <RouteTableIPv4Static xmlns="urn:com:ericsson:ecim:RtnRoutesStaticRouteIPv4">
               <routeTableIPv4StaticId>1</routeTableIPv4StaticId>
               <Dst>
-                <dstId>OSS</dstId>
-                <dst>0.0.0.0/0</dst>
+                <dstId>ENM1</dstId>
+                <dst>10.3.34.0/23</dst>
                 <NextHop>
                   <nextHopId>1</nextHopId>
                   <address>{OAM_GW}</address>
-                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>OSS2</dstId>
+                <dst>10.3.31.0/24</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{OAM_GW}</address>
                 </NextHop>
               </Dst>
             </RouteTableIPv4Static>
@@ -4159,182 +7906,122 @@ DEL_SiteBasic_ipv4_6630 = """
               <routeTableIPv4StaticId>2</routeTableIPv4StaticId>
               <Dst>
                 <dstId>SGW1</dstId>
-                <dst>10.206.0.0/19</dst>
+                <dst>10.155.72.32/27</dst>
                 <NextHop>
-                  <nextHopId>2</nextHopId>
+                  <nextHopId>3</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_1</dstId>
-                <dst>10.29.40.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_2</dstId>
-                <dst>10.29.56.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
                 <dstId>SGW2</dstId>
-                <dst>10.206.32.65/32</dst>
+                <dst>10.155.68.224/27</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>{fieldReplaceableUnitId}</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>SGW3</dstId>
-                <dst>10.40.18.96/28</dst>
+                <dstId>X2-1</dstId>
+                <dst>10.26.48.0/20</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>5</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>SGW4</dstId>
-                <dst>10.50.98.5/32</dst>
+                <dstId>X2-2</dstId>
+                <dst>10.26.80.0/20</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>6</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>SGW5</dstId>
-                <dst>10.50.98.17/32</dst>
+                <dstId>X2-3</dstId>
+                <dst>10.26.100.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>7</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_3</dstId>
-                <dst>10.29.8.0/21</dst>
+                <dstId>X2-4</dstId>
+                <dst>10.26.108.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>8</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_4</dstId>
-                <dst>10.29.24.0/21</dst>
+                <dstId>X2-5</dstId>
+                <dst>10.26.116.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>9</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_5</dstId>
-                <dst>10.29.80.0/20</dst>
+                <dstId>X2-6</dstId>
+                <dst>10.30.4.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>10</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_6</dstId>
-                <dst>10.29.112.0/20</dst>
+                <dstId>X2-7</dstId>
+                <dst>10.209.128.0/20</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>11</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_7</dstId>
-                <dst>10.72.48.0/21</dst>
+                <dstId>X2-8</dstId>
+                <dst>10.209.192.0/20</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>12</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_8</dstId>
-                <dst>10.72.56.0/21</dst>
+                <dstId>X2-9</dstId>
+                <dst>10.209.240.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>14</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_9</dstId>
-                <dst>10.80.160.0/21</dst>
+                <dstId>X2-10</dstId>
+                <dst>10.26.16.0/20</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>15</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_10</dstId>
-                <dst>10.80.136.0/21</dst>
+                <dstId>X2-11</dstId>
+                <dst>10.26.124.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>16</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_11</dstId>
-                <dst>10.97.90.0/23</dst>
+                <dstId>X2-12</dstId>
+                <dst>10.35.132.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>17</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_12</dstId>
-                <dst>100.81.16.0/20</dst>
+                <dstId>X2-13</dstId>
+                <dst>10.209.176.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>18</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_13</dstId>
-                <dst>10.72.16.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_14</dstId>
-                <dst>100.81.56.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_15</dstId>
-                <dst>100.83.192.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
             </RouteTableIPv4Static>
@@ -4345,189 +8032,144 @@ DEL_SiteBasic_ipv4_6630 = """
               <routeTableIPv4StaticId>3</routeTableIPv4StaticId>
               <Dst>
                 <dstId>MME1</dstId>
-                <dst>10.206.4.0/24</dst>
+                <dst>10.155.72.32/27</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>19</nextHopId>
                   <address>{LTE_S1_GW}</address>
                   <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
                 <dstId>MME2</dstId>
-                <dst>10.206.20.0/24</dst>
+                <dst>10.155.68.224/27</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>20</nextHopId>
                   <address>{LTE_S1_GW}</address>
                   <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>MME3</dstId>
-                <dst>10.206.27.0/24</dst>
+                <dstId>X2-14</dstId>
+                <dst>10.26.32.0/20</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>21</nextHopId>
                   <address>{LTE_S1_GW}</address>
                   <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>MME4</dstId>
-                <dst>10.206.32.0/24</dst>
+                <dstId>X2-15</dstId>
+                <dst>10.26.64.0/20</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>22</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-16</dstId>
+                <dst>10.26.96.0/22</dst>
+                <NextHop>
+                  <nextHopId>23</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-17</dstId>
+                <dst>10.26.104.0/22</dst>
+                <NextHop>
+                  <nextHopId>24</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-18</dstId>
+                <dst>10.26.112.0/22</dst>
+                <NextHop>
+                  <nextHopId>25</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-19</dstId>
+                <dst>10.30.0.0/22</dst>
+                <NextHop>
+                  <nextHopId>26</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-20</dstId>
+                <dst>10.209.144.0/20</dst>
+                <NextHop>
+                  <nextHopId>27</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-21</dstId>
+                <dst>10.209.208.0/20</dst>
+                <NextHop>
+                  <nextHopId>28</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-22</dstId>
+                <dst>10.209.244.0/22</dst>
+                <NextHop>
+                  <nextHopId>29</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-23</dstId>
+                <dst>10.26.0.0/20</dst>
+                <NextHop>
+                  <nextHopId>30</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-24</dstId>
+                <dst>10.26.120.0/22</dst>
+                <NextHop>
+                  <nextHopId>31</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-25</dstId>
+                <dst>10.35.128.0/20</dst>
+                <NextHop>
+                  <nextHopId>32</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-26</dstId>
+                <dst>10.209.180.0/22</dst>
+                <NextHop>
+                  <nextHopId>33</nextHopId>
                   <address>{LTE_S1_GW}</address>
                   <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
                 <dstId>RNC</dstId>
-                <dst>10.163.4.80/29</dst>
+                <dst>10.160.190.0/24</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>MM5</dstId>
-                <dst>10.0.235.0/24</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_16</dstId>
-                <dst>10.29.32.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_17</dstId>
-                <dst>10.29.0.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_18</dstId>
-                <dst>10.29.16.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_19</dstId>
-                <dst>10.72.32.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_20</dstId>
-                <dst>10.72.40.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_21</dstId>
-                <dst>10.80.152.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_22</dstId>
-                <dst>10.29.48.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_23</dstId>
-                <dst>10.80.128.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_24</dstId>
-                <dst>10.97.88.0/23</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_25</dstId>
-                <dst>100.81.0.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_26</dstId>
-                <dst>100.81.48.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_27</dstId>
-                <dst>10.72.0.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_28</dstId>
-                <dst>10.29.64.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_29</dstId>
-                <dst>10.29.96.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_30</dstId>
-                <dst>100.83.208.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>34</nextHopId>
                   <address>{LTE_S1_GW}</address>
                   <adminDistance>1</adminDistance>
                 </NextHop>
@@ -4569,6 +8211,7 @@ DEL_SiteBasic_ipv4_6630 = """
   <close-session></close-session>
 </rpc>
 ]]>]]>
+
 
 """
 
@@ -4595,7 +8238,7 @@ DEL_SiteBasic_ipv4_6353 = """
             <lmId>1</lmId>
             <fingerprint>{fingerprint}</fingerprint>
           </Lm>
-          <SecM xmlns="urn:com:ericsson:ecim:RcsSecM">
+          <SecM xmlns="urn:com:ericsson:ecim:ComSecM">
             <secMId>1</secMId>
             <UserManagement>
               <userManagementId>1</userManagementId>
@@ -4622,13 +8265,22 @@ DEL_SiteBasic_ipv4_6353 = """
               <cliTlsId>1</cliTlsId>
               <administrativeState>UNLOCKED</administrativeState>
             </CliTls>
+            <NtpServer>
+              <ntpServerId>1</ntpServerId>
+              <serverAddress>10.3.35.116</serverAddress>
+              <administrativeState>UNLOCKED</administrativeState>
+            </NtpServer>
+            <NtpServer>
+              <ntpServerId>2</ntpServerId>
+              <serverAddress>10.3.35.119</serverAddress>
+              <administrativeState>UNLOCKED</administrativeState>
+            </NtpServer>
           </SysM>
         </SystemFunctions>
         <Transport>
           <transportId>1</transportId>
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>OAM</routerId>
-            <ttl>64</ttl>
           </Router>
         </Transport>
         <Equipment xmlns="urn:com:ericsson:ecim:ReqEquipment">
@@ -4663,7 +8315,6 @@ DEL_SiteBasic_ipv4_6353 = """
             <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
               <interfaceIPv4Id>{tnPortId}_OAM</interfaceIPv4Id>
               <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_OAM</encapsulation>
-              <mtu>1500</mtu>
               <userLabel>OAM</userLabel>
               <AddressIPv4>
                 <addressIPv4Id>{tnPortId}_OAM</addressIPv4Id>
@@ -4680,78 +8331,37 @@ DEL_SiteBasic_ipv4_6353 = """
               <oamAccessPointId>1</oamAccessPointId>
               <accessPoint>ManagedElement=1,Transport=1,Router=OAM,InterfaceIPv4={tnPortId}_OAM,AddressIPv4={tnPortId}_OAM</accessPoint>
             </OamAccessPoint>
-            <OamTrafficClass>
-              <oamTrafficClassId>1</oamTrafficClassId>
-              <dscp>28</dscp>
-            </OamTrafficClass>
-            <TimeM xmlns="urn:com:ericsson:ecim:RcsTimeM">
-              <timeMId>1</timeMId>
-              <Ntp>
-                <ntpId>1</ntpId>
-                <NtpServer>
-                  <ntpServerId>1</ntpServerId>
-                  <userLabel>NTP TOD</userLabel>
-                  <serverAddress>10.19.105.6</serverAddress>
-                  <administrativeState>UNLOCKED</administrativeState>
-                </NtpServer>
-              </Ntp>
-            </TimeM>
+            <Snmp xmlns="urn:com:ericsson:ecim:RcsSnmp">
+              <snmpId>1</snmpId>
+              <administrativeState>UNLOCKED</administrativeState>
+              <agentAddress>
+                <host>0.0.0.0</host>
+                <port>161</port>
+              </agentAddress>
+              <SnmpTargetV2C>
+                <snmpTargetV2CId>1</snmpTargetV2CId>
+                <community>public</community>
+                <address>10.3.34.138</address>
+                <port>162</port>
+                <administrativeState>UNLOCKED</administrativeState>
+              </SnmpTargetV2C>
+            </Snmp>
           </SysM>
         </SystemFunctions>
         <Transport>
           <transportId>1</transportId>
-          <Ntp xmlns="urn:com:ericsson:ecim:RsyncNtp">
-            <ntpId>1</ntpId>
-          </Ntp>
-          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
-            <routerId>LTECP</routerId>
-            <ttl>64</ttl>
-          </Router>
-          <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
-            <vlanPortId>{tnPortId}_CP</vlanPortId>
-            <encapsulation>ManagedElement=1,Transport=1,EthernetPort={tnPortId}</encapsulation>
-            <isTagged>true</isTagged>
-            <userLabel>Control Plane</userLabel>
-            <vlanId>{LTE_S1_vlan}</vlanId>
-          </VlanPort>
-          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
-            <routerId>LTECP</routerId>
-            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
-              <interfaceIPv4Id>{tnPortId}_CP</interfaceIPv4Id>
-              <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_CP</encapsulation>
-              <mtu>1500</mtu>
-              <userLabel>Control Plane</userLabel>
-              <AddressIPv4>
-                <addressIPv4Id>{tnPortId}_CP</addressIPv4Id>
-                <address>{LTE_S1_IP}</address>
-              </AddressIPv4>
-            </InterfaceIPv4>
-          </Router>
-          <Ntp xmlns="urn:com:ericsson:ecim:RsyncNtp">
-            <ntpId>1</ntpId>
-            <NtpFrequencySync>
-              <ntpFrequencySyncId>NTP1</ntpFrequencySyncId>
-              <addressIPv4Reference>ManagedElement=1,Transport=1,Router=LTECP,InterfaceIPv4={tnPortId}_CP,AddressIPv4={tnPortId}_CP</addressIPv4Reference>
-              <dscp>54</dscp>
-              <syncServerNtpIpAddress>10.163.190.24</syncServerNtpIpAddress>
-            </NtpFrequencySync>
-            <NtpFrequencySync>
-              <ntpFrequencySyncId>NTP2</ntpFrequencySyncId>
-              <addressIPv4Reference>ManagedElement=1,Transport=1,Router=LTECP,InterfaceIPv4={tnPortId}_CP,AddressIPv4={tnPortId}_CP</addressIPv4Reference>
-              <dscp>54</dscp>
-              <syncServerNtpIpAddress>10.163.190.26</syncServerNtpIpAddress>
-            </NtpFrequencySync>
-          </Ntp>
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>LTEUP</routerId>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTECP</routerId>
             <ttl>64</ttl>
           </Router>
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>OAM</routerId>
             <DnsClient xmlns="urn:com:ericsson:ecim:RtnDnsClient">
               <dnsClientId>1</dnsClientId>
-              <dscp>46</dscp>
-              <serverAddress>10.19.105.28</serverAddress>
+              <serverAddress>10.3.35.116</serverAddress>
             </DnsClient>
           </Router>
           <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
@@ -4766,11 +8376,42 @@ DEL_SiteBasic_ipv4_6353 = """
             <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
               <interfaceIPv4Id>{tnPortId}_UP</interfaceIPv4Id>
               <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_UP</encapsulation>
-              <mtu>1500</mtu>
               <userLabel>User Plane</userLabel>
+            </InterfaceIPv4>
+          </Router>
+          <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
+            <vlanPortId>{tnPortId}_CP</vlanPortId>
+            <encapsulation>ManagedElement=1,Transport=1,EthernetPort={tnPortId}</encapsulation>
+            <isTagged>true</isTagged>
+            <userLabel>User Plane</userLabel>
+            <vlanId>{LTE_S1_vlan}</vlanId>
+          </VlanPort>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTECP</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_CP</interfaceIPv4Id>
+              <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_CP</encapsulation>
+              <mtu>1500</mtu>
+              <userLabel>Control Plane</userLabel>
+            </InterfaceIPv4>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTEUP</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_UP</interfaceIPv4Id>
               <AddressIPv4>
                 <addressIPv4Id>{tnPortId}_UP</addressIPv4Id>
                 <address>{LTE_UP_IP}</address>
+              </AddressIPv4>
+            </InterfaceIPv4>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTECP</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_CP</interfaceIPv4Id>
+              <AddressIPv4>
+                <addressIPv4Id>{tnPortId}_CP</addressIPv4Id>
+                <address>{LTE_S1_IP}</address>
               </AddressIPv4>
             </InterfaceIPv4>
           </Router>
@@ -4779,12 +8420,19 @@ DEL_SiteBasic_ipv4_6353 = """
             <RouteTableIPv4Static xmlns="urn:com:ericsson:ecim:RtnRoutesStaticRouteIPv4">
               <routeTableIPv4StaticId>1</routeTableIPv4StaticId>
               <Dst>
-                <dstId>OSS</dstId>
-                <dst>0.0.0.0/0</dst>
+                <dstId>ENM1</dstId>
+                <dst>10.3.34.0/23</dst>
                 <NextHop>
                   <nextHopId>1</nextHopId>
                   <address>{OAM_GW}</address>
-                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>OSS2</dstId>
+                <dst>10.3.31.0/24</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{OAM_GW}</address>
                 </NextHop>
               </Dst>
             </RouteTableIPv4Static>
@@ -4795,182 +8443,122 @@ DEL_SiteBasic_ipv4_6353 = """
               <routeTableIPv4StaticId>2</routeTableIPv4StaticId>
               <Dst>
                 <dstId>SGW1</dstId>
-                <dst>10.206.0.0/19</dst>
+                <dst>10.155.72.32/27</dst>
                 <NextHop>
-                  <nextHopId>2</nextHopId>
+                  <nextHopId>3</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_1</dstId>
-                <dst>10.29.40.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_2</dstId>
-                <dst>10.29.56.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
                 <dstId>SGW2</dstId>
-                <dst>10.206.32.65/32</dst>
+                <dst>10.155.68.224/27</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>{fieldReplaceableUnitId}</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>SGW3</dstId>
-                <dst>10.40.18.96/28</dst>
+                <dstId>X2-1</dstId>
+                <dst>10.26.48.0/20</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>5</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>SGW4</dstId>
-                <dst>10.50.98.5/32</dst>
+                <dstId>X2-2</dstId>
+                <dst>10.26.80.0/20</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>6</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>SGW5</dstId>
-                <dst>10.50.98.17/32</dst>
+                <dstId>X2-3</dstId>
+                <dst>10.26.100.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>7</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_3</dstId>
-                <dst>10.29.8.0/21</dst>
+                <dstId>X2-4</dstId>
+                <dst>10.26.108.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>8</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_4</dstId>
-                <dst>10.29.24.0/21</dst>
+                <dstId>X2-5</dstId>
+                <dst>10.26.116.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>9</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_5</dstId>
-                <dst>10.29.80.0/20</dst>
+                <dstId>X2-6</dstId>
+                <dst>10.30.4.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>10</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_6</dstId>
-                <dst>10.29.112.0/20</dst>
+                <dstId>X2-7</dstId>
+                <dst>10.209.128.0/20</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>11</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_7</dstId>
-                <dst>10.72.48.0/21</dst>
+                <dstId>X2-8</dstId>
+                <dst>10.209.192.0/20</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>12</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_8</dstId>
-                <dst>10.72.56.0/21</dst>
+                <dstId>X2-9</dstId>
+                <dst>10.209.240.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>14</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_9</dstId>
-                <dst>10.80.160.0/21</dst>
+                <dstId>X2-10</dstId>
+                <dst>10.26.16.0/20</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>15</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_10</dstId>
-                <dst>10.80.136.0/21</dst>
+                <dstId>X2-11</dstId>
+                <dst>10.26.124.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>16</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_11</dstId>
-                <dst>10.97.90.0/23</dst>
+                <dstId>X2-12</dstId>
+                <dst>10.35.132.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>17</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_12</dstId>
-                <dst>100.81.16.0/20</dst>
+                <dstId>X2-13</dstId>
+                <dst>10.209.176.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>18</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_13</dstId>
-                <dst>10.72.16.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_14</dstId>
-                <dst>100.81.56.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_15</dstId>
-                <dst>100.83.192.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
             </RouteTableIPv4Static>
@@ -4981,189 +8569,144 @@ DEL_SiteBasic_ipv4_6353 = """
               <routeTableIPv4StaticId>3</routeTableIPv4StaticId>
               <Dst>
                 <dstId>MME1</dstId>
-                <dst>10.206.4.0/24</dst>
+                <dst>10.155.72.32/27</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>19</nextHopId>
                   <address>{LTE_S1_GW}</address>
                   <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
                 <dstId>MME2</dstId>
-                <dst>10.206.20.0/24</dst>
+                <dst>10.155.68.224/27</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>20</nextHopId>
                   <address>{LTE_S1_GW}</address>
                   <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>MME3</dstId>
-                <dst>10.206.27.0/24</dst>
+                <dstId>X2-14</dstId>
+                <dst>10.26.32.0/20</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>21</nextHopId>
                   <address>{LTE_S1_GW}</address>
                   <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>MME4</dstId>
-                <dst>10.206.32.0/24</dst>
+                <dstId>X2-15</dstId>
+                <dst>10.26.64.0/20</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>22</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-16</dstId>
+                <dst>10.26.96.0/22</dst>
+                <NextHop>
+                  <nextHopId>23</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-17</dstId>
+                <dst>10.26.104.0/22</dst>
+                <NextHop>
+                  <nextHopId>24</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-18</dstId>
+                <dst>10.26.112.0/22</dst>
+                <NextHop>
+                  <nextHopId>25</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-19</dstId>
+                <dst>10.30.0.0/22</dst>
+                <NextHop>
+                  <nextHopId>26</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-20</dstId>
+                <dst>10.209.144.0/20</dst>
+                <NextHop>
+                  <nextHopId>27</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-21</dstId>
+                <dst>10.209.208.0/20</dst>
+                <NextHop>
+                  <nextHopId>28</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-22</dstId>
+                <dst>10.209.244.0/22</dst>
+                <NextHop>
+                  <nextHopId>29</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-23</dstId>
+                <dst>10.26.0.0/20</dst>
+                <NextHop>
+                  <nextHopId>30</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-24</dstId>
+                <dst>10.26.120.0/22</dst>
+                <NextHop>
+                  <nextHopId>31</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-25</dstId>
+                <dst>10.35.128.0/20</dst>
+                <NextHop>
+                  <nextHopId>32</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-26</dstId>
+                <dst>10.209.180.0/22</dst>
+                <NextHop>
+                  <nextHopId>33</nextHopId>
                   <address>{LTE_S1_GW}</address>
                   <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
                 <dstId>RNC</dstId>
-                <dst>10.163.4.80/29</dst>
+                <dst>10.160.190.0/24</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>MM5</dstId>
-                <dst>10.0.235.0/24</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_16</dstId>
-                <dst>10.29.32.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_17</dstId>
-                <dst>10.29.0.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_18</dstId>
-                <dst>10.29.16.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_19</dstId>
-                <dst>10.72.32.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_20</dstId>
-                <dst>10.72.40.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_21</dstId>
-                <dst>10.80.152.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_22</dstId>
-                <dst>10.29.48.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_23</dstId>
-                <dst>10.80.128.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_24</dstId>
-                <dst>10.97.88.0/23</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_25</dstId>
-                <dst>100.81.0.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_26</dstId>
-                <dst>100.81.48.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_27</dstId>
-                <dst>10.72.0.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_28</dstId>
-                <dst>10.29.64.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_29</dstId>
-                <dst>10.29.96.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_30</dstId>
-                <dst>100.83.208.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>34</nextHopId>
                   <address>{LTE_S1_GW}</address>
                   <adminDistance>1</adminDistance>
                 </NextHop>
@@ -5205,6 +8748,7 @@ DEL_SiteBasic_ipv4_6353 = """
   <close-session></close-session>
 </rpc>
 ]]>]]>
+
 
 """
 
@@ -5231,7 +8775,7 @@ DEL_SiteBasic_ipv4_6339 = """
             <lmId>1</lmId>
             <fingerprint>{fingerprint}</fingerprint>
           </Lm>
-          <SecM xmlns="urn:com:ericsson:ecim:RcsSecM">
+          <SecM xmlns="urn:com:ericsson:ecim:ComSecM">
             <secMId>1</secMId>
             <UserManagement>
               <userManagementId>1</userManagementId>
@@ -5258,13 +8802,22 @@ DEL_SiteBasic_ipv4_6339 = """
               <cliTlsId>1</cliTlsId>
               <administrativeState>UNLOCKED</administrativeState>
             </CliTls>
+            <NtpServer>
+              <ntpServerId>1</ntpServerId>
+              <serverAddress>10.3.35.116</serverAddress>
+              <administrativeState>UNLOCKED</administrativeState>
+            </NtpServer>
+            <NtpServer>
+              <ntpServerId>2</ntpServerId>
+              <serverAddress>10.3.35.119</serverAddress>
+              <administrativeState>UNLOCKED</administrativeState>
+            </NtpServer>
           </SysM>
         </SystemFunctions>
         <Transport>
           <transportId>1</transportId>
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>OAM</routerId>
-            <ttl>64</ttl>
           </Router>
         </Transport>
         <Equipment xmlns="urn:com:ericsson:ecim:ReqEquipment">
@@ -5299,7 +8852,6 @@ DEL_SiteBasic_ipv4_6339 = """
             <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
               <interfaceIPv4Id>{tnPortId}_OAM</interfaceIPv4Id>
               <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_OAM</encapsulation>
-              <mtu>1500</mtu>
               <userLabel>OAM</userLabel>
               <AddressIPv4>
                 <addressIPv4Id>{tnPortId}_OAM</addressIPv4Id>
@@ -5316,78 +8868,37 @@ DEL_SiteBasic_ipv4_6339 = """
               <oamAccessPointId>1</oamAccessPointId>
               <accessPoint>ManagedElement=1,Transport=1,Router=OAM,InterfaceIPv4={tnPortId}_OAM,AddressIPv4={tnPortId}_OAM</accessPoint>
             </OamAccessPoint>
-            <OamTrafficClass>
-              <oamTrafficClassId>1</oamTrafficClassId>
-              <dscp>28</dscp>
-            </OamTrafficClass>
-            <TimeM xmlns="urn:com:ericsson:ecim:RcsTimeM">
-              <timeMId>1</timeMId>
-              <Ntp>
-                <ntpId>1</ntpId>
-                <NtpServer>
-                  <ntpServerId>1</ntpServerId>
-                  <userLabel>NTP TOD</userLabel>
-                  <serverAddress>10.19.105.6</serverAddress>
-                  <administrativeState>UNLOCKED</administrativeState>
-                </NtpServer>
-              </Ntp>
-            </TimeM>
+            <Snmp xmlns="urn:com:ericsson:ecim:RcsSnmp">
+              <snmpId>1</snmpId>
+              <administrativeState>UNLOCKED</administrativeState>
+              <agentAddress>
+                <host>0.0.0.0</host>
+                <port>161</port>
+              </agentAddress>
+              <SnmpTargetV2C>
+                <snmpTargetV2CId>1</snmpTargetV2CId>
+                <community>public</community>
+                <address>10.3.34.138</address>
+                <port>162</port>
+                <administrativeState>UNLOCKED</administrativeState>
+              </SnmpTargetV2C>
+            </Snmp>
           </SysM>
         </SystemFunctions>
         <Transport>
           <transportId>1</transportId>
-          <Ntp xmlns="urn:com:ericsson:ecim:RsyncNtp">
-            <ntpId>1</ntpId>
-          </Ntp>
-          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
-            <routerId>LTECP</routerId>
-            <ttl>64</ttl>
-          </Router>
-          <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
-            <vlanPortId>{tnPortId}_CP</vlanPortId>
-            <encapsulation>ManagedElement=1,Transport=1,EthernetPort={tnPortId}</encapsulation>
-            <isTagged>true</isTagged>
-            <userLabel>Control Plane</userLabel>
-            <vlanId>{LTE_S1_vlan}</vlanId>
-          </VlanPort>
-          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
-            <routerId>LTECP</routerId>
-            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
-              <interfaceIPv4Id>{tnPortId}_CP</interfaceIPv4Id>
-              <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_CP</encapsulation>
-              <mtu>1500</mtu>
-              <userLabel>Control Plane</userLabel>
-              <AddressIPv4>
-                <addressIPv4Id>{tnPortId}_CP</addressIPv4Id>
-                <address>{LTE_S1_IP}</address>
-              </AddressIPv4>
-            </InterfaceIPv4>
-          </Router>
-          <Ntp xmlns="urn:com:ericsson:ecim:RsyncNtp">
-            <ntpId>1</ntpId>
-            <NtpFrequencySync>
-              <ntpFrequencySyncId>NTP1</ntpFrequencySyncId>
-              <addressIPv4Reference>ManagedElement=1,Transport=1,Router=LTECP,InterfaceIPv4={tnPortId}_CP,AddressIPv4={tnPortId}_CP</addressIPv4Reference>
-              <dscp>54</dscp>
-              <syncServerNtpIpAddress>10.163.190.24</syncServerNtpIpAddress>
-            </NtpFrequencySync>
-            <NtpFrequencySync>
-              <ntpFrequencySyncId>NTP2</ntpFrequencySyncId>
-              <addressIPv4Reference>ManagedElement=1,Transport=1,Router=LTECP,InterfaceIPv4={tnPortId}_CP,AddressIPv4={tnPortId}_CP</addressIPv4Reference>
-              <dscp>54</dscp>
-              <syncServerNtpIpAddress>10.163.190.26</syncServerNtpIpAddress>
-            </NtpFrequencySync>
-          </Ntp>
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>LTEUP</routerId>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTECP</routerId>
             <ttl>64</ttl>
           </Router>
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>OAM</routerId>
             <DnsClient xmlns="urn:com:ericsson:ecim:RtnDnsClient">
               <dnsClientId>1</dnsClientId>
-              <dscp>46</dscp>
-              <serverAddress>10.19.105.28</serverAddress>
+              <serverAddress>10.3.35.116</serverAddress>
             </DnsClient>
           </Router>
           <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
@@ -5402,11 +8913,42 @@ DEL_SiteBasic_ipv4_6339 = """
             <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
               <interfaceIPv4Id>{tnPortId}_UP</interfaceIPv4Id>
               <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_UP</encapsulation>
-              <mtu>1500</mtu>
               <userLabel>User Plane</userLabel>
+            </InterfaceIPv4>
+          </Router>
+          <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
+            <vlanPortId>{tnPortId}_CP</vlanPortId>
+            <encapsulation>ManagedElement=1,Transport=1,EthernetPort={tnPortId}</encapsulation>
+            <isTagged>true</isTagged>
+            <userLabel>User Plane</userLabel>
+            <vlanId>{LTE_S1_vlan}</vlanId>
+          </VlanPort>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTECP</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_CP</interfaceIPv4Id>
+              <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_CP</encapsulation>
+              <mtu>1500</mtu>
+              <userLabel>Control Plane</userLabel>
+            </InterfaceIPv4>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTEUP</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_UP</interfaceIPv4Id>
               <AddressIPv4>
                 <addressIPv4Id>{tnPortId}_UP</addressIPv4Id>
                 <address>{LTE_UP_IP}</address>
+              </AddressIPv4>
+            </InterfaceIPv4>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTECP</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_CP</interfaceIPv4Id>
+              <AddressIPv4>
+                <addressIPv4Id>{tnPortId}_CP</addressIPv4Id>
+                <address>{LTE_S1_IP}</address>
               </AddressIPv4>
             </InterfaceIPv4>
           </Router>
@@ -5415,12 +8957,19 @@ DEL_SiteBasic_ipv4_6339 = """
             <RouteTableIPv4Static xmlns="urn:com:ericsson:ecim:RtnRoutesStaticRouteIPv4">
               <routeTableIPv4StaticId>1</routeTableIPv4StaticId>
               <Dst>
-                <dstId>OSS</dstId>
-                <dst>0.0.0.0/0</dst>
+                <dstId>ENM1</dstId>
+                <dst>10.3.34.0/23</dst>
                 <NextHop>
                   <nextHopId>1</nextHopId>
                   <address>{OAM_GW}</address>
-                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>OSS2</dstId>
+                <dst>10.3.31.0/24</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{OAM_GW}</address>
                 </NextHop>
               </Dst>
             </RouteTableIPv4Static>
@@ -5431,182 +8980,122 @@ DEL_SiteBasic_ipv4_6339 = """
               <routeTableIPv4StaticId>2</routeTableIPv4StaticId>
               <Dst>
                 <dstId>SGW1</dstId>
-                <dst>10.206.0.0/19</dst>
+                <dst>10.155.72.32/27</dst>
                 <NextHop>
-                  <nextHopId>2</nextHopId>
+                  <nextHopId>3</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_1</dstId>
-                <dst>10.29.40.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_2</dstId>
-                <dst>10.29.56.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
                 <dstId>SGW2</dstId>
-                <dst>10.206.32.65/32</dst>
+                <dst>10.155.68.224/27</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>{fieldReplaceableUnitId}</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>SGW3</dstId>
-                <dst>10.40.18.96/28</dst>
+                <dstId>X2-1</dstId>
+                <dst>10.26.48.0/20</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>5</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>SGW4</dstId>
-                <dst>10.50.98.5/32</dst>
+                <dstId>X2-2</dstId>
+                <dst>10.26.80.0/20</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>6</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>SGW5</dstId>
-                <dst>10.50.98.17/32</dst>
+                <dstId>X2-3</dstId>
+                <dst>10.26.100.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>7</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_3</dstId>
-                <dst>10.29.8.0/21</dst>
+                <dstId>X2-4</dstId>
+                <dst>10.26.108.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>8</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_4</dstId>
-                <dst>10.29.24.0/21</dst>
+                <dstId>X2-5</dstId>
+                <dst>10.26.116.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>9</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_5</dstId>
-                <dst>10.29.80.0/20</dst>
+                <dstId>X2-6</dstId>
+                <dst>10.30.4.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>10</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_6</dstId>
-                <dst>10.29.112.0/20</dst>
+                <dstId>X2-7</dstId>
+                <dst>10.209.128.0/20</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>11</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_7</dstId>
-                <dst>10.72.48.0/21</dst>
+                <dstId>X2-8</dstId>
+                <dst>10.209.192.0/20</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>12</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_8</dstId>
-                <dst>10.72.56.0/21</dst>
+                <dstId>X2-9</dstId>
+                <dst>10.209.240.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>14</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_9</dstId>
-                <dst>10.80.160.0/21</dst>
+                <dstId>X2-10</dstId>
+                <dst>10.26.16.0/20</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>15</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_10</dstId>
-                <dst>10.80.136.0/21</dst>
+                <dstId>X2-11</dstId>
+                <dst>10.26.124.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>16</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_11</dstId>
-                <dst>10.97.90.0/23</dst>
+                <dstId>X2-12</dstId>
+                <dst>10.35.132.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>17</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_12</dstId>
-                <dst>100.81.16.0/20</dst>
+                <dstId>X2-13</dstId>
+                <dst>10.209.176.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>18</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_13</dstId>
-                <dst>10.72.16.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_14</dstId>
-                <dst>100.81.56.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_15</dstId>
-                <dst>100.83.192.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
             </RouteTableIPv4Static>
@@ -5617,189 +9106,144 @@ DEL_SiteBasic_ipv4_6339 = """
               <routeTableIPv4StaticId>3</routeTableIPv4StaticId>
               <Dst>
                 <dstId>MME1</dstId>
-                <dst>10.206.4.0/24</dst>
+                <dst>10.155.72.32/27</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>19</nextHopId>
                   <address>{LTE_S1_GW}</address>
                   <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
                 <dstId>MME2</dstId>
-                <dst>10.206.20.0/24</dst>
+                <dst>10.155.68.224/27</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>20</nextHopId>
                   <address>{LTE_S1_GW}</address>
                   <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>MME3</dstId>
-                <dst>10.206.27.0/24</dst>
+                <dstId>X2-14</dstId>
+                <dst>10.26.32.0/20</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>21</nextHopId>
                   <address>{LTE_S1_GW}</address>
                   <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>MME4</dstId>
-                <dst>10.206.32.0/24</dst>
+                <dstId>X2-15</dstId>
+                <dst>10.26.64.0/20</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>22</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-16</dstId>
+                <dst>10.26.96.0/22</dst>
+                <NextHop>
+                  <nextHopId>23</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-17</dstId>
+                <dst>10.26.104.0/22</dst>
+                <NextHop>
+                  <nextHopId>24</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-18</dstId>
+                <dst>10.26.112.0/22</dst>
+                <NextHop>
+                  <nextHopId>25</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-19</dstId>
+                <dst>10.30.0.0/22</dst>
+                <NextHop>
+                  <nextHopId>26</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-20</dstId>
+                <dst>10.209.144.0/20</dst>
+                <NextHop>
+                  <nextHopId>27</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-21</dstId>
+                <dst>10.209.208.0/20</dst>
+                <NextHop>
+                  <nextHopId>28</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-22</dstId>
+                <dst>10.209.244.0/22</dst>
+                <NextHop>
+                  <nextHopId>29</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-23</dstId>
+                <dst>10.26.0.0/20</dst>
+                <NextHop>
+                  <nextHopId>30</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-24</dstId>
+                <dst>10.26.120.0/22</dst>
+                <NextHop>
+                  <nextHopId>31</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-25</dstId>
+                <dst>10.35.128.0/20</dst>
+                <NextHop>
+                  <nextHopId>32</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-26</dstId>
+                <dst>10.209.180.0/22</dst>
+                <NextHop>
+                  <nextHopId>33</nextHopId>
                   <address>{LTE_S1_GW}</address>
                   <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
                 <dstId>RNC</dstId>
-                <dst>10.163.4.80/29</dst>
+                <dst>10.160.190.0/24</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>MM5</dstId>
-                <dst>10.0.235.0/24</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_16</dstId>
-                <dst>10.29.32.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_17</dstId>
-                <dst>10.29.0.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_18</dstId>
-                <dst>10.29.16.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_19</dstId>
-                <dst>10.72.32.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_20</dstId>
-                <dst>10.72.40.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_21</dstId>
-                <dst>10.80.152.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_22</dstId>
-                <dst>10.29.48.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_23</dstId>
-                <dst>10.80.128.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_24</dstId>
-                <dst>10.97.88.0/23</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_25</dstId>
-                <dst>100.81.0.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_26</dstId>
-                <dst>100.81.48.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_27</dstId>
-                <dst>10.72.0.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_28</dstId>
-                <dst>10.29.64.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_29</dstId>
-                <dst>10.29.96.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_30</dstId>
-                <dst>100.83.208.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>34</nextHopId>
                   <address>{LTE_S1_GW}</address>
                   <adminDistance>1</adminDistance>
                 </NextHop>
@@ -5841,6 +9285,7 @@ DEL_SiteBasic_ipv4_6339 = """
   <close-session></close-session>
 </rpc>
 ]]>]]>
+
 
 """
 
@@ -5865,9 +9310,9 @@ DEL_SiteBasic_ipv4_6339 = """
           <systemFunctionsId>1</systemFunctionsId>
           <Lm xmlns="urn:com:ericsson:ecim:RcsLM">
             <lmId>1</lmId>
-            <fingerprint>{eNodeBName}</fingerprint>
+            <fingerprint>{fingerprint}</fingerprint>
           </Lm>
-          <SecM xmlns="urn:com:ericsson:ecim:RcsSecM">
+          <SecM xmlns="urn:com:ericsson:ecim:ComSecM">
             <secMId>1</secMId>
             <UserManagement>
               <userManagementId>1</userManagementId>
@@ -5894,13 +9339,22 @@ DEL_SiteBasic_ipv4_6339 = """
               <cliTlsId>1</cliTlsId>
               <administrativeState>UNLOCKED</administrativeState>
             </CliTls>
+            <NtpServer>
+              <ntpServerId>1</ntpServerId>
+              <serverAddress>10.3.35.116</serverAddress>
+              <administrativeState>UNLOCKED</administrativeState>
+            </NtpServer>
+            <NtpServer>
+              <ntpServerId>2</ntpServerId>
+              <serverAddress>10.3.35.119</serverAddress>
+              <administrativeState>UNLOCKED</administrativeState>
+            </NtpServer>
           </SysM>
         </SystemFunctions>
         <Transport>
           <transportId>1</transportId>
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>OAM</routerId>
-            <ttl>64</ttl>
           </Router>
         </Transport>
         <Equipment xmlns="urn:com:ericsson:ecim:ReqEquipment">
@@ -5935,7 +9389,6 @@ DEL_SiteBasic_ipv4_6339 = """
             <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
               <interfaceIPv4Id>{tnPortId}_OAM</interfaceIPv4Id>
               <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_OAM</encapsulation>
-              <mtu>1500</mtu>
               <userLabel>OAM</userLabel>
               <AddressIPv4>
                 <addressIPv4Id>{tnPortId}_OAM</addressIPv4Id>
@@ -5952,78 +9405,37 @@ DEL_SiteBasic_ipv4_6339 = """
               <oamAccessPointId>1</oamAccessPointId>
               <accessPoint>ManagedElement=1,Transport=1,Router=OAM,InterfaceIPv4={tnPortId}_OAM,AddressIPv4={tnPortId}_OAM</accessPoint>
             </OamAccessPoint>
-            <OamTrafficClass>
-              <oamTrafficClassId>1</oamTrafficClassId>
-              <dscp>28</dscp>
-            </OamTrafficClass>
-            <TimeM xmlns="urn:com:ericsson:ecim:RcsTimeM">
-              <timeMId>1</timeMId>
-              <Ntp>
-                <ntpId>1</ntpId>
-                <NtpServer>
-                  <ntpServerId>1</ntpServerId>
-                  <userLabel>NTP TOD</userLabel>
-                  <serverAddress>10.19.105.6</serverAddress>
-                  <administrativeState>UNLOCKED</administrativeState>
-                </NtpServer>
-              </Ntp>
-            </TimeM>
+            <Snmp xmlns="urn:com:ericsson:ecim:RcsSnmp">
+              <snmpId>1</snmpId>
+              <administrativeState>UNLOCKED</administrativeState>
+              <agentAddress>
+                <host>0.0.0.0</host>
+                <port>161</port>
+              </agentAddress>
+              <SnmpTargetV2C>
+                <snmpTargetV2CId>1</snmpTargetV2CId>
+                <community>public</community>
+                <address>10.3.34.138</address>
+                <port>162</port>
+                <administrativeState>UNLOCKED</administrativeState>
+              </SnmpTargetV2C>
+            </Snmp>
           </SysM>
         </SystemFunctions>
         <Transport>
           <transportId>1</transportId>
-          <Ntp xmlns="urn:com:ericsson:ecim:RsyncNtp">
-            <ntpId>1</ntpId>
-          </Ntp>
-          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
-            <routerId>LTECP</routerId>
-            <ttl>64</ttl>
-          </Router>
-          <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
-            <vlanPortId>{tnPortId}_CP</vlanPortId>
-            <encapsulation>ManagedElement=1,Transport=1,EthernetPort={tnPortId}</encapsulation>
-            <isTagged>true</isTagged>
-            <userLabel>Control Plane</userLabel>
-            <vlanId>{LTE_S1_vlan}</vlanId>
-          </VlanPort>
-          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
-            <routerId>LTECP</routerId>
-            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
-              <interfaceIPv4Id>{tnPortId}_CP</interfaceIPv4Id>
-              <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_CP</encapsulation>
-              <mtu>1500</mtu>
-              <userLabel>Control Plane</userLabel>
-              <AddressIPv4>
-                <addressIPv4Id>{tnPortId}_CP</addressIPv4Id>
-                <address>{LTE_S1_IP}</address>
-              </AddressIPv4>
-            </InterfaceIPv4>
-          </Router>
-          <Ntp xmlns="urn:com:ericsson:ecim:RsyncNtp">
-            <ntpId>1</ntpId>
-            <NtpFrequencySync>
-              <ntpFrequencySyncId>NTP1</ntpFrequencySyncId>
-              <addressIPv4Reference>ManagedElement=1,Transport=1,Router=LTECP,InterfaceIPv4={tnPortId}_CP,AddressIPv4={tnPortId}_CP</addressIPv4Reference>
-              <dscp>54</dscp>
-              <syncServerNtpIpAddress>10.163.190.24</syncServerNtpIpAddress>
-            </NtpFrequencySync>
-            <NtpFrequencySync>
-              <ntpFrequencySyncId>NTP2</ntpFrequencySyncId>
-              <addressIPv4Reference>ManagedElement=1,Transport=1,Router=LTECP,InterfaceIPv4={tnPortId}_CP,AddressIPv4={tnPortId}_CP</addressIPv4Reference>
-              <dscp>54</dscp>
-              <syncServerNtpIpAddress>10.163.190.26</syncServerNtpIpAddress>
-            </NtpFrequencySync>
-          </Ntp>
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>LTEUP</routerId>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTECP</routerId>
             <ttl>64</ttl>
           </Router>
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>OAM</routerId>
             <DnsClient xmlns="urn:com:ericsson:ecim:RtnDnsClient">
               <dnsClientId>1</dnsClientId>
-              <dscp>46</dscp>
-              <serverAddress>10.19.105.28</serverAddress>
+              <serverAddress>10.3.35.116</serverAddress>
             </DnsClient>
           </Router>
           <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
@@ -6038,11 +9450,42 @@ DEL_SiteBasic_ipv4_6339 = """
             <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
               <interfaceIPv4Id>{tnPortId}_UP</interfaceIPv4Id>
               <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_UP</encapsulation>
-              <mtu>1500</mtu>
               <userLabel>User Plane</userLabel>
+            </InterfaceIPv4>
+          </Router>
+          <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
+            <vlanPortId>{tnPortId}_CP</vlanPortId>
+            <encapsulation>ManagedElement=1,Transport=1,EthernetPort={tnPortId}</encapsulation>
+            <isTagged>true</isTagged>
+            <userLabel>User Plane</userLabel>
+            <vlanId>{LTE_S1_vlan}</vlanId>
+          </VlanPort>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTECP</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_CP</interfaceIPv4Id>
+              <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_CP</encapsulation>
+              <mtu>1500</mtu>
+              <userLabel>Control Plane</userLabel>
+            </InterfaceIPv4>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTEUP</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_UP</interfaceIPv4Id>
               <AddressIPv4>
                 <addressIPv4Id>{tnPortId}_UP</addressIPv4Id>
                 <address>{LTE_UP_IP}</address>
+              </AddressIPv4>
+            </InterfaceIPv4>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTECP</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_CP</interfaceIPv4Id>
+              <AddressIPv4>
+                <addressIPv4Id>{tnPortId}_CP</addressIPv4Id>
+                <address>{LTE_S1_IP}</address>
               </AddressIPv4>
             </InterfaceIPv4>
           </Router>
@@ -6051,12 +9494,19 @@ DEL_SiteBasic_ipv4_6339 = """
             <RouteTableIPv4Static xmlns="urn:com:ericsson:ecim:RtnRoutesStaticRouteIPv4">
               <routeTableIPv4StaticId>1</routeTableIPv4StaticId>
               <Dst>
-                <dstId>OSS</dstId>
-                <dst>0.0.0.0/0</dst>
+                <dstId>ENM1</dstId>
+                <dst>10.3.34.0/23</dst>
                 <NextHop>
                   <nextHopId>1</nextHopId>
                   <address>{OAM_GW}</address>
-                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>OSS2</dstId>
+                <dst>10.3.31.0/24</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{OAM_GW}</address>
                 </NextHop>
               </Dst>
             </RouteTableIPv4Static>
@@ -6067,182 +9517,122 @@ DEL_SiteBasic_ipv4_6339 = """
               <routeTableIPv4StaticId>2</routeTableIPv4StaticId>
               <Dst>
                 <dstId>SGW1</dstId>
-                <dst>10.206.0.0/19</dst>
+                <dst>10.155.72.32/27</dst>
                 <NextHop>
-                  <nextHopId>2</nextHopId>
+                  <nextHopId>3</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_1</dstId>
-                <dst>10.29.40.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_2</dstId>
-                <dst>10.29.56.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
                 <dstId>SGW2</dstId>
-                <dst>10.206.32.65/32</dst>
+                <dst>10.155.68.224/27</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>{fieldReplaceableUnitId}</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>SGW3</dstId>
-                <dst>10.40.18.96/28</dst>
+                <dstId>X2-1</dstId>
+                <dst>10.26.48.0/20</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>5</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>SGW4</dstId>
-                <dst>10.50.98.5/32</dst>
+                <dstId>X2-2</dstId>
+                <dst>10.26.80.0/20</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>6</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>SGW5</dstId>
-                <dst>10.50.98.17/32</dst>
+                <dstId>X2-3</dstId>
+                <dst>10.26.100.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>7</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_3</dstId>
-                <dst>10.29.8.0/21</dst>
+                <dstId>X2-4</dstId>
+                <dst>10.26.108.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>8</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_4</dstId>
-                <dst>10.29.24.0/21</dst>
+                <dstId>X2-5</dstId>
+                <dst>10.26.116.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>9</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_5</dstId>
-                <dst>10.29.80.0/20</dst>
+                <dstId>X2-6</dstId>
+                <dst>10.30.4.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>10</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_6</dstId>
-                <dst>10.29.112.0/20</dst>
+                <dstId>X2-7</dstId>
+                <dst>10.209.128.0/20</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>11</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_7</dstId>
-                <dst>10.72.48.0/21</dst>
+                <dstId>X2-8</dstId>
+                <dst>10.209.192.0/20</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>12</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_8</dstId>
-                <dst>10.72.56.0/21</dst>
+                <dstId>X2-9</dstId>
+                <dst>10.209.240.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>14</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_9</dstId>
-                <dst>10.80.160.0/21</dst>
+                <dstId>X2-10</dstId>
+                <dst>10.26.16.0/20</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>15</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_10</dstId>
-                <dst>10.80.136.0/21</dst>
+                <dstId>X2-11</dstId>
+                <dst>10.26.124.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>16</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_11</dstId>
-                <dst>10.97.90.0/23</dst>
+                <dstId>X2-12</dstId>
+                <dst>10.35.132.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>17</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_12</dstId>
-                <dst>100.81.16.0/20</dst>
+                <dstId>X2-13</dstId>
+                <dst>10.209.176.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>18</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_13</dstId>
-                <dst>10.72.16.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_14</dstId>
-                <dst>100.81.56.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_15</dstId>
-                <dst>100.83.192.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
             </RouteTableIPv4Static>
@@ -6253,189 +9643,144 @@ DEL_SiteBasic_ipv4_6339 = """
               <routeTableIPv4StaticId>3</routeTableIPv4StaticId>
               <Dst>
                 <dstId>MME1</dstId>
-                <dst>10.206.4.0/24</dst>
+                <dst>10.155.72.32/27</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>19</nextHopId>
                   <address>{LTE_S1_GW}</address>
                   <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
                 <dstId>MME2</dstId>
-                <dst>10.206.20.0/24</dst>
+                <dst>10.155.68.224/27</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>20</nextHopId>
                   <address>{LTE_S1_GW}</address>
                   <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>MME3</dstId>
-                <dst>10.206.27.0/24</dst>
+                <dstId>X2-14</dstId>
+                <dst>10.26.32.0/20</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>21</nextHopId>
                   <address>{LTE_S1_GW}</address>
                   <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>MME4</dstId>
-                <dst>10.206.32.0/24</dst>
+                <dstId>X2-15</dstId>
+                <dst>10.26.64.0/20</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>22</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-16</dstId>
+                <dst>10.26.96.0/22</dst>
+                <NextHop>
+                  <nextHopId>23</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-17</dstId>
+                <dst>10.26.104.0/22</dst>
+                <NextHop>
+                  <nextHopId>24</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-18</dstId>
+                <dst>10.26.112.0/22</dst>
+                <NextHop>
+                  <nextHopId>25</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-19</dstId>
+                <dst>10.30.0.0/22</dst>
+                <NextHop>
+                  <nextHopId>26</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-20</dstId>
+                <dst>10.209.144.0/20</dst>
+                <NextHop>
+                  <nextHopId>27</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-21</dstId>
+                <dst>10.209.208.0/20</dst>
+                <NextHop>
+                  <nextHopId>28</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-22</dstId>
+                <dst>10.209.244.0/22</dst>
+                <NextHop>
+                  <nextHopId>29</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-23</dstId>
+                <dst>10.26.0.0/20</dst>
+                <NextHop>
+                  <nextHopId>30</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-24</dstId>
+                <dst>10.26.120.0/22</dst>
+                <NextHop>
+                  <nextHopId>31</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-25</dstId>
+                <dst>10.35.128.0/20</dst>
+                <NextHop>
+                  <nextHopId>32</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-26</dstId>
+                <dst>10.209.180.0/22</dst>
+                <NextHop>
+                  <nextHopId>33</nextHopId>
                   <address>{LTE_S1_GW}</address>
                   <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
                 <dstId>RNC</dstId>
-                <dst>10.163.4.80/29</dst>
+                <dst>10.160.190.0/24</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>MM5</dstId>
-                <dst>10.0.235.0/24</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_16</dstId>
-                <dst>10.29.32.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_17</dstId>
-                <dst>10.29.0.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_18</dstId>
-                <dst>10.29.16.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_19</dstId>
-                <dst>10.72.32.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_20</dstId>
-                <dst>10.72.40.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_21</dstId>
-                <dst>10.80.152.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_22</dstId>
-                <dst>10.29.48.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_23</dstId>
-                <dst>10.80.128.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_24</dstId>
-                <dst>10.97.88.0/23</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_25</dstId>
-                <dst>100.81.0.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_26</dstId>
-                <dst>100.81.48.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_27</dstId>
-                <dst>10.72.0.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_28</dstId>
-                <dst>10.29.64.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_29</dstId>
-                <dst>10.29.96.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_30</dstId>
-                <dst>100.83.208.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>34</nextHopId>
                   <address>{LTE_S1_GW}</address>
                   <adminDistance>1</adminDistance>
                 </NextHop>
@@ -6477,6 +9822,7 @@ DEL_SiteBasic_ipv4_6339 = """
   <close-session></close-session>
 </rpc>
 ]]>]]>
+
 
 """
 
@@ -6503,7 +9849,7 @@ DEL_SiteBasic_ipv4_6303 = """
             <lmId>1</lmId>
             <fingerprint>{fingerprint}</fingerprint>
           </Lm>
-          <SecM xmlns="urn:com:ericsson:ecim:RcsSecM">
+          <SecM xmlns="urn:com:ericsson:ecim:ComSecM">
             <secMId>1</secMId>
             <UserManagement>
               <userManagementId>1</userManagementId>
@@ -6530,13 +9876,22 @@ DEL_SiteBasic_ipv4_6303 = """
               <cliTlsId>1</cliTlsId>
               <administrativeState>UNLOCKED</administrativeState>
             </CliTls>
+            <NtpServer>
+              <ntpServerId>1</ntpServerId>
+              <serverAddress>10.3.35.116</serverAddress>
+              <administrativeState>UNLOCKED</administrativeState>
+            </NtpServer>
+            <NtpServer>
+              <ntpServerId>2</ntpServerId>
+              <serverAddress>10.3.35.119</serverAddress>
+              <administrativeState>UNLOCKED</administrativeState>
+            </NtpServer>
           </SysM>
         </SystemFunctions>
         <Transport>
           <transportId>1</transportId>
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>OAM</routerId>
-            <ttl>64</ttl>
           </Router>
         </Transport>
         <Equipment xmlns="urn:com:ericsson:ecim:ReqEquipment">
@@ -6571,7 +9926,6 @@ DEL_SiteBasic_ipv4_6303 = """
             <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
               <interfaceIPv4Id>{tnPortId}_OAM</interfaceIPv4Id>
               <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_OAM</encapsulation>
-              <mtu>1500</mtu>
               <userLabel>OAM</userLabel>
               <AddressIPv4>
                 <addressIPv4Id>{tnPortId}_OAM</addressIPv4Id>
@@ -6588,78 +9942,37 @@ DEL_SiteBasic_ipv4_6303 = """
               <oamAccessPointId>1</oamAccessPointId>
               <accessPoint>ManagedElement=1,Transport=1,Router=OAM,InterfaceIPv4={tnPortId}_OAM,AddressIPv4={tnPortId}_OAM</accessPoint>
             </OamAccessPoint>
-            <OamTrafficClass>
-              <oamTrafficClassId>1</oamTrafficClassId>
-              <dscp>28</dscp>
-            </OamTrafficClass>
-            <TimeM xmlns="urn:com:ericsson:ecim:RcsTimeM">
-              <timeMId>1</timeMId>
-              <Ntp>
-                <ntpId>1</ntpId>
-                <NtpServer>
-                  <ntpServerId>1</ntpServerId>
-                  <userLabel>NTP TOD</userLabel>
-                  <serverAddress>10.19.105.6</serverAddress>
-                  <administrativeState>UNLOCKED</administrativeState>
-                </NtpServer>
-              </Ntp>
-            </TimeM>
+            <Snmp xmlns="urn:com:ericsson:ecim:RcsSnmp">
+              <snmpId>1</snmpId>
+              <administrativeState>UNLOCKED</administrativeState>
+              <agentAddress>
+                <host>0.0.0.0</host>
+                <port>161</port>
+              </agentAddress>
+              <SnmpTargetV2C>
+                <snmpTargetV2CId>1</snmpTargetV2CId>
+                <community>public</community>
+                <address>10.3.34.138</address>
+                <port>162</port>
+                <administrativeState>UNLOCKED</administrativeState>
+              </SnmpTargetV2C>
+            </Snmp>
           </SysM>
         </SystemFunctions>
         <Transport>
           <transportId>1</transportId>
-          <Ntp xmlns="urn:com:ericsson:ecim:RsyncNtp">
-            <ntpId>1</ntpId>
-          </Ntp>
-          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
-            <routerId>LTECP</routerId>
-            <ttl>64</ttl>
-          </Router>
-          <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
-            <vlanPortId>{tnPortId}_CP</vlanPortId>
-            <encapsulation>ManagedElement=1,Transport=1,EthernetPort={tnPortId}</encapsulation>
-            <isTagged>true</isTagged>
-            <userLabel>Control Plane</userLabel>
-            <vlanId>{LTE_S1_vlan}</vlanId>
-          </VlanPort>
-          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
-            <routerId>LTECP</routerId>
-            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
-              <interfaceIPv4Id>{tnPortId}_CP</interfaceIPv4Id>
-              <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_CP</encapsulation>
-              <mtu>1500</mtu>
-              <userLabel>Control Plane</userLabel>
-              <AddressIPv4>
-                <addressIPv4Id>{tnPortId}_CP</addressIPv4Id>
-                <address>{LTE_S1_IP}</address>
-              </AddressIPv4>
-            </InterfaceIPv4>
-          </Router>
-          <Ntp xmlns="urn:com:ericsson:ecim:RsyncNtp">
-            <ntpId>1</ntpId>
-            <NtpFrequencySync>
-              <ntpFrequencySyncId>NTP1</ntpFrequencySyncId>
-              <addressIPv4Reference>ManagedElement=1,Transport=1,Router=LTECP,InterfaceIPv4={tnPortId}_CP,AddressIPv4={tnPortId}_CP</addressIPv4Reference>
-              <dscp>54</dscp>
-              <syncServerNtpIpAddress>10.163.190.24</syncServerNtpIpAddress>
-            </NtpFrequencySync>
-            <NtpFrequencySync>
-              <ntpFrequencySyncId>NTP2</ntpFrequencySyncId>
-              <addressIPv4Reference>ManagedElement=1,Transport=1,Router=LTECP,InterfaceIPv4={tnPortId}_CP,AddressIPv4={tnPortId}_CP</addressIPv4Reference>
-              <dscp>54</dscp>
-              <syncServerNtpIpAddress>10.163.190.26</syncServerNtpIpAddress>
-            </NtpFrequencySync>
-          </Ntp>
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>LTEUP</routerId>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTECP</routerId>
             <ttl>64</ttl>
           </Router>
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>OAM</routerId>
             <DnsClient xmlns="urn:com:ericsson:ecim:RtnDnsClient">
               <dnsClientId>1</dnsClientId>
-              <dscp>46</dscp>
-              <serverAddress>10.19.105.28</serverAddress>
+              <serverAddress>10.3.35.116</serverAddress>
             </DnsClient>
           </Router>
           <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
@@ -6674,11 +9987,42 @@ DEL_SiteBasic_ipv4_6303 = """
             <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
               <interfaceIPv4Id>{tnPortId}_UP</interfaceIPv4Id>
               <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_UP</encapsulation>
-              <mtu>1500</mtu>
               <userLabel>User Plane</userLabel>
+            </InterfaceIPv4>
+          </Router>
+          <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">
+            <vlanPortId>{tnPortId}_CP</vlanPortId>
+            <encapsulation>ManagedElement=1,Transport=1,EthernetPort={tnPortId}</encapsulation>
+            <isTagged>true</isTagged>
+            <userLabel>User Plane</userLabel>
+            <vlanId>{LTE_S1_vlan}</vlanId>
+          </VlanPort>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTECP</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_CP</interfaceIPv4Id>
+              <encapsulation>ManagedElement=1,Transport=1,VlanPort={tnPortId}_CP</encapsulation>
+              <mtu>1500</mtu>
+              <userLabel>Control Plane</userLabel>
+            </InterfaceIPv4>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTEUP</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_UP</interfaceIPv4Id>
               <AddressIPv4>
                 <addressIPv4Id>{tnPortId}_UP</addressIPv4Id>
                 <address>{LTE_UP_IP}</address>
+              </AddressIPv4>
+            </InterfaceIPv4>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTECP</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>{tnPortId}_CP</interfaceIPv4Id>
+              <AddressIPv4>
+                <addressIPv4Id>{tnPortId}_CP</addressIPv4Id>
+                <address>{LTE_S1_IP}</address>
               </AddressIPv4>
             </InterfaceIPv4>
           </Router>
@@ -6687,12 +10031,19 @@ DEL_SiteBasic_ipv4_6303 = """
             <RouteTableIPv4Static xmlns="urn:com:ericsson:ecim:RtnRoutesStaticRouteIPv4">
               <routeTableIPv4StaticId>1</routeTableIPv4StaticId>
               <Dst>
-                <dstId>OSS</dstId>
-                <dst>0.0.0.0/0</dst>
+                <dstId>ENM1</dstId>
+                <dst>10.3.34.0/23</dst>
                 <NextHop>
                   <nextHopId>1</nextHopId>
                   <address>{OAM_GW}</address>
-                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>OSS2</dstId>
+                <dst>10.3.31.0/24</dst>
+                <NextHop>
+                  <nextHopId>2</nextHopId>
+                  <address>{OAM_GW}</address>
                 </NextHop>
               </Dst>
             </RouteTableIPv4Static>
@@ -6703,182 +10054,122 @@ DEL_SiteBasic_ipv4_6303 = """
               <routeTableIPv4StaticId>2</routeTableIPv4StaticId>
               <Dst>
                 <dstId>SGW1</dstId>
-                <dst>10.206.0.0/19</dst>
+                <dst>10.155.72.32/27</dst>
                 <NextHop>
-                  <nextHopId>2</nextHopId>
+                  <nextHopId>3</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_1</dstId>
-                <dst>10.29.40.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_2</dstId>
-                <dst>10.29.56.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
                 <dstId>SGW2</dstId>
-                <dst>10.206.32.65/32</dst>
+                <dst>10.155.68.224/27</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>{fieldReplaceableUnitId}</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>SGW3</dstId>
-                <dst>10.40.18.96/28</dst>
+                <dstId>X2-1</dstId>
+                <dst>10.26.48.0/20</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>5</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>SGW4</dstId>
-                <dst>10.50.98.5/32</dst>
+                <dstId>X2-2</dstId>
+                <dst>10.26.80.0/20</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>6</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>SGW5</dstId>
-                <dst>10.50.98.17/32</dst>
+                <dstId>X2-3</dstId>
+                <dst>10.26.100.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>7</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_3</dstId>
-                <dst>10.29.8.0/21</dst>
+                <dstId>X2-4</dstId>
+                <dst>10.26.108.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>8</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_4</dstId>
-                <dst>10.29.24.0/21</dst>
+                <dstId>X2-5</dstId>
+                <dst>10.26.116.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>9</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_5</dstId>
-                <dst>10.29.80.0/20</dst>
+                <dstId>X2-6</dstId>
+                <dst>10.30.4.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>10</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_6</dstId>
-                <dst>10.29.112.0/20</dst>
+                <dstId>X2-7</dstId>
+                <dst>10.209.128.0/20</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>11</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_7</dstId>
-                <dst>10.72.48.0/21</dst>
+                <dstId>X2-8</dstId>
+                <dst>10.209.192.0/20</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>12</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_8</dstId>
-                <dst>10.72.56.0/21</dst>
+                <dstId>X2-9</dstId>
+                <dst>10.209.240.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>14</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_9</dstId>
-                <dst>10.80.160.0/21</dst>
+                <dstId>X2-10</dstId>
+                <dst>10.26.16.0/20</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>15</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_10</dstId>
-                <dst>10.80.136.0/21</dst>
+                <dstId>X2-11</dstId>
+                <dst>10.26.124.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>16</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_11</dstId>
-                <dst>10.97.90.0/23</dst>
+                <dstId>X2-12</dstId>
+                <dst>10.35.132.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>17</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>X2_12</dstId>
-                <dst>100.81.16.0/20</dst>
+                <dstId>X2-13</dstId>
+                <dst>10.209.176.0/22</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>18</nextHopId>
                   <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_13</dstId>
-                <dst>10.72.16.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_14</dstId>
-                <dst>100.81.56.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_15</dstId>
-                <dst>100.83.192.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_UP_GW}</address>
-                  <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
             </RouteTableIPv4Static>
@@ -6889,189 +10180,144 @@ DEL_SiteBasic_ipv4_6303 = """
               <routeTableIPv4StaticId>3</routeTableIPv4StaticId>
               <Dst>
                 <dstId>MME1</dstId>
-                <dst>10.206.4.0/24</dst>
+                <dst>10.155.72.32/27</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>19</nextHopId>
                   <address>{LTE_S1_GW}</address>
                   <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
                 <dstId>MME2</dstId>
-                <dst>10.206.20.0/24</dst>
+                <dst>10.155.68.224/27</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>20</nextHopId>
                   <address>{LTE_S1_GW}</address>
                   <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>MME3</dstId>
-                <dst>10.206.27.0/24</dst>
+                <dstId>X2-14</dstId>
+                <dst>10.26.32.0/20</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>21</nextHopId>
                   <address>{LTE_S1_GW}</address>
                   <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
-                <dstId>MME4</dstId>
-                <dst>10.206.32.0/24</dst>
+                <dstId>X2-15</dstId>
+                <dst>10.26.64.0/20</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>22</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-16</dstId>
+                <dst>10.26.96.0/22</dst>
+                <NextHop>
+                  <nextHopId>23</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-17</dstId>
+                <dst>10.26.104.0/22</dst>
+                <NextHop>
+                  <nextHopId>24</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-18</dstId>
+                <dst>10.26.112.0/22</dst>
+                <NextHop>
+                  <nextHopId>25</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-19</dstId>
+                <dst>10.30.0.0/22</dst>
+                <NextHop>
+                  <nextHopId>26</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-20</dstId>
+                <dst>10.209.144.0/20</dst>
+                <NextHop>
+                  <nextHopId>27</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-21</dstId>
+                <dst>10.209.208.0/20</dst>
+                <NextHop>
+                  <nextHopId>28</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-22</dstId>
+                <dst>10.209.244.0/22</dst>
+                <NextHop>
+                  <nextHopId>29</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-23</dstId>
+                <dst>10.26.0.0/20</dst>
+                <NextHop>
+                  <nextHopId>30</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-24</dstId>
+                <dst>10.26.120.0/22</dst>
+                <NextHop>
+                  <nextHopId>31</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-25</dstId>
+                <dst>10.35.128.0/20</dst>
+                <NextHop>
+                  <nextHopId>32</nextHopId>
+                  <address>{LTE_S1_GW}</address>
+                  <adminDistance>1</adminDistance>
+                </NextHop>
+              </Dst>
+              <Dst>
+                <dstId>X2-26</dstId>
+                <dst>10.209.180.0/22</dst>
+                <NextHop>
+                  <nextHopId>33</nextHopId>
                   <address>{LTE_S1_GW}</address>
                   <adminDistance>1</adminDistance>
                 </NextHop>
               </Dst>
               <Dst>
                 <dstId>RNC</dstId>
-                <dst>10.163.4.80/29</dst>
+                <dst>10.160.190.0/24</dst>
                 <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>MM5</dstId>
-                <dst>10.0.235.0/24</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_16</dstId>
-                <dst>10.29.32.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_17</dstId>
-                <dst>10.29.0.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_18</dstId>
-                <dst>10.29.16.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_19</dstId>
-                <dst>10.72.32.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_20</dstId>
-                <dst>10.72.40.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_21</dstId>
-                <dst>10.80.152.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_22</dstId>
-                <dst>10.29.48.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_23</dstId>
-                <dst>10.80.128.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_24</dstId>
-                <dst>10.97.88.0/23</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_25</dstId>
-                <dst>100.81.0.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_26</dstId>
-                <dst>100.81.48.0/21</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_27</dstId>
-                <dst>10.72.0.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_28</dstId>
-                <dst>10.29.64.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_29</dstId>
-                <dst>10.29.96.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
-                  <address>{LTE_S1_GW}</address>
-                  <adminDistance>1</adminDistance>
-                </NextHop>
-              </Dst>
-              <Dst>
-                <dstId>X2_30</dstId>
-                <dst>100.83.208.0/20</dst>
-                <NextHop>
-                  <nextHopId>1</nextHopId>
+                  <nextHopId>34</nextHopId>
                   <address>{LTE_S1_GW}</address>
                   <adminDistance>1</adminDistance>
                 </NextHop>

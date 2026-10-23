@@ -153,7 +153,7 @@ KK_SITE_BASIC_SCRIPT_6651 = """
             <TnPort xmlns="urn:com:ericsson:ecim:ReqTnPort">
               <tnPortId>{tnPortId}</tnPortId>
               <userLabel>{tnPortId}</userLabel>
-            </TnPort>
+            </TnPort>{extra_tn_ports}
           </FieldReplaceableUnit>
         </Equipment>
         <Transport>
@@ -172,12 +172,12 @@ KK_SITE_BASIC_SCRIPT_6651 = """
             <isTagged>true</isTagged>
             <userLabel>LTE_NR</userLabel>
             <vlanId>{OAM_vlan}</vlanId>
-          </VlanPort>
+          </VlanPort>{bridge_config}
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>LTE_NR</routerId>
             <InterfaceIPv6 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv6">
               <interfaceIPv6Id>NR</interfaceIPv6Id>
-              <encapsulation>ManagedElement=1,Transport=1,VlanPort=LTE_NR</encapsulation>
+              <encapsulation>ManagedElement=1,Transport=1,{lte_nr_encapsulation}</encapsulation>
               <mtu>1500</mtu>
               <userLabel>NR_S1U_OAM</userLabel>
               <AddressIPv6>
@@ -247,7 +247,7 @@ KK_SITE_BASIC_SCRIPT_6651 = """
             <routerId>LTE_NR</routerId>
             <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
               <interfaceIPv4Id>LTE</interfaceIPv4Id>
-              <encapsulation>ManagedElement=1,Transport=1,VlanPort=LTE_NR</encapsulation>
+              <encapsulation>ManagedElement=1,Transport=1,{lte_nr_encapsulation}</encapsulation>
               <mtu>1500</mtu>
               <userLabel>LTE_S1_CPUP</userLabel>
             </InterfaceIPv4>
@@ -441,7 +441,7 @@ KK_SITE_BASIC_SCRIPT_6655 = """
             <TnPort xmlns="urn:com:ericsson:ecim:ReqTnPort">
               <tnPortId>{tnPortId}</tnPortId>
               <userLabel>{tnPortId}</userLabel>
-            </TnPort>
+            </TnPort>{extra_tn_ports}
           </FieldReplaceableUnit>
         </Equipment>
         <Transport>
@@ -460,12 +460,12 @@ KK_SITE_BASIC_SCRIPT_6655 = """
             <isTagged>true</isTagged>
             <userLabel>LTE_NR</userLabel>
             <vlanId>{OAM_vlan}</vlanId>
-          </VlanPort>
+          </VlanPort>{bridge_config}
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>LTE_NR</routerId>
             <InterfaceIPv6 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv6">
               <interfaceIPv6Id>NR</interfaceIPv6Id>
-              <encapsulation>ManagedElement=1,Transport=1,VlanPort=LTE_NR</encapsulation>
+              <encapsulation>ManagedElement=1,Transport=1,{lte_nr_encapsulation}</encapsulation>
               <mtu>1500</mtu>
               <userLabel>NR_S1U_OAM</userLabel>
               <AddressIPv6>
@@ -535,7 +535,7 @@ KK_SITE_BASIC_SCRIPT_6655 = """
             <routerId>LTE_NR</routerId>
             <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
               <interfaceIPv4Id>LTE</interfaceIPv4Id>
-              <encapsulation>ManagedElement=1,Transport=1,VlanPort=LTE_NR</encapsulation>
+              <encapsulation>ManagedElement=1,Transport=1,{lte_nr_encapsulation}</encapsulation>
               <mtu>1500</mtu>
               <userLabel>LTE_S1_CPUP</userLabel>
             </InterfaceIPv4>
@@ -729,7 +729,7 @@ KK_SITE_BASIC_SCRIPT_6631 = """
             <TnPort xmlns="urn:com:ericsson:ecim:ReqTnPort">
               <tnPortId>{tnPortId}</tnPortId>
               <userLabel>{tnPortId}</userLabel>
-            </TnPort>
+            </TnPort>{extra_tn_ports}
           </FieldReplaceableUnit>
         </Equipment>
         <Transport>
@@ -748,12 +748,12 @@ KK_SITE_BASIC_SCRIPT_6631 = """
             <isTagged>true</isTagged>
             <userLabel>LTE_NR</userLabel>
             <vlanId>{OAM_vlan}</vlanId>
-          </VlanPort>
+          </VlanPort>{bridge_config}
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>LTE_NR</routerId>
             <InterfaceIPv6 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv6">
               <interfaceIPv6Id>NR</interfaceIPv6Id>
-              <encapsulation>ManagedElement=1,Transport=1,VlanPort=LTE_NR</encapsulation>
+              <encapsulation>ManagedElement=1,Transport=1,{lte_nr_encapsulation}</encapsulation>
               <mtu>1500</mtu>
               <userLabel>NR_S1U_OAM</userLabel>
               <AddressIPv6>
@@ -823,7 +823,7 @@ KK_SITE_BASIC_SCRIPT_6631 = """
             <routerId>LTE_NR</routerId>
             <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
               <interfaceIPv4Id>LTE</interfaceIPv4Id>
-              <encapsulation>ManagedElement=1,Transport=1,VlanPort=LTE_NR</encapsulation>
+              <encapsulation>ManagedElement=1,Transport=1,{lte_nr_encapsulation}</encapsulation>
               <mtu>1500</mtu>
               <userLabel>LTE_S1_CPUP</userLabel>
             </InterfaceIPv4>
@@ -1017,7 +1017,7 @@ KK_SITE_BASIC_SCRIPT_6353 = """
             <TnPort xmlns="urn:com:ericsson:ecim:ReqTnPort">
               <tnPortId>{tnPortId}</tnPortId>
               <userLabel>{tnPortId}</userLabel>
-            </TnPort>
+            </TnPort>{extra_tn_ports}
           </FieldReplaceableUnit>
         </Equipment>
         <Transport>
@@ -1036,12 +1036,12 @@ KK_SITE_BASIC_SCRIPT_6353 = """
             <isTagged>true</isTagged>
             <userLabel>LTE_NR</userLabel>
             <vlanId>{OAM_vlan}</vlanId>
-          </VlanPort>
+          </VlanPort>{bridge_config}
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>LTE_NR</routerId>
             <InterfaceIPv6 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv6">
               <interfaceIPv6Id>NR</interfaceIPv6Id>
-              <encapsulation>ManagedElement=1,Transport=1,VlanPort=LTE_NR</encapsulation>
+              <encapsulation>ManagedElement=1,Transport=1,{lte_nr_encapsulation}</encapsulation>
               <mtu>1500</mtu>
               <userLabel>NR_S1U_OAM</userLabel>
               <AddressIPv6>
@@ -1111,7 +1111,7 @@ KK_SITE_BASIC_SCRIPT_6353 = """
             <routerId>LTE_NR</routerId>
             <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
               <interfaceIPv4Id>LTE</interfaceIPv4Id>
-              <encapsulation>ManagedElement=1,Transport=1,VlanPort=LTE_NR</encapsulation>
+              <encapsulation>ManagedElement=1,Transport=1,{lte_nr_encapsulation}</encapsulation>
               <mtu>1500</mtu>
               <userLabel>LTE_S1_CPUP</userLabel>
             </InterfaceIPv4>
@@ -1305,7 +1305,7 @@ KK_SITE_BASIC_SCRIPT_6339 = """
             <TnPort xmlns="urn:com:ericsson:ecim:ReqTnPort">
               <tnPortId>{tnPortId}</tnPortId>
               <userLabel>{tnPortId}</userLabel>
-            </TnPort>
+            </TnPort>{extra_tn_ports}
           </FieldReplaceableUnit>
         </Equipment>
         <Transport>
@@ -1324,12 +1324,12 @@ KK_SITE_BASIC_SCRIPT_6339 = """
             <isTagged>true</isTagged>
             <userLabel>LTE_NR</userLabel>
             <vlanId>{OAM_vlan}</vlanId>
-          </VlanPort>
+          </VlanPort>{bridge_config}
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>LTE_NR</routerId>
             <InterfaceIPv6 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv6">
               <interfaceIPv6Id>NR</interfaceIPv6Id>
-              <encapsulation>ManagedElement=1,Transport=1,VlanPort=LTE_NR</encapsulation>
+              <encapsulation>ManagedElement=1,Transport=1,{lte_nr_encapsulation}</encapsulation>
               <mtu>1500</mtu>
               <userLabel>NR_S1U_OAM</userLabel>
               <AddressIPv6>
@@ -1399,7 +1399,7 @@ KK_SITE_BASIC_SCRIPT_6339 = """
             <routerId>LTE_NR</routerId>
             <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
               <interfaceIPv4Id>LTE</interfaceIPv4Id>
-              <encapsulation>ManagedElement=1,Transport=1,VlanPort=LTE_NR</encapsulation>
+              <encapsulation>ManagedElement=1,Transport=1,{lte_nr_encapsulation}</encapsulation>
               <mtu>1500</mtu>
               <userLabel>LTE_S1_CPUP</userLabel>
             </InterfaceIPv4>
@@ -1594,7 +1594,7 @@ KK_SITE_BASIC_SCRIPT_6303 = """
             <TnPort xmlns="urn:com:ericsson:ecim:ReqTnPort">
               <tnPortId>{tnPortId}</tnPortId>
               <userLabel>{tnPortId}</userLabel>
-            </TnPort>
+            </TnPort>{extra_tn_ports}
           </FieldReplaceableUnit>
         </Equipment>
         <Transport>
@@ -1613,12 +1613,12 @@ KK_SITE_BASIC_SCRIPT_6303 = """
             <isTagged>true</isTagged>
             <userLabel>LTE_NR</userLabel>
             <vlanId>{OAM_vlan}</vlanId>
-          </VlanPort>
+          </VlanPort>{bridge_config}
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>LTE_NR</routerId>
             <InterfaceIPv6 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv6">
               <interfaceIPv6Id>NR</interfaceIPv6Id>
-              <encapsulation>ManagedElement=1,Transport=1,VlanPort=LTE_NR</encapsulation>
+              <encapsulation>ManagedElement=1,Transport=1,{lte_nr_encapsulation}</encapsulation>
               <mtu>1500</mtu>
               <userLabel>NR_S1U_OAM</userLabel>
               <AddressIPv6>
@@ -1694,7 +1694,7 @@ KK_SITE_BASIC_SCRIPT_6303 = """
             </DnsClient>
             <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
               <interfaceIPv4Id>LTE</interfaceIPv4Id>
-              <encapsulation>ManagedElement=1,Transport=1,VlanPort=LTE_NR</encapsulation>
+              <encapsulation>ManagedElement=1,Transport=1,{lte_nr_encapsulation}</encapsulation>
               <mtu>1500</mtu>
               <userLabel>LTE_S1_CPUP</userLabel>
             </InterfaceIPv4>
@@ -1890,7 +1890,7 @@ KK_SITE_BASIC_SCRIPT_6630 = """
             <TnPort xmlns="urn:com:ericsson:ecim:ReqTnPort">
               <tnPortId>{tnPortId}</tnPortId>
               <userLabel>{tnPortId}</userLabel>
-            </TnPort>
+            </TnPort>{extra_tn_ports}
           </FieldReplaceableUnit>
         </Equipment>
         <Transport>
@@ -1909,12 +1909,12 @@ KK_SITE_BASIC_SCRIPT_6630 = """
             <isTagged>true</isTagged>
             <userLabel>LTE_NR</userLabel>
             <vlanId>{OAM_vlan}</vlanId>
-          </VlanPort>
+          </VlanPort>{bridge_config}
           <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
             <routerId>LTE_NR</routerId>
             <InterfaceIPv6 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv6">
               <interfaceIPv6Id>NR</interfaceIPv6Id>
-              <encapsulation>ManagedElement=1,Transport=1,VlanPort=LTE_NR</encapsulation>
+              <encapsulation>ManagedElement=1,Transport=1,{lte_nr_encapsulation}</encapsulation>
               <mtu>1500</mtu>
               <userLabel>NR_S1U_OAM</userLabel>
               <AddressIPv6>
@@ -1990,7 +1990,7 @@ KK_SITE_BASIC_SCRIPT_6630 = """
             </DnsClient>
             <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
               <interfaceIPv4Id>LTE</interfaceIPv4Id>
-              <encapsulation>ManagedElement=1,Transport=1,VlanPort=LTE_NR</encapsulation>
+              <encapsulation>ManagedElement=1,Transport=1,{lte_nr_encapsulation}</encapsulation>
               <mtu>1500</mtu>
               <userLabel>LTE_S1_CPUP</userLabel>
             </InterfaceIPv4>
