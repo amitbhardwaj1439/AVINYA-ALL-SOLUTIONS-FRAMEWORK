@@ -87,11 +87,11 @@ class ToolTab:
 
 
 class GplAuditTab(ToolTab):
-    """PRE/POST log comparison - the tool this app started life as."""
+    """PRE/POST kget comparison - gpl_audit_tool_V2's /run/: the full Database Audit, AMOS script only."""
 
     name = "GPL Audit"
-    description = ("Compare PRE and POST node logs and produce the GPL audit workbook "
-                   "plus correction scripts.")
+    description = ("Compare the PRE and POST kget_mom logs (every MO and parameter) and produce the GPL audit "
+                   "workbook plus the AMOS correction script. Several BBUs: one kget per node on each side.")
     run_label = "Run Audit"
 
     def build(self, parent) -> None:
@@ -102,69 +102,61 @@ class GplAuditTab(ToolTab):
 
         panels = ctk.CTkFrame(parent, fg_color="transparent")
         panels.pack(fill="both", expand=True)
-        self.pre = FilePanel(panels, "PRE logs")
+        self.pre = FilePanel(panels, "PRE kget logs", KGET_PATTERNS)
         self.pre.pack(side="left", fill="both", expand=True, padx=(0, 5))
-        self.post = FilePanel(panels, "POST logs")
+        self.post = FilePanel(panels, "POST kget logs", KGET_PATTERNS)
         self.post.pack(side="left", fill="both", expand=True, padx=(5, 0))
 
     def validate(self) -> None:
         if not self.pre.get_files():
-            raise ValueError("Add at least one PRE log file.")
+            raise ValueError("Add at least one PRE kget log.")
         if not self.post.get_files():
-            raise ValueError("Add at least one POST log file.")
+            raise ValueError("Add at least one POST kget log.")
 
     def collect(self) -> dict:
         return {"pre": self.pre.get_files(), "post": self.post.get_files(),
                 "out_dir": downloads_dir()}
 
     def run(self, params: dict, log) -> Result:
-        # These are contextvars and do NOT inherit into a new thread, so they
-        # must be set here, on the thread that will read them back.
-        from tools.gpl_audit.log_parser.config import (
-            set_output_file, set_post_files, set_pre_files)
-        from tools.gpl_audit.main import main as run_audit
+        from tools.database_audit.main import run_database_audit
 
-        set_pre_files(params["pre"])
-        set_post_files(params["post"])
-        # main() takes only the parent from this; it names the file itself.
-        set_output_file(params["out_dir"] / "GPL_AUDIT.xlsx")
-        zip_path = Path(asyncio.run(run_audit()))
+        zip_path = Path(run_database_audit([Path(p) for p in params["pre"]], [Path(p) for p in params["post"]],
+                                           params["out_dir"], xml=False))
         return Result("Audit complete - " + zip_path.name, zip_path)
 
 
 class GplParserTab(ToolTab):
-    """Parse-only: log files straight to Excel, no PRE/POST pairing.
+    """Parse-only: kget logs straight to Excel, no PRE/POST pairing.
 
     The desktop face of gpl_audit_tool_V2's /parse/ endpoint.
     """
 
     name = "GPL Parser"
-    description = ("Extract the raw parameters from one set of node logs into a workbook. "
-                   "No PRE/POST comparison and no audit verdict - just the parsed data.")
+    description = ("Extract the full site data from kget_mom logs into a workbook with the same sheets as the "
+                   "GPL / Database Audit report, several nodes (BBUs) together. No PRE/POST comparison - just the values.")
     run_label = "Parse Files"
 
     def build(self, parent) -> None:
         self._header(parent, self.description)
         self._output_note(parent)
-        self.inputs = FilePanel(parent, "Log files")
+        self.inputs = FilePanel(parent, "kget logs", KGET_PATTERNS)
         self.inputs.pack(fill="both", expand=True)
 
     def validate(self) -> None:
         if not self.inputs.get_files():
-            raise ValueError("Add at least one log file to parse.")
+            raise ValueError("Add at least one kget log to parse.")
 
     def collect(self) -> dict:
         return {"files": self.inputs.get_files(), "out_dir": downloads_dir()}
 
     def run(self, params: dict, log) -> Result:
-        # The parse pipeline reads its input through get_pre_files(); there is
-        # no POST side. Same wiring the /parse/ endpoint uses.
-        from tools.gpl_audit.log_parser.config import set_output_file, set_pre_files
-        from tools.gpl_audit.main import main_parse_only
+        from tools.database_audit.audit import site_token
+        from tools.database_audit.main import load_nodes
+        from tools.database_audit.site_data import write_site_data
 
-        set_pre_files(params["files"])
-        set_output_file(params["out_dir"] / "PARSED.xlsx")
-        excel_path = Path(asyncio.run(main_parse_only()))
+        nodes = load_nodes([Path(p) for p in params["files"]], "kget")
+        name = nodes[0].node if len(nodes) == 1 else (site_token(nodes[0].node) or nodes[0].node)
+        excel_path, _ = write_site_data(nodes, params["out_dir"] / f"{name}_Site_Data.xlsx")
         return Result("Parsed - " + excel_path.name, excel_path)
 
 
@@ -352,11 +344,12 @@ class IntegrationScriptingTab(ToolTab):
 
 
 class DatabaseAuditTab(ToolTab):
-    """Full PRE/POST comparison of two kget_mom logs - MNIT2's database_audit app."""
+    """Full PRE/POST comparison of kget_mom logs - MNIT2's database_audit app."""
 
     name = "Database Audit"
     description = ("Compare the PRE and POST kget_mom logs parameter by parameter (every MO and profile) and "
-                   "produce the audit workbook plus AMOS and XML correction scripts.")
+                   "produce the audit workbook plus AMOS and XML correction scripts. Several BBUs: one kget per "
+                   "node on each side (2 PRE + 2 POST, or 2 PRE + 1 POST).")
     run_label = "Run Database Audit"
 
     def build(self, parent) -> None:
@@ -372,9 +365,9 @@ class DatabaseAuditTab(ToolTab):
 
     def validate(self) -> None:
         if not self.pre.get_files():
-            raise ValueError("Add the PRE kget_mom log.")
+            raise ValueError("Add the PRE kget_mom log(s).")
         if not self.post.get_files():
-            raise ValueError("Add the POST kget_mom log.")
+            raise ValueError("Add the POST kget_mom log(s).")
 
     def collect(self) -> dict:
         return {"pre": self.pre.get_files(), "post": self.post.get_files(), "out_dir": downloads_dir()}

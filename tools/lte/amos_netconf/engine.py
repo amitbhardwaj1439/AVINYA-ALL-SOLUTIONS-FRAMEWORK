@@ -23,6 +23,11 @@ SKIP_SYSTEM = re.compile(r"^SystemFunctions=1,(Pm=1,PmGroup|PmEventM=1,EventProd
 UNKNOWN = object()
 GNB_NS = {"GNBDU", "GNBCUCP", "GNBCUUP"}
 SYSTEM_IDS = {"1", "Default", "Base"}          # ids the node uses for the MOs it creates itself
+# other MOs the node creates itself below the gNodeB functions (in the KK/AS/NE kgets, made by no script):
+# UlServiceDefinitionUeCfg=VoNR (the VoNR scripts only set its UlService=1) and UeCC=1,UlCgSwitchCfg=<cell> for every
+# new NRCellDU (referenced by UlCgSwitch=<cell>,UlCgSwitchUeCfg=Base) - nothing mandatory, so merge works either way
+SYSTEM_RDNS = {"UlServiceDefinitionUeCfg=VoNR"}
+CELL_SYSTEM_MOS = {"NRCellDU": ("UeCC=1", "UlCgSwitchCfg")}
 # classes of the reference kget that are not made by the node at integration: neighbour frequencies/relations of the
 # reference site (EUtranFrequency=39175 ...) and S1-U paths the node only learns from live traffic
 NOT_SYSTEM = {"EUtranFrequency", "EUtranFreqRelation", "TermPointToSGW", "GtpPath"}
@@ -176,6 +181,11 @@ class Model:
                 info = self.mom.attr(c["key"], a)
                 if info:
                     c["attrs"].setdefault(info[0], v)
+        if cls in CELL_SYSTEM_MOS and "," in ldn:
+            under, made = CELL_SYSTEM_MOS[cls]
+            parent = f"{ldn.rsplit(',', 1)[0]},{under}"
+            if parent.lower() in self.mos:
+                self._raw_add(f"{parent},{made}={ldn.rsplit('=', 1)[1]}", "system")
         return mo
 
     def _raw_add(self, ldn, origin):
@@ -1188,7 +1198,7 @@ def _system_templates(mom, templates):
         ns = set(mom.by_class.get(anchor.lower(), {}))
         gnb = bool(ns) and ns <= GNB_NS
         out[anchor] = [(r, v) for r, v in lst
-                       if (not gnb or all(p.partition("=")[2] in SYSTEM_IDS for p in r.split(",")))
+                       if (not gnb or all(p.partition("=")[2] in SYSTEM_IDS or p in SYSTEM_RDNS for p in r.split(",")))
                        and not any(p.partition("=")[0] in NOT_SYSTEM for p in r.split(","))]
     return out
 

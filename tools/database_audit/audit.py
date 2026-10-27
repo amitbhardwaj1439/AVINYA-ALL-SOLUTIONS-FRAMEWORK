@@ -4,9 +4,13 @@ Every MO of both logs is matched by its LDN (below ManagedElement) and every con
 (readOnly state is only compared where the audit-only sections ask for it). PRE is the reference, POST is the site
 being corrected. When PRE and POST are different sites the PRE names are moved onto the POST site first (node
 name, site token in cell/profile names, own eNBId/gNBId in relation ids), so 'the same' MO compares as one.
+
+A site of several BBUs (one kget per node): pair_bbus gives every POST node its PRE node(s). Two PRE BBUs on one POST
+node (BBU swap / consolidation) are each moved onto the POST node and merged into one PRE before the comparison.
 """
 from __future__ import annotations
 
+import itertools
 import re
 from collections import OrderedDict
 from dataclasses import dataclass, field
@@ -129,10 +133,13 @@ def _subst(v, rules):
 
 
 def site_token(node: str) -> str:
-    """'KK-NLAAZAD1-1' -> 'AAZAD1' (same rule as the LTE tool's site id)"""
+    """'KK-NLAAZAD1-1' -> 'AAZAD1', LTE-only BBU 'KK-LMYE883-1' -> 'MYE883' (technology prefix NL / L taken off)"""
     chunks = str(node).split("-")
     if len(chunks) >= 2 and chunks[1]:
         c = chunks[1]
+        m = re.match(r"^(NL|L)(?=[A-Za-z]{2})", c)
+        if m:
+            return c[m.end():]
         return c[2:] if c[:2].isalpha() and len(c) > 2 else c
     return ""
 
@@ -195,6 +202,9 @@ class AuditResult:
     mapping: list = field(default_factory=list)         # (from, to) applied to PRE
     template_cells: list = field(default_factory=list)  # (lone POST cell, [PRE cells], MOs checked, values that differ)
     node_managed: int = 0                               # relation values rewritten by the node - not compared
+    pres: list = field(default_factory=list)            # the PRE node(s) of this POST node
+    bbu_links: int = 0                                  # links between the PRE BBUs (one node in POST) - not compared
+    bbu_diffs: list = field(default_factory=list)       # values the PRE BBUs have different (first PRE BBU taken)
 
     @property
     def node(self) -> str:
@@ -293,7 +303,7 @@ def _template_cells(pre_mos, post_mos) -> list:
             rels = mine if rels is None else rels & mine
         synth, differ = OrderedDict(), 0
         own = cell.rsplit("=", 1)[1]
-        for rel in sorted(rels, key=lambda r: r.count(",")):
+        for rel in sorted(rels, key=lambda r: (r.count(","), r)):   # set: same order on every run
             if set(classes_of(rel.lstrip(","))) & (CELL_RELATIONS | NEIGHBOURS):
                 continue
             vals = [pre_mos[t + rel] for t in tpl]
@@ -346,41 +356,163 @@ def _pair_relations(pre_mos, post_mos) -> list:
     return [(a[0], by_post[g][0]) for g, a in by_pre.items() if len(a) == 1 and len(by_post.get(g, [])) == 1]
 
 
-def run_audit(pre: KgetData, post: KgetData) -> AuditResult:
-    cross = pre.node != post.node
+def _apply(mos, rules):
+    return OrderedDict((_subst(k, rules), _subst(v, rules)) for k, v in mos.items()) if rules else mos
+
+
+def _drop_bbu_links(mos, enbs: set, gnbs: set):
+    """two PRE BBUs on one POST node: what one PRE BBU defines of the other (ExternalENodeBFunction /
+    ExternalGNBCUCPFunction with the other BBU's eNBId / gNBId, their subtree, the relations pointing into them) are
+    own cells on the POST node - left out, else the audit would create a neighbour definition of the node itself"""
+    drop = [k for k, v in mos.items()
+            if (classes_of(k)[-1] == "ExternalENodeBFunction" and text(v.get("eNBId", "")).lstrip("0") in enbs)
+            or (classes_of(k)[-1] == "ExternalGNBCUCPFunction" and text(v.get("gNBId", "")).lstrip("0") in gnbs)]
+    if not drop:
+        return mos, 0
+    under = tuple(d + "," for d in drop)
+    drop = set(drop)
+
+    def gone(k, v):
+        if k in drop or k.startswith(under):
+            return True
+        ref = RELATION_TARGET.get(classes_of(k)[-1])
+        t = text(v.get(ref, "")) if ref else ""
+        return bool(t) and (t in drop or t.startswith(under))
+    kept = OrderedDict((k, v) for k, v in mos.items() if not gone(k, v))
+    return kept, len(mos) - len(kept)
+
+
+def _merge_bbus(parts, nodes):
+    """PRE BBUs moved onto one POST node -> one PRE: an MO both have gets the first BBU's values plus what only the
+    other has; FeatureState ACTIVATED on any BBU stays ACTIVATED (the one node needs every feature either BBU used).
+    -> (merged MOs, [(ldn, attr, taken node, taken value, other node, other value)])"""
+    merged, origin, diffs = OrderedDict(), {}, []
+    for node, mos in zip(nodes, parts):
+        for k, v in mos.items():
+            cur = merged.get(k)
+            if cur is None:
+                merged[k] = OrderedDict(v)
+                origin[k] = node
+                continue
+            for a, x in v.items():
+                if a not in cur:
+                    cur[a] = x
+                elif text(cur[a]) != text(x):
+                    if a == "featureState" and "(ACTIVATED)" in text(x):
+                        diffs.append((k, a, node, text(x), origin[k], text(cur[a])))
+                        cur[a] = x
+                    else:
+                        diffs.append((k, a, origin[k], text(cur[a]), node, text(x)))
+    return merged, diffs
+
+
+def merged_pre(pres: list) -> KgetData:
+    """one KgetData standing for several PRE BBUs (report / script headers): node names joined, MOs of all"""
+    if len(pres) == 1:
+        return pres[0]
+    mos = OrderedDict()
+    for p in pres:
+        for k, v in p.mos.items():
+            mos.setdefault(k, v)
+    return KgetData(path=pres[0].path, node=" + ".join(p.node for p in pres), mos=mos, mom=pres[0].mom,
+                    mom_from_log=pres[0].mom_from_log, preconditions=pres[0].preconditions,
+                    release=", ".join(dict.fromkeys(p.release for p in pres if p.release)))
+
+
+# ---------------------------------------------------------------------------------------------------- BBU pairing
+def _cell_signature(data: KgetData) -> set:
+    """(cell class, carrier, sector) of every cell - what a PRE and a POST BBU of the same layers have in common"""
+    out = set()
+    for k, v in data.mos.items():
+        if CELL_CLASSES.match(k) and ",NRCellCU=" not in k:
+            freq = text(v.get("earfcndl") or v.get("earfcn") or v.get("arfcnDL") or v.get("ssbFrequency") or "")
+            sector = re.search(r"_([A-Za-z0-9])$", k)
+            out.add((classes_of(k)[-1], freq, sector.group(1).upper() if sector else ""))
+    return out
+
+
+def _bbu_score(pre: KgetData, post: KgetData) -> int:
+    if pre.node == post.node:
+        return 10 ** 6
+    a, b = _cell_signature(pre), _cell_signature(post)
+    score = 10 * len(a & b) + len({x[:2] for x in a} & {x[:2] for x in b}) + len({x[0] for x in a} & {x[0] for x in b})
+    pt, qt = site_token(pre.node), site_token(post.node)
+    names = {k.replace(pt, qt) if pt and qt else k for k in pre.mos if CELL_CLASSES.match(k)}
+    score += 3 * len(names & {k for k in post.mos if CELL_CLASSES.match(k)})
+    if pre.node.rsplit("-", 1)[-1] == post.node.rsplit("-", 1)[-1]:     # KK-NLHSN013-1 / KK-NLHSN143-1
+        score += 1
+    return score
+
+
+def pair_bbus(pres: list, posts: list) -> list:
+    """-> [(POST node, [its PRE nodes])]: every POST BBU gets the PRE BBU with the same cells (layers, carriers,
+    sectors; same node name wins), PRE BBUs left over join the POST BBU they fit best (2 PRE BBUs -> 1 POST BBU)"""
+    if len(pres) < len(posts):
+        raise ValueError(f"POST has {len(posts)} nodes ({', '.join(p.node for p in posts)}) but PRE only {len(pres)} "
+                         f"({', '.join(p.node for p in pres)}) - upload the PRE kget of every BBU.")
+    score = [[_bbu_score(p, q) for q in posts] for p in pres]
+    best = max(itertools.permutations(range(len(pres)), len(posts)),
+               key=lambda pick: sum(score[i][j] for j, i in enumerate(pick)))
+    groups = [[pres[i]] for i in best]
+    for i, p in enumerate(pres):
+        if i not in best:
+            groups[max(range(len(posts)), key=lambda j: score[i][j])].append(p)
+    return [(q, sorted(g, key=lambda p: (p.node != q.node, -len(p.mos)))) for q, g in zip(posts, groups)]
+
+
+def run_audit(pre, post: KgetData) -> AuditResult:
+    """pre: the PRE KgetData, or a list of them (the PRE BBUs of this one POST node, the first one's values win)"""
+    pres = [pre] if isinstance(pre, KgetData) else list(pre)
+    cross = any(p.node != post.node for p in pres)
     rules, mapping = [], []
-    if cross:
-        rules.append((re.compile(re.escape(pre.node)), post.node))
-        mapping.append((pre.node, post.node))
-        pt, qt = site_token(pre.node), site_token(post.node)
-        if len(pt) >= 4 and len(qt) >= 4 and pt != qt:
+    for p in pres:
+        if p.node != post.node:
+            rules.append((re.compile(re.escape(p.node)), post.node))
+            mapping.append((p.node, post.node))
+    for p in pres:
+        pt, qt = site_token(p.node), site_token(post.node)
+        if len(pt) >= 4 and len(qt) >= 4 and pt != qt and (pt, qt) not in mapping:
             rules.append((re.compile(re.escape(pt)), qt))
             mapping.append((pt, qt))
-    named = OrderedDict((_subst(k, rules), _subst(v, rules)) for k, v in pre.mos.items()) if rules else pre.mos
-    cell_renames = _pair_cells(named, post.mos, site_token(post.node))
+    links, parts = 0, []
+    for p in pres:
+        mos = p.mos
+        if len(pres) > 1:
+            others = [_own_ids(o) for o in pres if o is not p]
+            mos, n = _drop_bbu_links(mos, {e.lstrip("0") for e, g in others if e}, {g.lstrip("0") for e, g in others if g})
+            links += n
+        parts.append(_apply(mos, rules))
+    view = OrderedDict((k, None) for mos in parts for k in mos)
+    cell_renames = _pair_cells(view, post.mos, site_token(post.node))
     if cell_renames:
         # the cell name wherever it is a whole word: cell LDNs and ids made from it (UeCC=1,CgSwitch=<cell name>)
         names = sorted({(a.rsplit("=", 1)[1], b.rsplit("=", 1)[1]) for a, b in cell_renames}, key=lambda ab: -len(ab[0]))
         cell_rules = [(re.compile(rf"(?<![\w-]){re.escape(a)}(?![\w-])"), b) for a, b in names]
-        named = OrderedDict((_subst(k, cell_rules), _subst(v, cell_rules)) for k, v in named.items())
+        parts = [_apply(mos, cell_rules) for mos in parts]
         mapping += [(a.rsplit(",", 1)[-1], b.rsplit(",", 1)[-1]) for a, b in cell_renames]
     if cross:
         # own eNBId / gNBId / cell numbers wherever they appear as a whole number: relation ids (40445-<id>-12,
-        # auto404_45_2_<id>, auto<ECI>), struct members (pciDetectingCell enbId=<id>), plain values (eNodeBId)
-        (pe, pg), (qe, qg) = _own_ids(pre), _own_ids(post)
-        nums = []
-        pre_cells, post_cells = _own_cell_numbers(named, pe), _own_cell_numbers(post.mos, qe)
-        for k, a in pre_cells.items():
-            b = post_cells.get(k)
-            if b and a != b:
-                nums.append((a, b))
-        nums += [(a, b) for a, b in ((pe, qe), (pg, qg)) if a and b and a != b and len(a) >= 4]
-        nums.sort(key=lambda ab: -len(ab[0]))          # longest first: an ECI never loses digits to the eNBId rule
+        # auto404_45_2_<id>, auto<ECI>), struct members (pciDetectingCell enbId=<id>), plain values (eNodeBId);
+        # several PRE BBUs: the numbers of every one of them, in all of them (a relation of one BBU to the other)
+        qe, qg = _own_ids(post)
+        post_cells = _own_cell_numbers(post.mos, qe)
+        nums, ids = OrderedDict(), []
+        for p, mos in zip(pres, parts):
+            pe, pg = _own_ids(p)
+            for k, a in _own_cell_numbers(mos, pe).items():
+                b = post_cells.get(k)
+                if b and a != b:
+                    nums.setdefault(a, b)
+            ids += [(a, b) for a, b in ((pe, qe), (pg, qg)) if a and b and a != b and len(a) >= 4]
+        for a, b in ids:
+            nums.setdefault(a, b)
+        nums = sorted(nums.items(), key=lambda ab: -len(ab[0]))    # longest first: an ECI never loses digits to the eNBId rule
         if nums:
             num_rules = [_number_rule(a, b) for a, b in nums]
-            named = OrderedDict((_subst(k, num_rules), _subst(v, num_rules)) for k, v in named.items())
-            mapping += [(a, b) for a, b in nums if (a, b) in ((pe, qe), (pg, qg))]
-            mapping.append((f"{sum(1 for a, b in nums if (a, b) not in ((pe, qe), (pg, qg)))} own cell ECI/NCI", "POST values"))
+            parts = [_apply(mos, num_rules) for mos in parts]
+            mapping += [ab for ab in nums if ab in ids]
+            mapping.append((f"{sum(1 for ab in nums if ab not in ids)} own cell ECI/NCI", "POST values"))
+    named, diffs = _merge_bbus(parts, [p.node for p in pres]) if len(parts) > 1 else (parts[0], [])
     # an MO whose id differs only in case is the same profile (PRE PrefUeGroupSelectionProfile=QCI6 = POST qci6: the
     # node refuses a second one with the same prefUeGroupId/priority) - PRE takes the POST id, references included
     post_lower = {k.lower(): k for k in post.mos}
@@ -401,8 +533,9 @@ def run_audit(pre: KgetData, post: KgetData) -> AuditResult:
     templates = _template_cells(pre_mos, post.mos)
     for cell, tpl, synth, differ in templates:
         pre_mos.update(synth)
-    res = AuditResult(pre=pre, post=post, pre_mos=pre_mos, cross_site=cross, mapping=mapping,
-                      template_cells=[(c, t, len(s), d) for c, t, s, d in templates])
+    res = AuditResult(pre=merged_pre(pres), post=post, pre_mos=pre_mos, cross_site=cross, mapping=mapping,
+                      template_cells=[(c, t, len(s), d) for c, t, s, d in templates], pres=pres,
+                      bbu_links=links, bbu_diffs=diffs)
     enb, gnb = _own_ids(post)
     own = {x.lstrip("0") for x in [enb, gnb, *_own_cell_numbers(post.mos, enb).values()] if x}
     mom = post.mom

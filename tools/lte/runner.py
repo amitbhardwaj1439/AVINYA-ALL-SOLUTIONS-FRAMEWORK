@@ -686,7 +686,7 @@ def kk_lte_config_xml_gsm(node, site_row, node_cells_df, sef_branches=None):
     - Abis transport: Router=ABIS with InterfaceIPv4/IPv6=ABIS (by the ABIS_IP address type), default route to ABIS_GW,
       on Bridge=ABIS_N when the SiteBasic made it (Bridge_tnPortId + Bridge_ABIS_vlan), else on a new
       VlanPort {tnPortId}_ABIS (ABIS_vlan)
-    - BtsFunction=1 + one GsmSector per L900 (F8) cell: name = site part of the cell name (KK_E_F8_OM_MYE883A_A ->
+    - BtsFunction=1 + one GsmSector per L900 (F8) cell: name = site ID of the node + sector letter (KK-LMYE883-1 + _A ->
       MYE883A), AbisIp=1 to the BSC broker (Site_Basic Broker_IP, else KK_BSC_BROKER_IPV4/IPV6), KK_GSM_TRX_PER_SECTOR Trx on the cell's SectorEquipmentFunction
       (Rx on its first two RfBranches from SiteEquipment, Tx on the first); created LOCKED, unlocked in the last RPC
     """
@@ -734,12 +734,16 @@ def kk_lte_config_xml_gsm(node, site_row, node_cells_df, sef_branches=None):
         f"<Address{ip}>\n<address{ip}Id>ABIS</address{ip}Id>\n<address>{abis_ip}</address>\n</Address{ip}>\n"
         f"</Interface{ip}>\n{route}</Router>\n</Transport>\n")))
 
+    # GSM sector name = site ID of the node + sector letter of the cell (KK-LMYE757-2 + KK_E_F8_OM_MYE460A_A -> MYE757A):
+    # the L900 cells can keep an old site's name (MYE757 node run 2026-10-25), the GSM sector must not
+    site = re.match(r"^[A-Z]+-(?:NL|L)?([A-Z0-9]+)-\d+$", node)
     sectors = []
     for _, row in node_cells_df.iterrows():
         cell = str(row["eUtranCellFDDId"])
         sef = str(row["sectorEquipmentFunctionId"]).strip()
         if "_F8_" in cell and len(cell.split("_")) > 2:
-            sectors.append((cell.split("_")[-2], sef, re.sub(r"\D", "", sef)))
+            name = site.group(1) + cell.split("_")[-1] if site else cell.split("_")[-2]
+            sectors.append((name, sef, re.sub(r"\D", "", sef)))
     if not sectors:
         print(f"{node}: ABIS_IP given but no L900 (F8) cell - Abis transport only, no GsmSector / Trx")
         return rpcs
@@ -791,6 +795,17 @@ def kk_site_equipment_rf_branches(commissioning_dir):
     return {sef: re.findall(r"<rfBranchRef>\s*([^<]+?)\s*</rfBranchRef>", body)
             for sef, body in re.findall(r"<sectorEquipmentFunctionId>([^<]+)</sectorEquipmentFunctionId>(.*?)</SectorEquipmentFunction>",
                                         text, re.S)}
+
+
+def kk_site_basic_has_dns_client(commissioning_dir):
+    """True when the newest 01 SiteBasic of the node creates DnsClient (KK 6303 / 6630 templates; KK-LINDI20-1 run:
+    04 'DnsClient=1 already exist' rolled back the ENodeBFunction RPC and every RPC after it)."""
+    found = [os.path.join(commissioning_dir, f) for f in os.listdir(commissioning_dir) if f.startswith("01_") and "SiteBasic" in f] \
+        if commissioning_dir and os.path.isdir(commissioning_dir) else []
+    if not found:
+        return False
+    with open(max(found, key=os.path.getmtime), encoding="utf-8", errors="replace") as file:
+        return "<DnsClient" in file.read()
 
 
 def kk_sector_carrier_rf_branches(node, node_cells_df, sef_branches):
@@ -879,8 +894,11 @@ def write_kk_lte_config_xml(lte_dir, node, enb_id, node_cells_df, current_time, 
     parts.append(KK_LTE_CONFIG_XML_EXTERNAL_ALARM.format(node=node, fru=fru_id))
     parts.extend(kk_lte_config_xml_gsm(node, site_row, node_cells_df, sef_branches))     # 2G+4G BBU only
     parts.append(KK_LTE_CONFIG_XML_CLOSE)
+    xml_text = "".join(parts)
+    if kk_site_basic_has_dns_client(commissioning_dir):     # SiteBasic made it: only set dscp (merge), keep its servers
+        xml_text = xml_text.replace('<DnsClient xc:operation="create">', "<DnsClient>")
     with open(os.path.join(lte_dir, f"04_{node}_LTE_Config_{current_time}.xml"), "w") as file:
-        file.write(_kk_lte_config_rpc_order("".join(parts)))
+        file.write(_kk_lte_config_rpc_order(xml_text))
 
 
 def _kk_lte_config_rpc_order(xml_text):

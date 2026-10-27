@@ -18,7 +18,7 @@ from tools.gpl_audit.log_parser.output import (_TABLE_GAP_ROWS, _TITLE_ALIGN, _T
                                                  _style_block)
 
 from .audit import (CELL_REL, EUTRAN_FREQ, EUTRAN_FREQ_REL, FEATURE, GERAN_FREQ_REL, GUTRAN_FREQ_REL, LTE_GPL, NR_GPL,
-                    CELL_CLASSES, OTHER, SSB_FREQ, AuditResult, classes_of, section_of, text)
+                    CELL_CLASSES, OTHER, SSB_FREQ, AuditResult, classes_of, section_of, site_token, text)
 from .corrections import MISSING, Plan, count_commands
 
 WIDE_SHEETS = OrderedDict([
@@ -107,8 +107,30 @@ def build_sheets(res: AuditResult, plan: Plan) -> "OrderedDict[str, list[tuple[s
         return out
     pc, qc = cells(res.pre, None), cells(res.post, None)
     rows = []
+    if len(res.pres) > 1:
+        # several PRE BBUs (cellIds repeat between them): PRE cell -> POST cell of the same name on the POST site, else
+        # the same cellId
+        qt, by_name = site_token(res.post.node), {q[1]: c for c, q in qc.items()}
+        pre_cells = [(cid, p, site_token(pre.node)) for pre in res.pres
+                     for cid, p in sorted(cells(pre, None).items(), key=lambda x: (len(x[0]), x[0]))]
+        match = [by_name.get(p[1].replace(pt, qt) if pt and qt else p[1]) for cid, p, pt in pre_cells]
+        used = set(match)
+        for n, (cid, p, pt) in enumerate(pre_cells):
+            if match[n] is None and cid in qc and cid not in used:
+                match[n] = cid
+                used.add(cid)
+            q = qc.get(match[n], ("NA", "NA", "NA"))
+            rows.append({"Pre SiteId": p[0], "Pre CellName": p[1], "Pre eNBID": p[2], "cellId": cid,
+                         "Post SiteId": q[0], "Post eNBID": q[2], "Post CellName": q[1]})
+        pc = {c: q for c, q in qc.items() if c in used}
     for cid in sorted(set(pc) | set(qc), key=lambda x: (len(x), x)):
-        p, q = pc.get(cid, ("NA", "NA", "NA")), qc.get(cid, ("NA", "NA", "NA"))
+        if len(res.pres) > 1:
+            if cid in pc:
+                continue
+            p = ("NA", "NA", "NA")
+        else:
+            p = pc.get(cid, ("NA", "NA", "NA"))
+        q = qc.get(cid, ("NA", "NA", "NA"))
         rows.append({"Pre SiteId": p[0], "Pre CellName": p[1], "Pre eNBID": p[2], "cellId": cid,
                      "Post SiteId": q[0], "Post eNBID": q[2], "Post CellName": q[1]})
     summary = pd.DataFrame(rows, columns=["Pre SiteId", "Pre CellName", "Pre eNBID", "cellId", "Post SiteId", "Post eNBID", "Post CellName"])
@@ -147,6 +169,11 @@ def build_sheets(res: AuditResult, plan: Plan) -> "OrderedDict[str, list[tuple[s
              (f"{len(pre_only_cells)}: " + ", ".join(pre_only_cells) +
               " - cells come from the integration scripts (RF data / radio); use a PRE site with the same cell "
               "configuration to audit them") if pre_only_cells else "none")]
+    if len(res.pres) > 1:
+        info += [("PRE BBUs merged onto this POST node", ", ".join(p.node for p in res.pres)),
+                 ("Links between those PRE BBUs (own cells on the one POST node) - not compared", res.bbu_links),
+                 ("Values the PRE BBUs have different (first PRE BBU taken, FeatureState ACTIVATED wins) - sheet "
+                  "PRE_BBU_DIFFERENCES", len(res.bbu_diffs))]
     info += [(f"Correction commands: {s}", n) for s, n in cmd.items()]
     sheets["Summary"] = [("", summary), ("Parameter Status Summary", pd.DataFrame(counts)),
                          ("Audit Information", pd.DataFrame(info, columns=["Item", "Value"]))]
@@ -266,12 +293,39 @@ def build_sheets(res: AuditResult, plan: Plan) -> "OrderedDict[str, list[tuple[s
     if rows:
         sheets["OTHER_MO_AUDIT"] = [("", pd.DataFrame(rows))]
 
+    # two PRE BBUs on one POST node: where they disagree, which value the audit took
+    rows = [{"Node_ID": node, "MO": ldn, "Section": section_of(ldn), "Parameter": a, "Taken from": src, "Taken value": _show(v),
+             "Other PRE BBU": other, "Other value": _show(w)} for ldn, a, src, v, other, w in res.bbu_diffs]
+    if rows:
+        sheets["PRE_BBU_DIFFERENCES"] = [("", pd.DataFrame(rows))]
+
     # what the correction scripts leave out and why (no longer written as comments into the scripts)
     rows = [{"Node_ID": node, "Correction Section": sec, "Not scripted": note} for sec, notes in plan.notes.items()
             for note in notes]
     if rows:
         sheets["NOT_SCRIPTED"] = [("", pd.DataFrame(rows))]
     return sheets
+
+
+def merge_sheets(per_node: list) -> "OrderedDict[str, list[tuple[str, pd.DataFrame]]]":
+    """build_sheets of several POST nodes (site of several BBUs) -> one report: tables of the same sheet and title
+    one under the other, Node_ID column first (added where a table has none)"""
+    if len(per_node) == 1:
+        return per_node[0][1]
+    out = OrderedDict()
+    for node, sheets in per_node:
+        for sheet, tables in sheets.items():
+            dst = out.setdefault(sheet, [])
+            for title, df in tables:
+                if "Node_ID" not in df.columns:
+                    df = df.copy()
+                    df.insert(0, "Node_ID", node)
+                at = next((n for n, (t, _) in enumerate(dst) if t == title), None)
+                if at is None:
+                    dst.append((title, df))
+                else:
+                    dst[at] = (title, pd.concat([dst[at][1], df], ignore_index=True).fillna(NOT_ON_MO))
+    return out
 
 
 def _write_tables(writer, sheet, tables):
