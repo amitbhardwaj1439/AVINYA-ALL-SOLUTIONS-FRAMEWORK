@@ -450,6 +450,7 @@ set ENodeBFunction=1,AnrFunction=1 removeNcellTime   1
 set ENodeBFunction=1,AnrFunction=1 removeNenbTime    1 
 set ENodeBFunction=1,AnrFunction=1 removeNrelTime 7
 set AnrFunction=1 probCellDetectMedHoSuccThres 50
+set ENodeBFunction=1,AnrFunction=1 pciConflictCellSelection 3
 set AnrFunction=1,AnrFunctionEUtran=1 cellAddRsrpThresholdEutran -1240
 set AnrFunction=1,AnrFunctionEUtran=1 cellAddRsrqThresholdEutran -1530
 set ENodeBFunction=1,AnrFunction=1,AnrFunctionUtran=1 anrStateUtran 1
@@ -469,7 +470,12 @@ set AnrPciConflictDrxProfile=1                              anrPciConflictDrxIna
 set AnrPciConflictDrxProfile=1                              anrPciConflictOnDurationTimer 4
 set ENodeBFunction=1,AnrFunction=1,AnrFunctionNR=1          anrStateNR 1
 set ENodeBFunction=1,AnrFunction=1,AnrFunctionNR=1          gNodebIdLength 26
+set ENodeBFunction=1,AnrFunction=1,AnrFunctionNR=1          cellAddRsrpThresholdNR -110
+set ENodeBFunction=1,AnrFunction=1,AnrFunctionNR=1          maxNoOfUeForPciConflictDetect 5
+set ENodeBFunction=1,AnrFunction=1,AnrFunctionNR=1          pciConflictDetectionType 3
+set ENodeBFunction=1,AnrFunction=1,AnrFunctionNR=1          supportNrFreqChange 1
 set ENodeBFunction=1 endcX2IpAddrViaS1Active 1
+set ENodeBFunction=1 pciConflictReportType 2
 
 #CarrierAggFunction
 
@@ -584,6 +590,8 @@ set EUtranCellFDD                                 servOrPrioTriggeredErabAction 
 set EUtranCellFDD  dlInternalChannelBandwidth 0
 set EUtranCellFDD  ulInternalChannelBandwidth 0
 set EUtranCellFDD  beamWeightSet16Tr 0
+set EUtranCellFDD subscriptionRatioHighThresh 16000
+set EUtranCellTDD subscriptionRatioHighThresh 16000
 set EUtranCellFDD adaptiveCfiHoProhibit 0
 set EUtranCellFDD enableSinrUplinkClpc 1
 set EUtranCellFDD pdcchCovImproveQci1 true
@@ -4848,7 +4856,7 @@ fi
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 
 set  GNBDUFunction=1,RadioBearerTable=1,SignalingRadioBearer=1 tPollRetransmitUl  80                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
 set  GNBDUFunction=1,RadioBearerTable=1,SignalingRadioBearer=1 tPollRetransmitDl  80                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
-set ,CaSCellHandlingUeCfg=Base sCellActDeactDataThres -1                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
+set ,CaSCellHandlingUeCfg=Base sCellActDeactDataThres 100                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
 set ,CaSCellHandlingUeCfg=Base sCellActDeactDataThresHyst 90                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 
 cvcu                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
@@ -4867,6 +4875,7 @@ set GNBDUFunction=1,UeCC=1,RadioLinkControl=1,DrbRlc=Default,DrbRlcUeCfg=Base dl
 set GNBDUFunction=1,UeCC=1,RadioLinkControl=1,DrbRlc=Default,DrbRlcUeCfg=Base ulMaxRetxThreshold 32                                                                                                                                                                                                                                                                                                                                                                                                                                                             
 set GNBDUFunction=1,UeCC=1,RadioLinkControl=1,DrbRlc=Default,DrbRlcUeCfg=Base tPollRetransmitUl 80                                                                                                                                                                                                                                                                                                                                                                                                                                                              
 set GNBDUFunction=1,UeCC=1,RadioLinkControl=1,DrbRlc=Default,DrbRlcUeCfg=Base tPollRetransmitDl 80                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+set GNBDUFunction=1,UeCC=1,RadioLinkControl=1,DrbRlc=Default,DrbRlcUeCfg=Base rlcSNLength 12
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 
 #############Set 2W with OR site only###############                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
@@ -5063,7 +5072,7 @@ set NRCellDU=.* pZeroNomPucch -114
 set NRCellDU=.* pZeroNomPuschGrant 1000
 set NRCellDU=.* pZeroNomSrs -110
 set NRCellDU=.* rachPreambleRecTargetPower -110
-set NRCellDU=.* rachPreambleTransMax 20
+set NRCellDU=.* rachPreambleTransMax 10
 set GNBCUCPFunction=1,AnrFunction=1    removeNrelTime    7
 set IntraFreqMC=1,IntraFreqMCCellProfile=1,IntraFreqMCCellProfileUeCfg=Base rsrpBetterSpCell hysteresis=10
 set NRCellDU=.* secondaryCellOnly false
@@ -5208,7 +5217,7 @@ set McpcPSCellProfileUeCfg=Base  rsrpSearchZone threshold=-112
 set IntraFreqMCCellProfileUeCfg=Base rsrpSCellCoverage threshold=-117                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           
 Set UePolicyOptimization=1        t320    180                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
 Set UeCA=1,CaSCellHandling=Default,CaSCellHandlingUeCfg=Base sCellActDeactDataThresHyst 90                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
-Set UeCA=1,CaSCellHandling=Default,CaSCellHandlingUeCfg=Base sCellActDeactDataThres -1                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
+Set UeCA=1,CaSCellHandling=Default,CaSCellHandlingUeCfg=Base sCellActDeactDataThres 100                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
 Set McpcPSCellProfile=Default,McpcPSCellProfileUeCfg=Base rsrpCriticalEnabled true                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
 Set IntraFreqMCCellProfile=1,IntraFreqMCCellProfileUeCfg=Base  rsrpBetterSpCell hysteresis=10,offset=30,timeToTrigger=640                                                                                                                                                                                                                                                                                                                                                                                                                                       
 Set EUtranCellFDD=.*,EUtranFreqRelation=.* qOffsetFreq       0                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
@@ -5567,9 +5576,9 @@ Set GNBCUUPFunction=1,UeCC=1,DcDlCfg=Default dcDlAggAllowed true
 set GNBDUFunction=1,UeCC=1,CgSwitchCfg=Default dlCgSwitchMode 1
 set GNBDUFunction=1,UeCC=1,CgSwitchCfg=Default dlScgLowQualThresh 0
 set GNBDUFunction=1,UeCC=1,CgSwitchCfg=Default dlScgLowQualHyst 30
-set GNBDUFunction=1,UeCC=1,UlCgSwitchCfg=Default ulCgSwitchMode 1
-set GNBDUFunction=1,UeCC=1,UlCgSwitchCfg=Default ulScgLowQualThresh 120
-set GNBDUFunction=1,UeCC=1,UlCgSwitchCfg=Default ulScgLowQualHyst 60
+set GNBDUFunction=1,UeCC=1,UlCgSwitchCfg= ulCgSwitchMode 1
+set GNBDUFunction=1,UeCC=1,UlCgSwitchCfg= ulScgLowQualThresh 120
+set GNBDUFunction=1,UeCC=1,UlCgSwitchCfg= ulScgLowQualHyst 60
 set nrcelldu srsHoppingBandwidth 0
 set GNBDUFunction=1 mixedSrsModeEnabled False
 setm nrcelldu aperiodicSrsEnabled False advancedDlSuMimoEnabled False maxNoOfAdvancedDlMuMimoLayers 0 srsCapacityBoostEnabled False
@@ -5584,7 +5593,7 @@ set UePolicyOptimization=1 loadAwareImc true
 set GNBCUCPFunction=1,UeCC=1,UlDataSplit=Default_endc,UlDataSplitUeCfg=Base initialUlPrimaryPathMode 2
 set GNBCUCPFunction=1,UeCC=1,UlDataSplit=Default_endc,UlDataSplitUeCfg=Base ulDataSplitThreshMcg -1
 set GNBCUCPFunction=1,UeCC=1,UlDataSplit=Default_endc,UlDataSplitUeCfg=Base ulDataSplitThreshScg 102400
-Set UeCA=1,CaSCellHandling=Default,CaSCellHandlingUeCfg=Base sCellActDeactDataThres -1
+Set UeCA=1,CaSCellHandling=Default,CaSCellHandlingUeCfg=Base sCellActDeactDataThres 100
 set DU5qiTable=1,DU5qi=2                                    packetDelayBudget 130
 set BWPSet=100,DynPowerOpt=vonr                             downDlThreshold   0
 set BWPSet=100,DynPowerOpt=vonr                             downUlThreshold   0
@@ -5619,7 +5628,7 @@ set GNBDUFunction=1,Rrc=1 t301 600
 set GNBDUFunction=1,Rrc=1 t310 2000
 set GNBDUFunction=1,Rrc=1 t311 3000
 set GNBDUFunction=1,Rrc=1 t319 400
-set UeCA=1,CaSCellHandling=Default,CaSCellHandlingUeCfg=Base sCellActDeactDataThres -1
+set UeCA=1,CaSCellHandling=Default,CaSCellHandlingUeCfg=Base sCellActDeactDataThres 100
 set GNBDUFunction=1,UeCC=1,Rach=Default,RachUeCfg=Base      cfraEnabled       true
 #######################
 crn GNBCUCPFunction=1,Mcpc=1,McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=VONR
@@ -5635,7 +5644,7 @@ end
 set NRCellDU=                  ssbIndex
 set NRCellDU=                  ssbTimeShiftEnabled false
 set GNBCUCPFunction=1                                       tNgRelocOverall   8
-set GNBDUFunction=1,UeCC=1,UlServiceDefinition=1,UlServiceDefinitionUeCfg=VoNR,UlService=1 ulServicePacketSize 75
+setm GNBDUFunction=1,UeCC=1,UlServiceDefinition=1,UlServiceDefinitionUeCfg=VoNR,UlService=1 ulServicePacketInterval 20 ulServicePacketSize 75
 set GNBDUFunction=1,UeCC=1,RadioLinkControl=1,DrbRlc=Default,DrbRlcUeCfg=VoNR ulPollPdu         16
 set GNBDUFunction=1,UeCC=1,RadioLinkControl=1,DrbRlc=Default,DrbRlcUeCfg=VoNR tReassemblyDlHighRate 10
 set BWPSet=100,BWPSetUeCfg=vonr,BWPSetCfg=0                 bWPDlRef          BWP=DenseSS_DL_100
@@ -8518,6 +8527,7 @@ KK_LTE_CONFIG_XML_SITE = """<?xml version="1.0" encoding="UTF-8"?>
 <onDurationTimerNb2>2</onDurationTimerNb2>
 </onDurationTimerNb>
 <overheatingIndProhibitTimer>20</overheatingIndProhibitTimer>
+<pciConflictReportType>BOTH</pciConflictReportType>
 <pdbMeasurementDelta>0</pdbMeasurementDelta>
 <pimCancAutoConfigEnabled>false</pimCancAutoConfigEnabled>
 <pimDetectionEnabled>true</pimDetectionEnabled>
@@ -8633,7 +8643,6 @@ KK_LTE_CONFIG_XML_SITE = """<?xml version="1.0" encoding="UTF-8"?>
 <zzzTemporary76>-2000000000</zzzTemporary76>
 <zzzTemporary77>-2000000000</zzzTemporary77>
 <zzzTemporary79>-2000000000</zzzTemporary79>
-<zzzTemporary80>-2000000000</zzzTemporary80>
 <zzzTemporary81>1</zzzTemporary81>
 <zzzTemporary82>-2000000000</zzzTemporary82>
 <zzzTemporary83>-2000000000</zzzTemporary83>
@@ -9750,6 +9759,7 @@ KK_LTE_CONFIG_XML_SITE = """<?xml version="1.0" encoding="UTF-8"?>
 </AmoFunction>
 <AnrFunction>
 <anrFunctionId>1</anrFunctionId>
+<pciConflictCellSelection>AUTO_SELECT_OVER_MANUAL</pciConflictCellSelection>
 <pciConflictDetectionEcgiMeas>true</pciConflictDetectionEcgiMeas>
 <pciConflictMobilityEcgiMeas>true</pciConflictMobilityEcgiMeas>
 <cellRelHoAttRateThreshold>15</cellRelHoAttRateThreshold>
@@ -9830,6 +9840,7 @@ KK_LTE_CONFIG_XML_SITE = """<?xml version="1.0" encoding="UTF-8"?>
 <essNRNeighborCellInfoUsed>true</essNRNeighborCellInfoUsed>
 <gNodebIdLength>26</gNodebIdLength>
 <maxNoOfUeForPciConflictDetect>5</maxNoOfUeForPciConflictDetect>
+<pciConflictDetectionType>BOTH</pciConflictDetectionType>
 <scgSessTimeForEndcRachFail>2500</scgSessTimeForEndcRachFail>
 <supportNrFreqChange>ADD_FREQREL</supportNrFreqChange>
 </AnrFunctionNR>
@@ -13893,7 +13904,7 @@ KK_LTE_CONFIG_XML_FDD_CELL = """
 <acBarringTime>64</acBarringTime>
 </ssacBarringForMMTELVoice>
 <subbandSrsActive>false</subbandSrsActive>
-<subscriptionRatioHighThresh>4500</subscriptionRatioHighThresh>
+<subscriptionRatioHighThresh>16000</subscriptionRatioHighThresh>
 <systemInformationBlock24>
 <tReselectionNR>2</tReselectionNR>
 <tReselectionNRSfHigh>100</tReselectionNRSfHigh>
@@ -16230,7 +16241,7 @@ KK_LTE_CONFIG_XML_TDD_CELL = """
 </ssacBarringForMMTELVoice>
 <subbandSrsActive>false</subbandSrsActive>
 <subframeAssignment>2</subframeAssignment>
-<subscriptionRatioHighThresh>4000</subscriptionRatioHighThresh>
+<subscriptionRatioHighThresh>16000</subscriptionRatioHighThresh>
 <systemInformationBlock24>
 <tReselectionNR>2</tReselectionNR>
 <tReselectionNRSfHigh>100</tReselectionNRSfHigh>
