@@ -132,8 +132,8 @@ class GplParserTab(ToolTab):
     """
 
     name = "GPL Parser"
-    description = ("Extract the full site data from kget_mom logs into a workbook - one sheet per MO class, "
-                   "several nodes (BBUs) together. No PRE/POST comparison - just the parsed data.")
+    description = ("Extract the full site data from kget_mom logs into a workbook with the same sheets as the "
+                   "GPL / Database Audit report, several nodes (BBUs) together. No PRE/POST comparison - just the values.")
     run_label = "Parse Files"
 
     def build(self, parent) -> None:
