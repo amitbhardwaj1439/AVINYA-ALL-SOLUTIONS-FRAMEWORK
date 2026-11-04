@@ -116,6 +116,7 @@ from tools.lte.circles.RJ.RJ_INTEGRATION_SCRIPT import (
     RJ_SA_cUCP5qiTable_XML,
     RJ_SA_dU5qiTable_XML,
     RJ_SA_AMF_RIM_CONFIG,
+    RJ_LTE_GPL_OVERWRITE,
     RJ_Route_4G_GPL_LMS,
     RJ_TN_RN_GPS_MME,
     CISCO_MME_SCRIPT,
@@ -578,8 +579,8 @@ def kk_site_basic_piu_bridge(row):
     KK Site_Basic PIU + bridge parts (pattern from KK-NLBGR583-1 kget), returned as the template placeholders
     extra_tn_ports / bridge_config / lte_nr_encapsulation.
     PIU (PIU_tnPortId, e.g. TN_E): VlanPort {PIU}_PIU on the site's own OAM_vlan, bridged with LTE_NR in Bridge=PIU.
-    Bridge_tnPortId (e.g. TN_IDL_C) filled: each bridge only if its VLAN column is filled - Bridge=CP_N (Bridge_CP_vlan;
-    LTE_NR, {PIU}_PIU and {port}_CP_N, no separate PIU bridge), Bridge=OAM_N (Bridge_OAM_vlan) and Bridge=ABIS_N
+    Bridge_tnPortId (e.g. TN_IDL_C) filled: each bridge only if its VLAN column is filled - Bridge=PIU (Bridge_CP_vlan;
+    LTE_NR, {PIU}_PIU and {port}_CP_N, named PIU instead of CP_N per KK guideline 2026-10-28), Bridge=OAM_N (Bridge_OAM_vlan) and Bridge=ABIS_N
     (Bridge_ABIS_vlan) over tnPortId + Bridge_tnPortId
     (KK AMOS "PIU_KK_TN_IDL_B TO TN_IDL_C & TN_E PIU" / "Bridge_TN_IDL_B_To_TN_IDL_C"). Bridge_UP_vlan is not used in KK.
     No PIU and no bridge port: interfaces stay on VlanPort=LTE_NR as before.
@@ -596,8 +597,9 @@ def kk_site_basic_piu_bridge(row):
     bridge_port = value("Bridge_tnPortId")
     oam_vlan = str(_xml_value(row["OAM_vlan"]))
     cp_vlan = value("Bridge_CP_vlan")
-    # a bridge only when its VLAN is in the RF (HSN143-1: only Bridge_ABIS_vlan -> ABIS_N, no CP_N)
-    cp_bridge = "CP_N" if bridge_port and cp_vlan else "PIU" if piu_port else None
+    # a bridge only when its VLAN is in the RF (HSN143-1: only Bridge_ABIS_vlan -> ABIS_N, no CP bridge);
+    # the CP bridge is always named PIU (KK guideline, KK-NLBG1454-1), its ports stay the same
+    cp_bridge = "PIU" if (bridge_port and cp_vlan) or piu_port else None
 
     if not piu_port and not bridge_port:
         return {"extra_tn_ports": "", "bridge_config": "", "lte_nr_encapsulation": "VlanPort=LTE_NR"}
@@ -1019,7 +1021,7 @@ def kk_rim_vonr_parts(node, initial, steps):
     return rim, section, model
 
 
-def write_lte_config_xml(base_path_url, node, current_time, system, anchor=None):
+def write_lte_config_xml(base_path_url, node, current_time, system, anchor=None, extras=None):
     """04_{node}_LTE_Config: LTE 01 TN_RN_GPS_MME + 02 Cell_Def + 03 GPL_LMS converted to NETCONF by the engine
     (replayed on the commissioning XMLs; AS / NE - KK has its own 04 LTE_Config templates)"""
     paths = create_script_paths(base_path_url, node)
@@ -1040,22 +1042,45 @@ def write_lte_config_xml(base_path_url, node, current_time, system, anchor=None)
         text = anchor(initial[0] if initial else "")
         if text:
             steps.append(("LTE04", "amos", text))
+    if system in LTE_GPL_OVERWRITE:      # circle GPL overwrite run after the integration (RJ sgpl + sgpl-2)
+        steps.append(("LTE05", "amos", LTE_GPL_OVERWRITE[system]))
     lte01 = script(paths["lte"], "01_")
     stamp = re.search(r"(\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2})", os.path.basename(lte01)) if lte01 else None
     xml_text, _, _ = amos_to_netconf(node, initial, steps, system)
+    rpcs = extras(paths) if extras else []
+    if rpcs:        # KK-style parts (RfBranch refs, external alarms, GSM) at the bottom, before the closing RPC
+        cut = xml_text.find('<rpc message-id="Closing"')
+        cut = cut if cut >= 0 else len(xml_text)
+        xml_text = xml_text[:cut] + "".join(rpcs) + xml_text[cut:]
     with open(os.path.join(paths["lte"], f"04_{node}_LTE_Config_{stamp.group(1) if stamp else current_time}.xml"), "w",
               encoding="utf-8") as file:
         file.write(xml_text)
 
 
-ANCHOR_TERMPOINT = {"AS": AS_Termpoint_GUtranFreqRelation_script, "NE": NE_Termpoint_GUtranFreqRelation_script}
+# RJ: sgpl + sgpl-2 (user 2026-11-03) ran on every RJ node after the integration (RJ-NLRJNT02-1 / LR1J02 kgets)
+LTE_GPL_OVERWRITE = {"RJ": RJ_LTE_GPL_OVERWRITE}
+
+ANCHOR_TERMPOINT = {"AS": AS_Termpoint_GUtranFreqRelation_script, "NE": NE_Termpoint_GUtranFreqRelation_script,
+                    "RJ": RJ_Termpoint_GUtranFreqRelation}
+
+# RJ AIR SiteEquipment: the shared AIR template makes baseband RiPorts K/L/M only, but its RiLink uses the RF's RiPort_BB
+# (RJ-NLRJNT02-1: N / P, beyond the A-M of the 6651/6655 baseband section) -> the RiLink pointed to a missing RiPort and
+# the AAS was not configured. RJ: the AIR block makes the baseband RiPort its RiLink uses.
+RJ_AIR_5G_GENERATION_SCRIPT = re.sub(
+    r"<RiPort xmlns=\"urn:com:ericsson:ecim:ReqRiPort\">\s*<riPortId>K</riPortId>.*?<riPortId>M</riPortId>\s*"
+    r"<administrativeState>UNLOCKED</administrativeState>\s*</RiPort>",
+    '<RiPort xmlns="urn:com:ericsson:ecim:ReqRiPort">\n              <riPortId>{RiPort_BB}</riPortId>\n'
+    "              <administrativeState>UNLOCKED</administrativeState>\n            </RiPort>",
+    AIR_5G_GENERATION_SCRIPT, count=1, flags=re.S)
 
 
 def anchor_4g_only_amos(site_row, site_basic_xml, termpoint_script):
-    """AMOS of the ENDC anchor part of a 4G only site, as on the AS / NE 2G-4G reference nodes (LBOTR2 / LMZGM2):
-    Router=LTEUP,InterfaceIPv6=NR on the LTE UP interface's encapsulation, AddressIPv6=X2 = Anchor_ENDC_IP, default
-    IPv6 route via Anchor_ENDC_GW, SctpEndpoint=X2_ENDC, then the circle's NR 03 Termpoint script (GUtraNetwork,
-    GUtranSyncSignalFrequency, GUtranFreqRelation, ENodeBFunction X2 ENDC refs). Its ExternalGNodeBFunction /
+    """AMOS of the ENDC anchor part of a 4G only site, as on the 2G/4G nodes of all three circles (RJ LJP608 / LOGT03,
+    AS LDP052, NE LDM346 / LNOE10): Router=LTEUP,InterfaceIPv6=NR on the LTE UP interface's encapsulation,
+    AddressIPv6=NR = Anchor_ENDC_IP (user 2026-11-02: AddressIPv6=X2 only on 4G+5G nodes, where NR is the gNB's),
+    RouteTableIPv6Static=1,Dst=default via Anchor_ENDC_GW, SctpEndpoint=X2_ENDC, ENodeBFunction sctpEndcX2Ref /
+    upEndcX2IpAddressRef / intraRanIpAddressRef, then the circle's NR 03 Termpoint script (GUtraNetwork,
+    GUtranSyncSignalFrequency, GUtranFreqRelation) with its AddressIPv6=X2 refs on NR. Its ExternalGNodeBFunction /
     TermPointToGNB / GUtranCellRelation need the gNBId - a 4G only site has none, the conversion leaves them out."""
     ip, gw = (str(site_row.get(c, "")).strip() for c in ("Anchor_ENDC_IP", "Anchor_ENDC_GW"))
     if not ip or ip.lower() == "nan" or not gw or gw.lower() == "nan":
@@ -1066,33 +1091,341 @@ def anchor_4g_only_amos(site_row, site_basic_xml, termpoint_script):
         return ""
     return "\n".join([
         "crn Transport=1,Router=LTEUP,InterfaceIPv6=NR", f"encapsulation {enc.group(1)}", "mtu 1500", "end",
-        "crn Transport=1,Router=LTEUP,InterfaceIPv6=NR,AddressIPv6=X2", f"address {ip}", "end",
-        "crn Transport=1,Router=LTEUP,RouteTableIPv6Static=2", "end",
-        "crn Transport=1,Router=LTEUP,RouteTableIPv6Static=2,Dst=default", "dst ::/0", "end",
-        "crn Transport=1,Router=LTEUP,RouteTableIPv6Static=2,Dst=default,NextHop=1", f"address {gw}", "adminDistance 1",
+        "crn Transport=1,Router=LTEUP,InterfaceIPv6=NR,AddressIPv6=NR", f"address {ip}", "end",
+        "crn Transport=1,Router=LTEUP,RouteTableIPv6Static=1", "end",
+        "crn Transport=1,Router=LTEUP,RouteTableIPv6Static=1,Dst=default", "dst ::/0", "end",
+        "crn Transport=1,Router=LTEUP,RouteTableIPv6Static=1,Dst=default,NextHop=1", f"address {gw}", "adminDistance 1",
         "end",
         "crn Transport=1,SctpEndpoint=X2_ENDC", "dtlsSctpSecurityMode 0",
-        "localIpAddress Transport=1,Router=LTEUP,InterfaceIPv6=NR,AddressIPv6=X2", "portNumber 36422",
+        "localIpAddress Transport=1,Router=LTEUP,InterfaceIPv6=NR,AddressIPv6=NR", "portNumber 36422",
         "sctpProfile SctpProfile=1", "end",
-        "", termpoint_script])
+        "set ENodeBFunction=1 sctpEndcX2Ref Transport=1,SctpEndpoint=X2_ENDC",
+        "set ENodeBFunction=1 upEndcX2IpAddressRef Router=LTEUP,InterfaceIPv6=NR,AddressIPv6=NR",
+        "set ENodeBFunction=1 intraRanIpAddressRef Router=LTEUP,InterfaceIPv6=NR,AddressIPv6=NR",
+        "set ENodeBFunction=1 endcX2IpAddrViaS1Active true",
+        "", re.sub(r"InterfaceIPv6=NR,AddressIPv6=X2\b", "InterfaceIPv6=NR,AddressIPv6=NR", termpoint_script)])
 
 
-def write_circle_config_xmls(base_path_url, nodes, current_time, system, site_basic_df=None):
-    """AS / NE NETCONF XMLs per node: 04 LTE_Config (if LTE scripts), then 04 5G_Config / 05 SA / 06 RIM (if NR
+def circle_site_equipment_shared(base_path_url, site_basic_df, radio_hw_df):
+    """A multi-band radio (Radio_Type with '+', e.g. RJ '6626 B1+B3') listed on two nodes of the same site is one radio
+    shared between them (mixed mode, RJ RNJT02: LR1J02 RRU-1 L1800 + RJ-NLRJNT02-1 RRU-31 L2100): both kgets have
+    isSharedWithExternalMe true - set in the nodes' 02 SiteEquipment."""
+    if radio_hw_df is None or site_basic_df is None or "Site Name" not in site_basic_df:
+        return
+    site_of = dict(zip(site_basic_df["eNodeBName"].astype(str), site_basic_df["Site Name"].astype(str)))
+    hw = radio_hw_df[radio_hw_df["Radio_Type"].astype(str).str.contains(r"\+")].copy()
+    hw["site"] = hw["eNodeBName"].astype(str).map(site_of)
+    hw["kind"] = hw["Radio_Type"].astype(str).str.replace(r"\s+", "", regex=True).str.upper()
+    for (site, kind), grp in hw.groupby(["site", "kind"]):
+        if grp["eNodeBName"].nunique() < 2:
+            continue
+        for _, r in grp.iterrows():
+            node, fru = str(r["eNodeBName"]), f"RRU-{_xml_value(r['Radio_UnitId'])}"
+            path = _newest(create_script_paths(base_path_url, node)["commissioning"], "02_", "SiteEquipment")
+            if not path:
+                continue
+            text = open(path, encoding="utf-8", errors="replace").read()
+            new = re.sub(rf"(<fieldReplaceableUnitId>{re.escape(fru)}</fieldReplaceableUnitId>(?:(?!</FieldReplaceableUnit>).)*?"
+                         r"<isSharedWithExternalMe>)false(</isSharedWithExternalMe>)", r"\1true\2", text, count=1, flags=re.S)
+            if new != text:
+                with open(path, "w", encoding="utf-8") as f:
+                    f.write(new)
+                print(f"{node}: {fru} ({r['Radio_Type']}) shared with the other node of site {site} - isSharedWithExternalMe true")
+
+
+def write_circle_config_xmls(base_path_url, nodes, current_time, system, site_basic_df=None, lte_df=None, radio_hw_df=None):
+    """AS / NE / RJ NETCONF XMLs per node: 04 LTE_Config (if LTE scripts), then 04 5G_Config / 05 SA / 06 RIM (if NR
     scripts) on top of commissioning + 04 LTE_Config - as KK; a 4G only site with Anchor_ENDC_IP / _GW gets the ENDC
-    anchor part in its 04 LTE_Config"""
+    anchor part in its 04 LTE_Config. As KK (user 2026-11-02): Bridge / PIU in the 01 SiteBasic from the RF, and at the
+    bottom of 04 LTE_Config the SectorCarrier RfBranch refs, the external alarms and the GSM (Abis / Trx) part."""
+    circle_site_equipment_shared(base_path_url, site_basic_df, radio_hw_df)
     for node in nodes:
-        nr = create_script_paths(base_path_url, node)["nr"]
+        paths = create_script_paths(base_path_url, node)
+        nr = paths["nr"]
         has_nr = os.path.isdir(nr) and any(f.startswith("01_") for f in os.listdir(nr))
+        rows = site_basic_df[site_basic_df["eNodeBName"] == node] if site_basic_df is not None else None
+        row = rows.iloc[0] if rows is not None and not rows.empty else None
+        if row is not None and not _site_value(row, "Broker_IP") and "Broker_IP" in site_basic_df \
+                and "Site Name" in site_basic_df:
+            # the BSC broker is per site: AS KHUDR2 RF has it on the 4G/5G row, the Abis is on the 2G/4G node LKUDR2
+            same_site = site_basic_df[site_basic_df["Site Name"].astype(str) == str(row["Site Name"])]
+            brokers = [b for b in (_site_value(r, "Broker_IP") for _, r in same_site.iterrows()) if b]
+            if brokers:
+                row = row.copy()
+                row["Broker_IP"] = brokers[0]
+        if row is not None:
+            circle_site_basic_bridge(paths["commissioning"], row)
         anchor = None
-        if not has_nr and site_basic_df is not None and system in ANCHOR_TERMPOINT:
-            rows = site_basic_df[site_basic_df["eNodeBName"] == node]
-            if not rows.empty:
-                row = rows.iloc[0]
-                anchor = lambda sb, row=row: anchor_4g_only_amos(row, sb, ANCHOR_TERMPOINT[system])
-        write_lte_config_xml(base_path_url, node, current_time, system, anchor)
+        if not has_nr and row is not None and system in ANCHOR_TERMPOINT:
+            anchor = lambda sb, row=row: anchor_4g_only_amos(row, sb, ANCHOR_TERMPOINT[system])
+        cells = lte_df[lte_df["eNodeBName"] == node] if lte_df is not None else None
+        extras = (lambda p, row=row, cells=cells, node=node: circle_lte_config_extras(node, row, cells, p["commissioning"], system)) \
+            if row is not None and cells is not None else None
+        write_lte_config_xml(base_path_url, node, current_time, system, anchor, extras)
         if has_nr:
             write_kk_5g_config_xml(base_path_url, node, current_time, system)
+
+
+def _newest(folder, prefix, part=""):
+    found = [os.path.join(folder, f) for f in os.listdir(folder) if f.startswith(prefix) and part in f] \
+        if folder and os.path.isdir(folder) else []
+    return max(found, key=os.path.getmtime) if found else None
+
+
+def circle_site_basic_bridge(commissioning_dir, row):
+    """AS / NE / RJ 01 SiteBasic: Bridge / PIU from the RF Site_Basic, laid out as on the 2G/4G nodes of all three
+    circles (RJ LJP608 / LOGT03, AS LDP052, NE LDM346 / LNOE10): Bridge_tnPortId -> TnPort / EthernetPort {port} and
+    VlanPorts {port}_CP / _UP / _OAM (VLAN = Bridge_CP/UP/OAM_vlan, else the tnPortId VLAN); Bridge=CP and Bridge=OAM
+    over the tnPortId VlanPort and the bridge port's, the UP bridge is named PIU (tnPortId UP, bridge port UP and the
+    PIU port); PIU_tnPortId -> TnPort {piu}, EthernetPort / VlanPort {piu}_PIU on the UP VLAN. The CP / UP (+ NR) / OAM
+    interfaces go on the bridges, Abis stays on its VlanPort (Bridge=ABIS over both ports only with Bridge_ABIS_vlan)."""
+    path = _newest(commissioning_dir, "01_", "SiteBasic")
+    bridge_port, piu_port = _site_value(row, "Bridge_tnPortId"), _site_value(row, "PIU_tnPortId")
+    tn = _site_value(row, "tnPortId")
+    if not path or not tn or not (bridge_port or piu_port):
+        return
+    with open(path, "rb") as f:
+        text = f.read().decode("utf-8", errors="replace")
+    if "<bridgeId>" in text:
+        return
+    fru = _site_value(row, "fieldReplaceableUnitId") or "1"
+    me = "ManagedElement=1"
+
+    def tn_port(p):
+        return (f'\n            <TnPort xmlns="urn:com:ericsson:ecim:ReqTnPort">\n              <tnPortId>{p}</tnPortId>'
+                '\n            </TnPort>')     # no userLabel on the bridge / PIU ports (all 2G/4G kgets)
+
+    def eth_port(pid, p):
+        return (f'\n          <EthernetPort xmlns="urn:com:ericsson:ecim:RtnL2EthernetPort">\n            <ethernetPortId>{pid}</ethernetPortId>'
+                f'\n            <administrativeState>UNLOCKED</administrativeState>\n            <admOperatingMode>1G_FULL</admOperatingMode>'
+                f'\n            <autoNegEnable>true</autoNegEnable>'
+                f'\n            <encapsulation>{me},Equipment=1,FieldReplaceableUnit={fru},TnPort={p}</encapsulation>'
+                '\n          </EthernetPort>')
+
+    def vlan_port(vid, eth, vlan, label):
+        return (f'\n          <VlanPort xmlns="urn:com:ericsson:ecim:RtnL2VlanPort">\n            <vlanPortId>{vid}</vlanPortId>'
+                f'\n            <encapsulation>{me},Transport=1,EthernetPort={eth}</encapsulation>\n            <isTagged>true</isTagged>'
+                f'\n            <vlanId>{vlan}</vlanId>\n          </VlanPort>')
+
+    def bridge(bid, ports):
+        return (f'\n          <Bridge xmlns="urn:com:ericsson:ecim:RtnBridging">\n            <bridgeId>{bid}</bridgeId>'
+                + "".join(f'\n            <port>{me},Transport=1,VlanPort={p}</port>' for p in ports) + '\n          </Bridge>')
+
+    def vlan_of(vid):
+        m = re.search(rf"<vlanPortId>{re.escape(vid)}</vlanPortId>.*?<vlanId>(\d+)</vlanId>", text, re.S)
+        return m.group(1) if m else None
+
+    added_eth = False
+    kinds = [("CP", "Bridge_CP_vlan"), ("UP", "Bridge_UP_vlan"), ("OAM", "Bridge_OAM_vlan")]
+    if _site_value(row, "Bridge_ABIS_vlan"):
+        kinds.append(("ABIS", "Bridge_ABIS_vlan"))
+    for kind, col in kinds:
+        own = f"{tn}_{kind}"
+        vlan = vlan_of(own)
+        if vlan is None:
+            continue
+        ports, extra = [own], ""
+        if bridge_port:
+            ports.append(f"{bridge_port}_{kind}")
+            extra += vlan_port(f"{bridge_port}_{kind}", bridge_port, _site_value(row, col) or vlan, f"{kind}_Bridge")
+        if piu_port and kind == "UP":
+            ports.append(f"{piu_port}_PIU")
+            extra += eth_port(f"{piu_port}_PIU", piu_port) + vlan_port(f"{piu_port}_PIU", f"{piu_port}_PIU", vlan, "PIU")
+        if len(ports) < 2:
+            continue
+        if bridge_port and not added_eth:
+            extra = eth_port(bridge_port, bridge_port) + extra
+            added_eth = True
+        # interfaces on the Bridge; the bridge right after the VlanPort element of the tnPortId (same transaction)
+        name = "PIU" if kind == "UP" else kind
+        text = re.sub(rf"(<encapsulation>(?:ManagedElement=[^,]*,)?Transport=1,)VlanPort={re.escape(own)}(</encapsulation>)",
+                      rf"\g<1>Bridge={name}\g<2>", text)
+        m = re.search(rf"<vlanPortId>{re.escape(own)}</vlanPortId>.*?</VlanPort>", text, re.S)
+        text = text[:m.end()] + extra + bridge(name, ports) + text[m.end():]
+    new_tn = [p for p in (bridge_port, piu_port) if p and f"<tnPortId>{p}</tnPortId>" not in text]
+    m = re.search(rf"<tnPortId>{re.escape(tn)}</tnPortId>.*?</TnPort>", text, re.S)
+    if m and new_tn:
+        text = text[:m.end()] + "".join(tn_port(p) for p in new_tn) + text[m.end():]
+    with open(path, "wb") as f:
+        f.write(text.encode("utf-8"))
+
+
+# per circle, from the 2G/4G nodes of the 2026-11-02 kgets (Downloads\RJ-NE-AS_Kget): external alarms (baseband
+# AlarmPort 1-8; the 4G/5G and 4G only nodes have none), GSM Trx per band (G900 on the L900 F8 SEF, RJ also G1800 on
+# the L1800 F3 SEF), Tx branch of the 2nd Trx (RJ: RfBranch 2, AS / NE: 1)
+CIRCLE_ALARMS = {
+    "RJ": [("MAINS FAIL", "MINOR"), ("SITE ON BATTERY", "MAJOR"), ("LOW BATTERY VOLTAGE", "MINOR"), ("RECTIFIER FAIL", "CRITICAL"),
+           ("DG ON LOAD", "MAJOR"), ("DG FAILED TO START", "CRITICAL"), ("HIGH TEMPERATURE", "MINOR"),
+           ("DOOR OPEN", "MINOR")],                                       # RJ LR1J02 kget 031126_1515 (user 2026-11-03)
+    "AS": [("MAINS FAIL", "MINOR"), ("DG ON LOAD", "MINOR"), ("SITE ON BATTERY", "MINOR"), ("HIGH TEMPERATURE", "MINOR"),
+           ("FIRE AND SMOKE", "MINOR"), ("DG FAILED TO START", "MINOR"), ("LOW BATTERY VOLTAGE", "MINOR"),
+           ("DOOR OPEN", "MINOR")],                                                          # AS LDP052
+    "NE": [("MAINS FAIL", "CRITICAL"), ("DG ON LOAD", "MINOR"), ("SITE ON BATTERY", "MAJOR"), ("HIGH TEMPERATURE", "MAJOR"),
+           ("FIRE AND SMOKE", "CRITICAL"), ("DG FAILED TO START", "CRITICAL"), ("LOW BATTERY VOLTAGE", "CRITICAL"),
+           ("DOOR OPEN", "CRITICAL")],                                                       # NE LNOE10 / LDM346
+}
+# band of the LTE cell -> (Trx prefix, frequencyBand, arfcnMin, arfcnMax, Trx count per GSM sector)
+CIRCLE_GSM_BANDS = {
+    "RJ": {"_F8_": ("G900", 8, 1, 124, 2), "_F3_": ("G1800", 3, 662, 736, 1)},
+    "AS": {"_F8_": ("G900", 8, 10, 84, 2)},
+    "NE": {"_F8_": ("G900", 8, 18, 92, 2)},
+}
+CIRCLE_GSM_TX_ALTERNATE = {"RJ": True}
+CIRCLE_GSM_TRX = {"configuredMaxTxPower": 20000, "noOfRxAntennas": 2, "noOfTxAntennas": 1, "combinedCellType": "NON_COMBINED_CELL"}
+CIRCLE_BRIDGE_FEATURE = "CXC4011915"      # active on every bridged node of the three circles
+
+
+def _feature_rpc(node, mid, cxc):
+    return KK_LTE_CONFIG_XML_RPC.format(mid=mid, node=node, body=(
+        "<SystemFunctions>\n<systemFunctionsId>1</systemFunctionsId>\n<Lm>\n<lmId>1</lmId>\n<FeatureState>\n"
+        f"<featureStateId>{cxc}</featureStateId>\n<featureState>ACTIVATED</featureState>\n"
+        "</FeatureState>\n</Lm>\n</SystemFunctions>\n"))
+
+
+def circle_external_alarm_rpc(node, fru, circle):
+    """External alarms of a 2G/4G site: AlarmPort 1-8 of the baseband with the circle's slogans / severities (merge)"""
+    ports = "".join(
+        f"<AlarmPort>\n<alarmPortId>{n}</alarmPortId>\n<administrativeState>UNLOCKED</administrativeState>\n"
+        f"<alarmSlogan>{slogan}</alarmSlogan>\n<filterAlgorithm>NONE</filterAlgorithm>\n<filterTime>0</filterTime>\n"
+        f"<normallyOpen>true</normallyOpen>\n<perceivedSeverity>{severity}</perceivedSeverity>\n</AlarmPort>\n"
+        for n, (slogan, severity) in enumerate(CIRCLE_ALARMS[circle], 1))
+    return KK_LTE_CONFIG_XML_RPC.format(mid="External_Alarm_para", node=node, body=(
+        f"<Equipment>\n<equipmentId>1</equipmentId>\n<FieldReplaceableUnit>\n<fieldReplaceableUnitId>{fru}</fieldReplaceableUnitId>\n"
+        f"{ports}</FieldReplaceableUnit>\n</Equipment>\n"))
+
+
+def circle_gsm_rpcs(node, row, cells, sef_branches, site_basic_text, circle):
+    """GSM part of a 2G/4G site (RF ABIS_IP) as on the circle's 2G/4G nodes: the Abis transport is in the 01 SiteBasic
+    (Router=ABIS); here the GSM features, BtsFunction=1 (userLabel = site), one GsmSector per sector with an L900 (F8)
+    cell, id and gsmSectorName = site + sector (RJ_E_F8_OM_JPR608A_A -> JPR608A), AbisIp=1 to the BSC broker of
+    Site_Basic Broker_IP, and Trx G900-1.. on the F8 cell's SEF (RJ also G1800-1 on the sector's F3 SEF); Rx on the first
+    two RfBranches of the SEF, Tx on the first (RJ: the 2nd Trx on the 2nd). Created LOCKED, one RPC per sector,
+    unlocked at the end."""
+    abis_ip = _site_value(row, "ABIS_IP")
+    if not abis_ip or cells is None or cells.empty:
+        return []
+    m = re.search(r"<routerId>ABIS</routerId>\s*<Interface(IPv[46])[^>]*>\s*<interface\1Id>([^<]+)</interface\1Id>.*?"
+                  r"<address\1Id>([^<]+)</address\1Id>", site_basic_text, re.S)
+    if not m:
+        print(f"{node}: ABIS_IP given but no Router=ABIS interface in the 01 SiteBasic - no GSM part in 04 LTE_Config")
+        return []
+    ip = m.group(1)
+    me = f"ManagedElement={node}"
+    address_ref = f"{me},Transport=1,Router=ABIS,Interface{ip}={m.group(2)},Address{ip}={m.group(3)}"
+    bands = CIRCLE_GSM_BANDS.get(circle, CIRCLE_GSM_BANDS["AS"])
+    sef_of = {}                                       # (sector name, band key) -> SEF
+    for _, c in cells.iterrows():
+        cell, sef = str(c["eUtranCellFDDId"]), str(c["sectorEquipmentFunctionId"]).strip()
+        parts = cell.split("_")
+        for key in bands:
+            if key in cell and len(parts) > 2:
+                sef_of.setdefault((parts[-2], key), sef)
+    sectors = sorted({name for name, key in sef_of if key == "_F8_"})
+    if not sectors:
+        print(f"{node}: ABIS_IP given but no L900 (F8) cell - no GsmSector / Trx")
+        return []
+    rpcs = [_feature_rpc(node, f"GSM_Feature_{cxc}", cxc) for cxc in KK_GSM_FEATURES + (KK_GSM_FEATURES_IPV6 if ip == "IPv6" else [])]
+    broker = (_site_value(row, "Broker_IP") or "").split("/")[0]
+    if not broker:
+        print(f"{node}: Site_Basic Broker_IP empty - AbisIp without BSC broker address (the node rejects it)")
+    elif broker == abis_ip.split("/")[0]:
+        print(f"{node}: Site_Basic Broker_IP {broker} is the node's own ABIS_IP - the BSC broker address is expected")
+    broker_tag = "bscBrokerIpv6Address" if ":" in broker else "bscBrokerIpAddress"
+    abis_settings = "".join(f"<{k}>{v}</{k}>\n" for k, v in KK_GSM_ABIS_IP.items())
+    bts = "<BtsFunction>\n<btsFunctionId>1</btsFunctionId>\n"
+    rpcs.append(KK_LTE_CONFIG_XML_RPC.format(mid="GSM_BtsFunction", node=node,
+                                             body=bts + f"<userLabel>{sectors[0][:-1]}</userLabel>\n</BtsFunction>\n"))
+    trx_ids = {}
+    for name in sectors:
+        body = (f'<GsmSector xc:operation="create">\n<gsmSectorId>{name}</gsmSectorId>\n'
+                f"<AbisIp>\n<abisIpId>1</abisIpId>\n<administrativeState>LOCKED</administrativeState>\n"
+                f"{f'<{broker_tag}>{broker}</{broker_tag}>' + chr(10) if broker else ''}"
+                f"<gsmSectorName>{name}</gsmSectorName>\n<{ip.lower()}Address>{address_ref}</{ip.lower()}Address>\n"
+                f"{abis_settings}</AbisIp>\n")     # AbisIp userLabel empty on all 2G/4G kgets
+        for key, (prefix, band, arfcn_min, arfcn_max, count) in bands.items():
+            sef = sef_of.get((name, key))
+            if not sef:
+                continue
+            branches = [re.sub(r"^ManagedElement=[^,]+", me, b) for b in (sef_branches or {}).get(sef, [])][:2]
+            if len(branches) < 2:
+                aug = re.sub(r"\D", "", sef)
+                branches = [f"{me},Equipment=1,AntennaUnitGroup={aug},RfBranch={n}" for n in (1, 2)]
+            for n in range(1, count + 1):
+                trx = f"{prefix}-{n}"
+                trx_ids.setdefault(name, []).append(trx)
+                tx = branches[1] if CIRCLE_GSM_TX_ALTERNATE.get(circle) and n % 2 == 0 else branches[0]
+                body += (f"<Trx>\n<trxId>{trx}</trxId>\n<administrativeState>LOCKED</administrativeState>\n"
+                         f"<arfcnMin>{arfcn_min}</arfcnMin>\n<arfcnMax>{arfcn_max}</arfcnMax>\n<frequencyBand>{band}</frequencyBand>\n"
+                         + "".join(f"<{k}>{v}</{k}>\n" for k, v in CIRCLE_GSM_TRX.items())
+                         + f"<rfBranchRxRef>{branches[0]}</rfBranchRxRef>\n<rfBranchRxRef>{branches[1]}</rfBranchRxRef>\n"
+                         f"<rfBranchTxRef>{tx}</rfBranchTxRef>\n"
+                         f"<sectorEquipmentFunctionRef>{me},NodeSupport=1,SectorEquipmentFunction={sef}</sectorEquipmentFunctionRef>\n"
+                         f"</Trx>\n")
+        rpcs.append(KK_LTE_CONFIG_XML_RPC.format(mid=f"GSM_{name}_create", node=node, body=bts + body + "</GsmSector>\n</BtsFunction>\n"))
+    for name in sectors:
+        unlock = (f"<GsmSector>\n<gsmSectorId>{name}</gsmSectorId>\n<AbisIp>\n<abisIpId>1</abisIpId>\n"
+                  f"<administrativeState>UNLOCKED</administrativeState>\n</AbisIp>\n"
+                  + "".join(f"<Trx>\n<trxId>{t}</trxId>\n<administrativeState>UNLOCKED</administrativeState>\n</Trx>\n"
+                            for t in trx_ids.get(name, [])) + "</GsmSector>\n")
+        rpcs.append(KK_LTE_CONFIG_XML_RPC.format(mid=f"GSM_{name}_unlock", node=node, body=bts + unlock + "</BtsFunction>\n"))
+    return rpcs
+
+
+def circle_sector_carrier_rf_branches(node, cells, sef_branches):
+    """rfBranchRxRef / rfBranchTxRef as KK (kk_sector_carrier_rf_branches), for every circle only where a radio (SEF)
+    is shared by cells of two or more sectors (user 2026-11-02): the sectors in order take consecutive RfBranches of
+    the SEF, as many as their antennas; all carriers of a sector get the same branches for Rx and Tx."""
+    body = ""
+    for sef, grp in cells.groupby(cells["sectorEquipmentFunctionId"].astype(str).str.strip(), sort=False):
+        branches = sef_branches.get(sef, [])
+        sectors = {}
+        for _, c in grp.iterrows():
+            antennas = max(int(_xml_value(c["noOfTxAntennas"])), int(_xml_value(c["noOfRxAntennas"])))
+            sec = sectors.setdefault(str(c["eUtranCellFDDId"]).split("_")[-1], {"antennas": 0, "carriers": []})
+            sec["antennas"] = max(sec["antennas"], antennas)
+            sec["carriers"].append(_xml_value(c["sectorCarrierId"]))
+        needed = sum(x["antennas"] for x in sectors.values())
+        if not branches or len(sectors) < 2:
+            continue
+        if needed > len(branches):
+            print(f"{node}: {sef} has {len(branches)} RfBranches but its sectors need {needed} - no rfBranch refs written")
+            continue
+        start = 0
+        for _, sec in sorted(sectors.items()):
+            refs = [re.sub(r"^ManagedElement=[^,]+", f"ManagedElement={node}", b) for b in branches[start:start + sec["antennas"]]]
+            start += sec["antennas"]
+            for carrier in sec["carriers"]:
+                body += (f"<SectorCarrier>\n<sectorCarrierId>{carrier}</sectorCarrierId>\n"
+                         + "".join(f"<rfBranchRxRef>{r}</rfBranchRxRef>\n" for r in refs)
+                         + "".join(f"<rfBranchTxRef>{r}</rfBranchTxRef>\n" for r in refs) + "</SectorCarrier>\n")
+    return [KK_LTE_CONFIG_XML_RPC.format(mid="SectorCarrier_RfBranch_para", node=node,
+            body=f"<ENodeBFunction>\n<eNodeBFunctionId>1</eNodeBFunctionId>\n{body}</ENodeBFunction>\n")] if body else []
+
+
+def circle_lte_config_extras(node, row, cells, commissioning_dir, circle):
+    """RPCs at the bottom of an AS / NE / RJ 04 LTE_Config: RfBranch refs (shared radios), the bridging feature when the
+    SiteBasic has bridges, and on 2G/4G sites (RF ABIS_IP) the circle's external alarms and the GSM part"""
+    sef_branches = kk_site_equipment_rf_branches(commissioning_dir)
+    sb = _newest(commissioning_dir, "01_", "SiteBasic")
+    site_basic_text = open(sb, encoding="utf-8", errors="replace").read() if sb else ""
+    rpcs = circle_sector_carrier_rf_branches(node, cells, sef_branches)
+    if "<bridgeId>" in site_basic_text:
+        rpcs.append(_feature_rpc(node, f"Bridge_Feature_{CIRCLE_BRIDGE_FEATURE}", CIRCLE_BRIDGE_FEATURE))
+    if _site_value(row, "ABIS_IP"):
+        rpcs.append(circle_external_alarm_rpc(node, _site_value(row, "fieldReplaceableUnitId") or "1", circle))
+        rpcs += circle_gsm_rpcs(node, row, cells, sef_branches, site_basic_text, circle)
+    return rpcs
+
+
+def append_abis_session(site_basic_text, abis_text):
+    """01 SiteBasic + the ABIS session after it, with its XML declaration only if the SiteBasic has them: the IPv6
+    SiteBasic templates have none, and a lone '<?xml ...?>' in the middle of the file fails the commissioning
+    (AS LBSRI3, IPv6 OAM + ABIS: 'failed to parse Site Basic file in transaction "Closing"')"""
+    if "<?xml" not in site_basic_text:
+        abis_text = re.sub(r"[ \t]*<\?xml[^>]*\?>[ \t]*\n", "", abis_text, count=1)
+    return site_basic_text + "\n" + abis_text
+
+
 def gpl_routes_for_oam_ip(gpl_text, site_basic_df, node):
     """03 GPL as per the site's OAM IP version (as the commissioning SiteBasic): the IPv4 OSS / ENM routes of
     Router=OAM (RouteTableIPv4Static=1) only on IPv4 OAM sites - an IPv6 OAM site has no IPv4 route table there, its
@@ -1110,6 +1443,30 @@ def gpl_routes_for_oam_ip(gpl_text, site_basic_df, node):
         elif line.strip() == "end":
             skip = False
     return "".join(out)
+
+
+# bridging feature of a node whose 01 SiteBasic has bridges (active on every bridged node of the three circles; the
+# XML flow activates it in 04 LTE_Config) - AMOS flow: at the end of its LTE 01 TN_RN_GPS_MME
+CIRCLE_BRIDGE_FEATURE_AMOS = "set SystemFunctions=1,Lm=1,FeatureState=CXC4011915 featureState 1"
+
+
+def circle_commissioning_bridges(base_path_url, site_basic_df, radio_hw_df=None):
+    """AS / NE / RJ after the 01 SiteBasic / 02 SiteEquipment are written: Bridge / PIU in the SiteBasic from the RF
+    (as KK), a multi-band radio shared by two nodes of the site isSharedWithExternalMe true in the SiteEquipment, and
+    the bridging feature in the LTE 01 TN_RN_GPS_MME of a bridged node"""
+    circle_site_equipment_shared(base_path_url, site_basic_df, radio_hw_df)
+    for node in site_basic_df["eNodeBName"].unique():
+        paths = create_script_paths(base_path_url, node)
+        circle_site_basic_bridge(paths["commissioning"], site_basic_df[site_basic_df["eNodeBName"] == node].iloc[0])
+        sb = _newest(paths["commissioning"], "01_", "SiteBasic")
+        lte01 = _newest(paths["lte"], "01_")
+        if not sb or not lte01 or "<bridgeId>" not in open(sb, encoding="utf-8", errors="replace").read():
+            continue
+        with open(lte01, encoding="utf-8", errors="replace") as f:
+            if CIRCLE_BRIDGE_FEATURE_AMOS in f.read():
+                continue
+        with open(lte01, "a", encoding="utf-8") as f:
+            f.write("\n" + CIRCLE_BRIDGE_FEATURE_AMOS + "\n")
 
 
 RIM_SECTION_HEADERS = {
@@ -1143,14 +1500,31 @@ def _drop_wide_bwp_refs(node, node_nr_df, script):
     return re.sub(r"^set\s+NRCellDU=\S+\s+(bwpref|bWPSetRef)\s+.*\n?", "", script, flags=re.M | re.I)
 
 
-def write_sa_scripts(nr_dir, node, current_time, node_nr_df, cucp_5qi_xml, du_5qi_xml, amf_rim_config):
+def is_air_3268_b42(node_nr_df, radio_hw_df=None):
+    """the gNodeB's NR radios are AIR 3268 B42 (Radio_HW row of the NR cell's SEF, else NR-CELL Radio_Type)"""
+    types = []
+    if radio_hw_df is not None and "Radio_Type" in radio_hw_df and "sectorEquipmentFunctionId" in node_nr_df:
+        sefs = set(node_nr_df["sectorEquipmentFunctionId"].astype(str).str.strip())
+        types = list(radio_hw_df[radio_hw_df["sectorEquipmentFunctionId"].astype(str).str.strip().isin(sefs)]["Radio_Type"])
+    if not types and "Radio_Type" in node_nr_df:
+        types = list(node_nr_df["Radio_Type"])
+    return any(re.search(r"3268", str(t)) and re.search(r"B42", str(t), re.I) for t in types)
+
+
+def write_sa_scripts(nr_dir, node, current_time, node_nr_df, cucp_5qi_xml, du_5qi_xml, amf_rim_config,
+                     rim_no_location=False):
     # 06 = circle's AMF part + only the RIM block matching the gNodeB's sector (NR cell) count: 1, 2, or 3+
     starts = {k: amf_rim_config.rfind("\n", 0, amf_rim_config.index(h)) + 1 for k, h in RIM_SECTION_HEADERS.items()}
     sectors = min(max(len(node_nr_df), 1), 3)
     rim_script = amf_rim_config[starts[sectors]: starts[sectors + 1] if sectors < 3 else len(amf_rim_config)]
+    if rim_no_location:
+        # RJ AIR 3268 B42 (user 2026-11-03, RJ_RIM Activation script_B42 / RJ-NLRJNT02-1 kget): setIdAllocation 0,
+        # rimLocationEnabled false
+        rim_script = re.sub(r"(?im)^(set\s+\S+\s+setIdAllocation\s+)1\s*$", r"\g<1>0", rim_script)
+        rim_script = re.sub(r"(?im)^(set\s+\S+\s+rimLocationEnabled\s+)true\s*$", r"\g<1>false", rim_script)
     for _, row in node_nr_df.iterrows():
         sector = str(row["gUtranCell"]).strip()[-1:].upper()
-        set_id = row.get("SetID")
+        set_id = row.get("SetID", row.get("Set ID"))      # AS / NE RF templates still have the old "Set ID" header
         if sector in ("A", "B", "C") and pd.notna(set_id):
             rim_script = rim_script.replace(f"$setID_{sector}", str(int(set_id)))
     amf_script = _drop_wide_bwp_refs(node, node_nr_df, amf_rim_config[: starts[1]])
@@ -1844,6 +2218,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                     "6630-B": TN_SITEBASIC_SCRIPT_BBU6630_BBU6631_Bridge_IPV4,
                     "6631-B": TN_SITEBASIC_SCRIPT_BBU6630_BBU6631_Bridge_IPV4,
                     "6651": TN_SITEBASIC_SCRIPT_BBU6651,
+                    "6655": TN_SITEBASIC_SCRIPT_BBU6651,      # 6655 = same as 6651 (IPv6 6655 template above wins)
                     "6630": TN_SITEBASIC_SCRIPT_BBU6630_BBU6631,
                     "6631": TN_SITEBASIC_SCRIPT_BBU6630_BBU6631,
                 }.items():
@@ -2079,6 +2454,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                     "6631-B": CHN_SITEBASIC_SCRIPT_BBU6630_BBU6631_Bridge_IPV4,
                     "6630-B": CHN_SITEBASIC_SCRIPT_BBU6630_BBU6631_Bridge_IPV4,
                     "6651": CHN_SITEBASIC_SCRIPT_BBU6651,
+                    "6655": CHN_SITEBASIC_SCRIPT_BBU6651,      # 6655 = same as 6651 (IPv6 6655 template above wins)
                     "6630": CHN_SITEBASIC_SCRIPT_BBU6630_BBU6631,
                     "6631": CHN_SITEBASIC_SCRIPT_BBU6630_BBU6631,
                 }.items():
@@ -2378,7 +2754,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                                 ABIS_IP = row['ABIS_IP'],
                                 ABIS_GW = row['ABIS_GW']
                             )
-                            formatted_text += '\n' + abis_site_basic_text
+                            formatted_text = append_abis_session(formatted_text, abis_site_basic_text)
                             
                         with open(sitebasic_df_path, "a", encoding="utf-8") as file:
                             file.write(formatted_text + "\n")
@@ -2501,7 +2877,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
             RJ_Route_4G_GPL_LMS_path = os.path.join(create_script_paths(base_path_url, node_name)["lte"],f"03_{node_name}_GPL_LMS_script_{current_time}.txt")
             Phy_SiteID_Userlabel = site_basic_df['Phy SiteID/Userlabel'].unique()[0]
             with open(RJ_Route_4G_GPL_LMS_path, "a", encoding="utf-8") as file:
-                file.write(RJ_Route_4G_GPL_LMS.format(Phy_SiteID_Userlabel = Phy_SiteID_Userlabel) + "\n")
+                file.write(gpl_routes_for_oam_ip(RJ_Route_4G_GPL_LMS.format(Phy_SiteID_Userlabel = Phy_SiteID_Userlabel), site_basic_df, node_name) + "\n")
 
             temp_lte_df = lte_df[lte_df["eNodeBName"] == node_name].copy()
 
@@ -2601,7 +2977,8 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 with open(Termpoint_GUtranFreqRelation_path, "a") as file:
                     file.write(RJ_Termpoint_GUtranFreqRelation + "\n")
 
-                write_sa_scripts(create_script_paths(base_path_url, node)["nr"], node, current_time, nr_cell_sub, RJ_SA_cUCP5qiTable_XML, RJ_SA_dU5qiTable_XML, RJ_SA_AMF_RIM_CONFIG)
+                write_sa_scripts(create_script_paths(base_path_url, node)["nr"], node, current_time, nr_cell_sub, RJ_SA_cUCP5qiTable_XML, RJ_SA_dU5qiTable_XML, RJ_SA_AMF_RIM_CONFIG,
+                                 rim_no_location=is_air_3268_b42(nr_cell_sub, rru_hw_df))
         # ________________________________________________________________________________________________________________________________________________________________________#
 
         ########################################## RJ Commissioning Scripts Generation Logic ###############################################################
@@ -2691,7 +3068,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                                 ABIS_IP = row['ABIS_IP'],
                                 ABIS_GW = row['ABIS_GW']
                             )
-                            formatted_text += '\n' + abis_site_basic_text
+                            formatted_text = append_abis_session(formatted_text, abis_site_basic_text)
                             
                         with open(sitebasic_df_path, "a", encoding="utf-8") as file:
                             file.write(formatted_text + "\n")
@@ -2730,13 +3107,14 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 "6630": SiteEquipment_6630,
                 "6631": SiteEquipment_6631,
                 "6651": SiteEquipment_6651,
+                "6655": SiteEquipment_6651,      # 6655 = same as 6651 (user 2026-11-02)
                 "6303": SiteEquipment_6303,
                 "6353": SiteEquipment_6353,
                 "6339": SiteEquipment_6339,
                 "5216": SiteEquipment_5216,
                 "6648": SiteEquipment_6648,
                 "R503": SiteEquipment_R503,
-                
+
             }
             site_equipment_script_text = ""
             for _, row in sitebasic_df.iterrows():
@@ -2747,8 +3125,8 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                             Phy_SiteID_Userlabel=row["Phy_SiteID_Userlabel"],
                         )
                         break
-                    
-                    
+
+
             rru_type = {
                 "2219": RRU_2219_B0_B1_B3_2X2,
                 "2271": RRUS_2271_B1_2X2,
@@ -2760,14 +3138,15 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 "4427": RRU_4412_4418_4427_4428_4471_4X4,
                 "4428": RRU_4412_4418_4427_4428_4471_4X4,
                 "4471": RRU_4412_4418_4427_4428_4471_4X4,
-                "AIR" : AIR_5G_GENERATION_SCRIPT,
+                "RUS12": RRU_2219_B0_B1_B3_2X2,      # RUS12 B1 = same as 2219 B1 (user 2026-11-02)
+                "AIR" : RJ_AIR_5G_GENERATION_SCRIPT,
             }
             print(site_specific_rru_df)
 
             for idx, row in site_specific_rru_df.iterrows():
                 print(row['Radio_Type'])
                 for rru, rru_template in rru_type.items():
-                    if rru in str(row["Radio_Type"]):
+                    if rru in str(row["Radio_Type"]).replace(" ", "").upper():
                         print(rru)
                         site_equipment_text += rru_template.format(
                             eNodeBName=row["eNodeBName"],
@@ -2795,6 +3174,10 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                         siteBasicFilePath=siteBasicFilePath,
                     )
                 )
+        circle_commissioning_bridges(base_path_url, site_basic_df, rru_hw_df)      # Bridge / PIU (as KK)
+        if XML_TESTING:     # 04 LTE_Config + 04/05/06 5G NETCONF XMLs (testing)
+            write_circle_config_xmls(base_path_url, site_basic_df["eNodeBName"].unique(), current_time, "RJ", site_basic_df, lte_df,
+                                     rru_hw_df)
     # --------------------------------------------------------------- RJ Circle-specific Script Generation ---------------------------------------------------------------------
     
     # ---------------------------------------------------------------- NE Circle-specific Script Generation ----------------------------------------------------------------
@@ -2917,7 +3300,8 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 with open(Termpoint_GUtranFreqRelation_path, "a") as file:
                     file.write(NE_Termpoint_GUtranFreqRelation_script + "\n")
 
-                write_sa_scripts(create_script_paths(base_path_url, node)["nr"], node, current_time, nr_cell_sub, NE_SA_cUCP5qiTable_XML, NE_SA_dU5qiTable_XML, NE_SA_AMF_RIM_CONFIG)
+                write_sa_scripts(create_script_paths(base_path_url, node)["nr"], node, current_time, nr_cell_sub, NE_SA_cUCP5qiTable_XML, NE_SA_dU5qiTable_XML, NE_SA_AMF_RIM_CONFIG,
+                                 rim_no_location=is_air_3268_b42(nr_cell_sub, rru_hw_df))
         # ________________________________________________________________________________________________________________________________________________________________________#
 
         ########################################## NE Commissioning Scripts Generation Logic ###############################################################
@@ -2963,6 +3347,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 ############################################################ if ip_type in ["IPv4", "IPv6"]:git #####################################################################
                 bbu_script_mapping_ipv4 = {
                     "6651": NE_SiteBasic_ipv4_6651,
+                    "6655": NE_SiteBasic_ipv4_6651,      # 6655 = same as 6651 (user 2026-11-04)
                     "6631": NE_SiteBasic_ipv4_6631,
                     "6630": NE_SiteBasic_ipv4_6630,
                     "6353": NE_SiteBasic_ipv4_6353,
@@ -2973,6 +3358,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
                 bbu_script_mapping_ipv6 = {
                     "6651": NE_SiteBasic_ipv6_6651,
+                    "6655": NE_SiteBasic_ipv6_6651,      # 6655 = same as 6651 (user 2026-11-04)
                     "6631": NE_SiteBasic_ipv6_6631,
                     "6630": NE_SiteBasic_ipv6_6630,
                     "6339": NE_SiteBasic_ipv6_6339,
@@ -3007,7 +3393,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                                 ABIS_IP = row['ABIS_IP'],
                                 ABIS_GW = row['ABIS_GW']
                             )
-                            formatted_text += '\n' + abis_site_basic_text
+                            formatted_text = append_abis_session(formatted_text, abis_site_basic_text)
                             
                         with open(sitebasic_df_path, "a", encoding="utf-8") as file:
                             file.write(formatted_text + "\n")
@@ -3111,8 +3497,9 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                         siteBasicFilePath=siteBasicFilePath,
                     )
                 )
+        circle_commissioning_bridges(base_path_url, site_basic_df)      # Bridge / PIU (as KK)
         if XML_TESTING:     # 04 LTE_Config + 04/05/06 5G NETCONF XMLs (testing)
-            write_circle_config_xmls(base_path_url, site_basic_df["eNodeBName"].unique(), current_time, "NE", site_basic_df)
+            write_circle_config_xmls(base_path_url, site_basic_df["eNodeBName"].unique(), current_time, "NE", site_basic_df, lte_df)
     # ---------------------------------------------------------------- NE Circle-specific Script Generation ---------------------------------------------------------------------
     
     # ---------------------------------------------------------------- AS Circle-specific Script Generation ----------------------------------------------------------------
@@ -3254,7 +3641,8 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 with open(Termpoint_GUtranFreqRelation_path, "a") as file:
                     file.write(AS_Termpoint_GUtranFreqRelation_script + "\n")
 
-                write_sa_scripts(create_script_paths(base_path_url, node)["nr"], node, current_time, nr_cell_sub, AS_SA_cUCP5qiTable_XML, AS_SA_dU5qiTable_XML, AS_SA_AMF_RIM_CONFIG)
+                write_sa_scripts(create_script_paths(base_path_url, node)["nr"], node, current_time, nr_cell_sub, AS_SA_cUCP5qiTable_XML, AS_SA_dU5qiTable_XML, AS_SA_AMF_RIM_CONFIG,
+                                 rim_no_location=is_air_3268_b42(nr_cell_sub, rru_hw_df))
         # .......................................................................... NRCELL CONFIGRATION FOR CELL CREATION IN 5G ................................................
         ########################################## AS Commissioning Scripts Generation Logic ###############################################################
         for node in site_basic_df["eNodeBName"].unique():
@@ -3298,6 +3686,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 ############################################################ if ip_type in ["IPv4", "IPv6"]:git #####################################################################
                 bbu_script_mapping_ipv4 = {
                     "6651": AS_SiteBasic_ipv4_6651,
+                    "6655": AS_SiteBasic_ipv4_6651,      # 6655 = same as 6651 (user 2026-11-04)
                     "6631": AS_SiteBasic_ipv4_6631,
                     "6630": AS_SiteBasic_ipv4_6630,
                     "6353": AS_SiteBasic_ipv4_6353,
@@ -3308,6 +3697,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
                 bbu_script_mapping_ipv6 = {
                     "6651": AS_SiteBasic_ipv6_6651,
+                    "6655": AS_SiteBasic_ipv6_6651,      # 6655 = same as 6651 (user 2026-11-04)
                     "6631": AS_SiteBasic_ipv6_6631,
                     "6630": AS_SiteBasic_ipv6_6630,
                     "6339": AS_SiteBasic_ipv6_6339,
@@ -3342,7 +3732,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                                 ABIS_IP = row['ABIS_IP'],
                                 ABIS_GW = row['ABIS_GW']
                             )
-                            formatted_text += '\n' + abis_site_basic_text
+                            formatted_text = append_abis_session(formatted_text, abis_site_basic_text)
                         
                         with open(sitebasic_df_path, "a", encoding="utf-8") as file:
                             file.write(formatted_text + "\n")
@@ -3431,8 +3821,9 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
             
             with open(site_equipment_script_path, "a", encoding="utf-8") as file:
                 file.write(rbs_summary_script(circle).format(siteEquipmentFilePath=siteEquipmentFilePath,siteBasicFilePath=siteBasicFilePath))
+        circle_commissioning_bridges(base_path_url, site_basic_df)      # Bridge / PIU (as KK)
         if XML_TESTING:     # 04 LTE_Config + 04/05/06 5G NETCONF XMLs (testing)
-            write_circle_config_xmls(base_path_url, site_basic_df["eNodeBName"].unique(), current_time, "AS", site_basic_df)
+            write_circle_config_xmls(base_path_url, site_basic_df["eNodeBName"].unique(), current_time, "AS", site_basic_df, lte_df)
     # ---------------------------------------------------------------- AS Circle-specific Script Generation ----------------------------------------------------------------
     
     # ---------------------------------------------------------------- DEL Circle-specific Script Generation ----------------------------------------------------------------
@@ -3665,7 +4056,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                                 ABIS_IP = row['ABIS_IP'],
                                 ABIS_GW = row['ABIS_GW']
                             )
-                            formatted_text += '\n' + abis_site_basic_text
+                            formatted_text = append_abis_session(formatted_text, abis_site_basic_text)
                         
                         with open(sitebasic_df_path, "a", encoding="utf-8") as file:
                             file.write(formatted_text + "\n")
@@ -3943,6 +4334,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 ############################################################ if ip_type in ["IPv4", "IPv6"]:git #####################################################################
                 bbu_script_mapping_ipv4 = {
                     "6651": DEL_Vi_SiteBasic_ipv4_6651,
+                    "6655": DEL_Vi_SiteBasic_ipv4_6651,      # 6655 = same as 6651 (user 2026-11-04)
                     "6631": DEL_Vi_SiteBasic_ipv4_6631,
                     "6630": DEL_Vi_SiteBasic_ipv4_6630,
                     "6353": DEL_Vi_SiteBasic_ipv4_6353,
@@ -3953,6 +4345,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
                 bbu_script_mapping_ipv6 = {
                     "6651": DEL_Vi_SiteBasic_ipv6_6651,
+                    "6655": DEL_Vi_SiteBasic_ipv6_6651,      # 6655 = same as 6651 (user 2026-11-04)
                     "6631": DEL_Vi_SiteBasic_ipv6_6631,
                     "6630": DEL_Vi_SiteBasic_ipv6_6630,
                     "6339": DEL_Vi_SiteBasic_ipv6_6339,
@@ -4000,7 +4393,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                                 ABIS_IP = row['ABIS_IP'],
                                 ABIS_GW = row['ABIS_GW']
                             )
-                            formatted_text += '\n' + abis_site_basic_text
+                            formatted_text = append_abis_session(formatted_text, abis_site_basic_text)
                         
                         with open(sitebasic_df_path, "a", encoding="utf-8") as file:
                             file.write(formatted_text + "\n")
@@ -4300,6 +4693,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 ############################################################ if ip_type in ["IPv4", "IPv6"]:git #####################################################################
                 bbu_script_mapping_ipv4 = {
                     "6651": MAG_Vi_SiteBasic_ipv4_6651,
+                    "6655": MAG_Vi_SiteBasic_ipv4_6651,      # 6655 = same as 6651 (user 2026-11-04)
                     "6631": MAG_Vi_SiteBasic_ipv4_6631,
                     "6630": MAG_Vi_SiteBasic_ipv4_6630,
                     "6353": MAG_Vi_SiteBasic_ipv4_6353,
@@ -4310,6 +4704,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
                 bbu_script_mapping_ipv6 = {
                     "6651": MAG_Vi_SiteBasic_ipv6_6651,
+                    "6655": MAG_Vi_SiteBasic_ipv6_6651,      # 6655 = same as 6651 (user 2026-11-04)
                     "6631": MAG_Vi_SiteBasic_ipv6_6631,
                     "6630": MAG_Vi_SiteBasic_ipv6_6630,
                     "6339": MAG_Vi_SiteBasic_ipv6_6339,
@@ -4357,7 +4752,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                                 ABIS_IP = row['ABIS_IP'],
                                 ABIS_GW = row['ABIS_GW']
                             )
-                            formatted_text += '\n' + abis_site_basic_text
+                            formatted_text = append_abis_session(formatted_text, abis_site_basic_text)
                         
                         with open(sitebasic_df_path, "a", encoding="utf-8") as file:
                             file.write(formatted_text + "\n")
@@ -4657,6 +5052,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 ############################################################ if ip_type in ["IPv4", "IPv6"]:git #####################################################################
                 bbu_script_mapping_ipv4 = {
                     "6651": MP_Vi_SiteBasic_ipv4_6651,
+                    "6655": MP_Vi_SiteBasic_ipv4_6651,      # 6655 = same as 6651 (user 2026-11-04)
                     "6631": MP_Vi_SiteBasic_ipv4_6631,
                     "6630": MP_Vi_SiteBasic_ipv4_6630,
                     "6353": MP_Vi_SiteBasic_ipv4_6353,
@@ -4667,6 +5063,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
                 bbu_script_mapping_ipv6 = {
                     "6651": MP_Vi_SiteBasic_ipv6_6651,
+                    "6655": MP_Vi_SiteBasic_ipv6_6651,      # 6655 = same as 6651 (user 2026-11-04)
                     "6631": MP_Vi_SiteBasic_ipv6_6631,
                     "6630": MP_Vi_SiteBasic_ipv6_6630,
                     "6339": MP_Vi_SiteBasic_ipv6_6339,
@@ -4714,7 +5111,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                                 ABIS_IP = row['ABIS_IP'],
                                 ABIS_GW = row['ABIS_GW']
                             )
-                            formatted_text += '\n' + abis_site_basic_text
+                            formatted_text = append_abis_session(formatted_text, abis_site_basic_text)
                         
                         with open(sitebasic_df_path, "a", encoding="utf-8") as file:
                             file.write(formatted_text + "\n")
@@ -4988,6 +5385,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 ############################################################ if ip_type in ["IPv4", "IPv6"]:git #####################################################################
                 bbu_script_mapping_ipv4 = {
                     "6651": UPW_SiteBasic_ipv4_6651,
+                    "6655": UPW_SiteBasic_ipv4_6651,      # 6655 = same as 6651 (user 2026-11-04)
                     "6631": UPW_SiteBasic_ipv4_6631,
                     "6630": UPW_SiteBasic_ipv4_6630,
                     "6353": UPW_SiteBasic_ipv4_6353,
@@ -4998,6 +5396,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
                 bbu_script_mapping_ipv6 = {
                     "6651": UPW_SiteBasic_ipv6_6651,
+                    "6655": UPW_SiteBasic_ipv6_6651,      # 6655 = same as 6651 (user 2026-11-04)
                     "6631": UPW_SiteBasic_ipv6_6631,
                     "6630": UPW_SiteBasic_ipv6_6630,
                     "6339": UPW_SiteBasic_ipv6_6339,
@@ -5032,7 +5431,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                                 ABIS_IP = row['ABIS_IP'],
                                 ABIS_GW = row['ABIS_GW']
                             )
-                            formatted_text += '\n' + abis_site_basic_text
+                            formatted_text = append_abis_session(formatted_text, abis_site_basic_text)
                         
                         with open(sitebasic_df_path, "a", encoding="utf-8") as file:
                             file.write(formatted_text + "\n")
@@ -5355,7 +5754,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                                     ABIS_IP = row['ABIS_IP'],
                                     ABIS_GW = row['ABIS_GW']
                                 )
-                            formatted_text += '\n' + abis_site_basic_text
+                            formatted_text = append_abis_session(formatted_text, abis_site_basic_text)
                             
                         with open(sitebasic_df_path, "a", encoding="utf-8") as file:
                             file.write(formatted_text + "\n")
@@ -5644,6 +6043,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 ############################################################ if ip_type in ["IPv4", "IPv6"]:git #####################################################################
                 bbu_script_mapping_ipv4 = {
                     "6651": JK_SiteBasic_ipv4_6651,
+                    "6655": JK_SiteBasic_ipv4_6651,      # 6655 = same as 6651 (user 2026-11-04)
                     "6631": JK_SiteBasic_ipv4_6631,
                     "6630": JK_SiteBasic_ipv4_6630,
                     "6353": JK_SiteBasic_ipv4_6353,
@@ -5654,6 +6054,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
                 bbu_script_mapping_ipv6 = {
                     "6651": JK_SiteBasic_ipv6_6651,
+                    "6655": JK_SiteBasic_ipv6_6651,      # 6655 = same as 6651 (user 2026-11-04)
                     "6631": JK_SiteBasic_ipv6_6631,
                     "6630": JK_SiteBasic_ipv6_6630,
                     "6339": JK_SiteBasic_ipv6_6339,
@@ -5688,7 +6089,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                                 ABIS_IP = row['ABIS_IP'],
                                 ABIS_GW = row['ABIS_GW']
                             )
-                            formatted_text += '\n' + abis_site_basic_text
+                            formatted_text = append_abis_session(formatted_text, abis_site_basic_text)
                         
                         with open(sitebasic_df_path, "a", encoding="utf-8") as file:
                             file.write(formatted_text + "\n")

@@ -4438,1295 +4438,1486 @@ NE_SA_AMF_RIM_CONFIG = """lt all
 #################NSA to SA Conversion#######################
 
 
-                                                                                                                                                                                           
-$date = `date +%y%m%d_%H%M`                                                                                                                                                                            
-cvms Pre_SA_$date                                                                                                                                                                                      
-                                                                                                                                                                                                       
-confb+                                                                                                                                                                                                 
-gs+                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-gs+                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-crn GNBCUCPFunction=1,TermPointToAmf=NE_3                                                                                                                                                              
-                                                                                                                                                                                                       
-administrativeState 1                                                                                                                                                                                  
-defaultAmf true                                                                                                                                                                                        
-domainName                                                                                                                                                                                             
-ipv4Address1 10.103.39.116                                                                                                                                                                             
-ipv4Address2 10.103.39.118                                                                                                                                                                             
-                                                                                                                                                                                                       
-ipv6Address1 2401:4900:50:8::1:362                                                                                                                                                                     
-ipv6Address2 2401:4900:50:8::1:364                                                                                                                                                                     
-operatorPLMNId                                                                                                                                                                                         
-pwsRestartHandling 0                                                                                                                                                                                   
-end                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-crn GNBCUCPFunction=1,TermPointToAmf=NE_4                                                                                                                                                              
-                                                                                                                                                                                                       
-administrativeState 1                                                                                                                                                                                  
-defaultAmf true                                                                                                                                                                                        
-domainName                                                                                                                                                                                             
-ipv4Address1 10.103.39.76                                                                                                                                                                              
-ipv4Address2 10.103.39.78                                                                                                                                                                              
-                                                                                                                                                                                                       
-ipv6Address1 2401:4900:50:8::1:3d3                                                                                                                                                                     
-ipv6Address2 2401:4900:50:8::1:3d5                                                                                                                                                                     
-operatorPLMNId                                                                                                                                                                                         
-pwsRestartHandling 0                                                                                                                                                                                   
-end                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-deb TermPointToAmf=[1-3]                                                                                                                                                                               
-get TermPointToAmf=.*                                                                                                                                                                                  
-                                                                                                                                                                                                       
-bl NRCELLDU=.*                                                                                                                                                                                         
-bl NRSectorCarrier=S.*_N11                                                                                                                                                                             
-                                                                                                                                                                                                       
-eset1 ^NRCellDU sNSSAIList sd=1,sst=1                                                                                                                                                                  
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-3. change below parameters on NR.                                                                                                                                                                      
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-set . secondaryCellOnly false                                                                                                                                                                          
-set GNBDUFunction=1,Rrc=1 t310 2000                                                                                                                                                                    
-set . transmitSib2 true                                                                                                                                                                                
-                                                                                                                                                                                                       
-set GNBCUCPFunction=1,AnrFunction=1,AnrFunctionNR=1 anrCgiMeasIntraFreqEnabled true                                                                                                                    
-set GNBCUCPFunction=1,AnrFunction=1,AnrFunctionNR=1 anrCgiMeasInterFreqMode 1                                                                                                                          
-set GNBCUCPFunction=1 nasInactivityTime 10                                                                                                                                                             
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++                                                                                   
-                                                                                                                                                                                                       
-Relations in SA                                                                                                                                                                                        
-                                                                                                                                                                                                       
-ARFCN:L1800-1509                                                                                                                                                                                       
-L2100: 265                                                                                                                                                                                             
-                                                                                                                                                                                                       
-get . earfcn                                                                                                                                                                                           
-                                                                                                                                                                                                       
-lt all                                                                                                                                                                                                 
-st cell                                                                                                                                                                                                
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-gs+                                                                                                                                                                                                    
-crn GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=1509                                                                                                                                              
-arfcnValueEUtranDl 1509                                                                                                                                                                                
-userLabel                                                                                                                                                                                              
-end                                                                                                                                                                                                    
-gs-                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-gs+                                                                                                                                                                                                    
-crn GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=265                                                                                                                                               
-arfcnValueEUtranDl 265                                                                                                                                                                                 
-userLabel                                                                                                                                                                                              
-end                                                                                                                                                                                                    
-gs-                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-gs+                                                                                                                                                                                                    
-crn GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=3645                                                                                                                                              
-arfcnValueEUtranDl 3645                                                                                                                                                                                
-userLabel                                                                                                                                                                                              
-end                                                                                                                                                                                                    
-gs-                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-gs+                                                                                                                                                                                                    
-crn GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=39150                                                                                                                                             
-arfcnValueEUtranDl 39150                                                                                                                                                                               
-userLabel                                                                                                                                                                                              
-end                                                                                                                                                                                                    
-gs-                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-gs+                                                                                                                                                                                                    
-crn GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=39294                                                                                                                                             
-arfcnValueEUtranDl 39294                                                                                                                                                                               
-userLabel                                                                                                                                                                                              
-end                                                                                                                                                                                                    
-gs-                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-gs+                                                                                                                                                                                                    
-crn GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=39151                                                                                                                                             
-arfcnValueEUtranDl 39151                                                                                                                                                                               
-userLabel                                                                                                                                                                                              
-end                                                                                                                                                                                                    
-gs-                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-gs+                                                                                                                                                                                                    
-crn GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=39348                                                                                                                                             
-arfcnValueEUtranDl 39348                                                                                                                                                                               
-userLabel                                                                                                                                                                                              
-end                                                                                                                                                                                                    
-gs-                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-gs+                                                                                                                                                                                                    
-ma nrcell GNBDUFunction=1,NRCellDU=                                                                                                                                                                    
-for $mo in nrcell                                                                                                                                                                                      
-$mordn = rdn($mo)                                                                                                                                                                                      
-$mordn = $mordn -s NRCellDU= -r NRCellCU=                                                                                                                                                              
-crn GNBCUCPFunction=1,$mordn,EUtranFreqRelation=1509                                                                                                                                                   
-allowedMeasBandwidth 100                                                                                                                                                                               
-allowedPlmnList                                                                                                                                                                                        
-cellReselectionPriority 6                                                                                                                                                                              
-eUtranFallbackPrioEc 6                                                                                                                                                                                 
-eUtranFrequencyRef GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=1509                                                                                                                               
-mcpcPCellEUtranFreqRelProfileRef                                                                                                                                                                       
-pMaxEUtra 23                                                                                                                                                                                           
-presenceAntennaPort1 false                                                                                                                                                                             
-qQualMin -34                                                                                                                                                                                           
-qRxLevMin -128                                                                                                                                                                                         
-tReselectionEUtra 2                                                                                                                                                                                    
-tReselectionEutraSfHigh                                                                                                                                                                                
-tReselectionEutraSfMedium                                                                                                                                                                              
-threshXHighP 62                                                                                                                                                                                        
-threshXHighQ                                                                                                                                                                                           
-threshXLowP 0                                                                                                                                                                                          
-threshXLowQ                                                                                                                                                                                            
-ueMCEUtranFreqRelProfileRef                                                                                                                                                                            
-userLabel                                                                                                                                                                                              
-voicePrio 0                                                                                                                                                                                            
-end                                                                                                                                                                                                    
-gs-                                                                                                                                                                                                    
-done                                                                                                                                                                                                   
-                                                                                                                                                                                                       
-gs+                                                                                                                                                                                                    
-ma nrcell GNBDUFunction=1,NRCellDU=                                                                                                                                                                    
-for $mo in nrcell                                                                                                                                                                                      
-$mordn = rdn($mo)                                                                                                                                                                                      
-$mordn = $mordn -s NRCellDU= -r NRCellCU=                                                                                                                                                              
-crn GNBCUCPFunction=1,$mordn,EUtranFreqRelation=265                                                                                                                                                    
-allowedMeasBandwidth 50                                                                                                                                                                                
-allowedPlmnList                                                                                                                                                                                        
-cellReselectionPriority 5                                                                                                                                                                              
-eUtranFallbackPrioEc 5                                                                                                                                                                                 
-eUtranFrequencyRef GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=265                                                                                                                                
-mcpcPCellEUtranFreqRelProfileRef                                                                                                                                                                       
-pMaxEUtra 23                                                                                                                                                                                           
-presenceAntennaPort1 false                                                                                                                                                                             
-qQualMin -34                                                                                                                                                                                           
-qRxLevMin -128                                                                                                                                                                                         
-tReselectionEUtra 2                                                                                                                                                                                    
-tReselectionEutraSfHigh                                                                                                                                                                                
-tReselectionEutraSfMedium                                                                                                                                                                              
-threshXHighP 62                                                                                                                                                                                        
-threshXHighQ                                                                                                                                                                                           
-threshXLowP 0                                                                                                                                                                                          
-threshXLowQ                                                                                                                                                                                            
-ueMCEUtranFreqRelProfileRef                                                                                                                                                                            
-userLabel                                                                                                                                                                                              
-voicePrio 0                                                                                                                                                                                            
-end                                                                                                                                                                                                    
-gs-                                                                                                                                                                                                    
-done                                                                                                                                                                                                   
-                                                                                                                                                                                                       
-gs-                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-gs+                                                                                                                                                                                                    
-ma nrcell GNBDUFunction=1,NRCellDU=                                                                                                                                                                    
-for $mo in nrcell                                                                                                                                                                                      
-$mordn = rdn($mo)                                                                                                                                                                                      
-$mordn = $mordn -s NRCellDU= -r NRCellCU=                                                                                                                                                              
-crn GNBCUCPFunction=1,$mordn,EUtranFreqRelation=3645                                                                                                                                                   
-allowedMeasBandwidth 25                                                                                                                                                                                
-allowedPlmnList                                                                                                                                                                                        
-cellReselectionPriority 3                                                                                                                                                                              
-eUtranFallbackPrioEc 4                                                                                                                                                                                 
-eUtranFrequencyRef GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=3645                                                                                                                               
-mcpcPCellEUtranFreqRelProfileRef                                                                                                                                                                       
-pMaxEUtra 23                                                                                                                                                                                           
-presenceAntennaPort1 false                                                                                                                                                                             
-qQualMin -34                                                                                                                                                                                           
-qRxLevMin -128                                                                                                                                                                                         
-tReselectionEUtra 2                                                                                                                                                                                    
-tReselectionEutraSfHigh                                                                                                                                                                                
-tReselectionEutraSfMedium                                                                                                                                                                              
-threshXHighP 62                                                                                                                                                                                        
-threshXHighQ                                                                                                                                                                                           
-threshXLowP 0                                                                                                                                                                                          
-threshXLowQ                                                                                                                                                                                            
-ueMCEUtranFreqRelProfileRef                                                                                                                                                                            
-userLabel                                                                                                                                                                                              
-voicePrio 0                                                                                                                                                                                            
-end                                                                                                                                                                                                    
-gs-                                                                                                                                                                                                    
-done                                                                                                                                                                                                   
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-gs+                                                                                                                                                                                                    
-ma nrcell GNBDUFunction=1,NRCellDU=                                                                                                                                                                    
-for $mo in nrcell                                                                                                                                                                                      
-$mordn = rdn($mo)                                                                                                                                                                                      
-$mordn = $mordn -s NRCellDU= -r NRCellCU=                                                                                                                                                              
-crn GNBCUCPFunction=1,$mordn,EUtranFreqRelation=39150                                                                                                                                                  
-allowedMeasBandwidth 75                                                                                                                                                                                
-allowedPlmnList                                                                                                                                                                                        
-cellReselectionPriority 6                                                                                                                                                                              
-eUtranFallbackPrioEc 3                                                                                                                                                                                 
-eUtranFrequencyRef GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=39150                                                                                                                              
-mcpcPCellEUtranFreqRelProfileRef                                                                                                                                                                       
-pMaxEUtra 23                                                                                                                                                                                           
-presenceAntennaPort1 false                                                                                                                                                                             
-qQualMin -34                                                                                                                                                                                           
-qRxLevMin -128                                                                                                                                                                                         
-tReselectionEUtra 2                                                                                                                                                                                    
-tReselectionEutraSfHigh                                                                                                                                                                                
-tReselectionEutraSfMedium                                                                                                                                                                              
-threshXHighP 62                                                                                                                                                                                        
-threshXHighQ                                                                                                                                                                                           
-threshXLowP 0                                                                                                                                                                                          
-threshXLowQ                                                                                                                                                                                            
-ueMCEUtranFreqRelProfileRef                                                                                                                                                                            
-userLabel                                                                                                                                                                                              
-voicePrio 0                                                                                                                                                                                            
-end                                                                                                                                                                                                    
-gs-                                                                                                                                                                                                    
-done                                                                                                                                                                                                   
-                                                                                                                                                                                                       
-gs+                                                                                                                                                                                                    
-ma nrcell GNBDUFunction=1,NRCellDU=                                                                                                                                                                    
-for $mo in nrcell                                                                                                                                                                                      
-$mordn = rdn($mo)                                                                                                                                                                                      
-$mordn = $mordn -s NRCellDU= -r NRCellCU=                                                                                                                                                              
-crn GNBCUCPFunction=1,$mordn,EUtranFreqRelation=39294                                                                                                                                                  
-allowedMeasBandwidth 75                                                                                                                                                                                
-allowedPlmnList                                                                                                                                                                                        
-cellReselectionPriority 6                                                                                                                                                                              
-eUtranFallbackPrioEc 0                                                                                                                                                                                 
-eUtranFrequencyRef GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=39294                                                                                                                              
-mcpcPCellEUtranFreqRelProfileRef                                                                                                                                                                       
-pMaxEUtra 23                                                                                                                                                                                           
-presenceAntennaPort1 false                                                                                                                                                                             
-qQualMin -34                                                                                                                                                                                           
-qRxLevMin -128                                                                                                                                                                                         
-tReselectionEUtra 2                                                                                                                                                                                    
-tReselectionEutraSfHigh                                                                                                                                                                                
-tReselectionEutraSfMedium                                                                                                                                                                              
-threshXHighP 62                                                                                                                                                                                        
-threshXHighQ                                                                                                                                                                                           
-threshXLowP 0                                                                                                                                                                                          
-threshXLowQ                                                                                                                                                                                            
-ueMCEUtranFreqRelProfileRef                                                                                                                                                                            
-userLabel                                                                                                                                                                                              
-voicePrio 0                                                                                                                                                                                            
-end                                                                                                                                                                                                    
-gs-                                                                                                                                                                                                    
-done                                                                                                                                                                                                   
-                                                                                                                                                                                                       
-gs+                                                                                                                                                                                                    
-ma nrcell GNBDUFunction=1,NRCellDU=                                                                                                                                                                    
-for $mo in nrcell                                                                                                                                                                                      
-$mordn = rdn($mo)                                                                                                                                                                                      
-$mordn = $mordn -s NRCellDU= -r NRCellCU=                                                                                                                                                              
-crn GNBCUCPFunction=1,$mordn,EUtranFreqRelation=39348                                                                                                                                                  
-allowedMeasBandwidth 75                                                                                                                                                                                
-allowedPlmnList                                                                                                                                                                                        
-cellReselectionPriority 4                                                                                                                                                                              
-eUtranFallbackPrioEc -1                                                                                                                                                                                
-eUtranFrequencyRef GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=39348                                                                                                                              
-mcpcPCellEUtranFreqRelProfileRef                                                                                                                                                                       
-pMaxEUtra 23                                                                                                                                                                                           
-presenceAntennaPort1 false                                                                                                                                                                             
-qQualMin -34                                                                                                                                                                                           
-qRxLevMin -128                                                                                                                                                                                         
-tReselectionEUtra 2                                                                                                                                                                                    
-tReselectionEutraSfHigh                                                                                                                                                                                
-tReselectionEutraSfMedium                                                                                                                                                                              
-threshXHighP 62                                                                                                                                                                                        
-threshXHighQ                                                                                                                                                                                           
-threshXLowP 0                                                                                                                                                                                          
-threshXLowQ                                                                                                                                                                                            
-ueMCEUtranFreqRelProfileRef                                                                                                                                                                            
-userLabel                                                                                                                                                                                              
-voicePrio 0                                                                                                                                                                                            
-end                                                                                                                                                                                                    
-gs-                                                                                                                                                                                                    
-done                                                                                                                                                                                                   
-                                                                                                                                                                                                       
-gs+                                                                                                                                                                                                    
-ma nrcell GNBDUFunction=1,NRCellDU=                                                                                                                                                                    
-for $mo in nrcell                                                                                                                                                                                      
-$mordn = rdn($mo)                                                                                                                                                                                      
-$mordn = $mordn -s NRCellDU= -r NRCellCU=                                                                                                                                                              
-crn GNBCUCPFunction=1,$mordn,EUtranFreqRelation=39151                                                                                                                                                  
-allowedMeasBandwidth 75                                                                                                                                                                                
-allowedPlmnList                                                                                                                                                                                        
-cellReselectionPriority 4                                                                                                                                                                              
-eUtranFallbackPrioEc -1                                                                                                                                                                                
-eUtranFrequencyRef GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=39151                                                                                                                              
-mcpcPCellEUtranFreqRelProfileRef                                                                                                                                                                       
-pMaxEUtra 23                                                                                                                                                                                           
-presenceAntennaPort1 false                                                                                                                                                                             
-qQualMin -34                                                                                                                                                                                           
-qRxLevMin -128                                                                                                                                                                                         
-tReselectionEUtra 2                                                                                                                                                                                    
-tReselectionEutraSfHigh                                                                                                                                                                                
-tReselectionEutraSfMedium                                                                                                                                                                              
-threshXHighP 62                                                                                                                                                                                        
-threshXHighQ                                                                                                                                                                                           
-threshXLowP 0                                                                                                                                                                                          
-threshXLowQ                                                                                                                                                                                            
-ueMCEUtranFreqRelProfileRef                                                                                                                                                                            
-userLabel                                                                                                                                                                                              
-voicePrio 0                                                                                                                                                                                            
-end                                                                                                                                                                                                    
-gs-                                                                                                                                                                                                    
-done                                                                                                                                                                                                   
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-set GNBCUCPFunction=1,NRCellCU=.*,EUtranFreqRelation=.* anrMeasOn true                                                                                                                                 
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-+++++++++++++++++Create Xn Interface++++++++++++++++                                                                                                                                                   
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-crn Transport=1,SctpEndpoint=XN                                                                                                                                                                        
-dtls                                                                                                                                                                                                   
-dtlsNodeCredential                                                                                                                                                                                     
-dtlsSctpSecurityMode 0                                                                                                                                                                                 
-dtlsTrustCategory                                                                                                                                                                                      
-localIpAddress Transport=1,Router=LTEUP,InterfaceIPv6=NR,AddressIPv6=NR                                                                                                                                
-portNumber 38422                                                                                                                                                                                       
-sctpProfile SctpProfile=1                                                                                                                                                                              
-userLabel                                                                                                                                                                                              
-end                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-crn GNBCUCPFunction=1,EndpointResource=1,LocalSctpEndpoint=4                                                                                                                                           
-interfaceUsed 6                                                                                                                                                                                        
-sctpEndpointRef SctpEndpoint=XN                                                                                                                                                                        
-end                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-set . transmitSib5 true                                                                                                                                                                                
-                                                                                                                                                                                                       
-deb NRCELLDU=.*                                                                                                                                                                                        
-deb NRSectorCarrier=S.*_N11                                                                                                                                                                            
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-confb+                                                                                                                                                                                                 
-set CUUP5qiTable=1,CUUP5qi=5qi1                             dscp              34                                                                                                                       
-set CUUP5qiTable=1,CUUP5qi=5qi2                             dscp              34                                                                                                                       
-set CUUP5qiTable=1,CUUP5qi=5qi3                             dscp              12                                                                                                                       
-set CUUP5qiTable=1,CUUP5qi=5qi4                             dscp              12                                                                                                                       
-set CUUP5qiTable=1,CUUP5qi=5qi5                             dscp              46                                                                                                                       
-set CUUP5qiTable=1,CUUP5qi=5qi6                             dscp              32                                                                                                                       
-set CUUP5qiTable=1,CUUP5qi=5qi7                             dscp              40                                                                                                                       
-set CUUP5qiTable=1,CUUP5qi=5qi8                             dscp              30                                                                                                                       
-set CUUP5qiTable=1,CUUP5qi=5qi9                             dscp              26                                                                                                                       
-                                                                                                                                                                                                       
-set DU5qiTable=1,DU5qi=1                                    dscp              34                                                                                                                       
-set DU5qiTable=1,DU5qi=2                                    dscp              34                                                                                                                       
-set DU5qiTable=1,DU5qi=3                                    dscp              12                                                                                                                       
-set DU5qiTable=1,DU5qi=4                                    dscp              12                                                                                                                       
-set DU5qiTable=1,DU5qi=5                                    dscp              46                                                                                                                       
-set DU5qiTable=1,DU5qi=6                                    dscp              32                                                                                                                       
-set DU5qiTable=1,DU5qi=7                                    dscp              40                                                                                                                       
-set DU5qiTable=1,DU5qi=8                                    dscp              30                                                                                                                       
-set DU5qiTable=1,DU5qi=9                                    dscp              26                                                                                                                       
-                                                                                                                                                                                                       
-lt all                                                                                                                                                                                                 
-                                                                                                                                                                                                       
-confb-                                                                                                                                                                                                 
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-lt all                                                                                                                                                                                                 
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-confbd+                                                                                                                                                                                                
-                                                                                                                                                                                                       
-lbl nrcell                                                                                                                                                                                             
-                                                                                                                                                                                                       
+
+$date = `date +%y%m%d_%H%M`
+cvms Pre_SA_$date
+
+confb+
+gs+
+
+
+gs+
+
+crn GNBCUCPFunction=1,TermPointToAmf=NE_3
+
+administrativeState 1
+defaultAmf true
+domainName
+ipv4Address1 10.103.39.116
+ipv4Address2 10.103.39.118
+
+ipv6Address1 2401:4900:50:8::1:362
+ipv6Address2 2401:4900:50:8::1:364
+operatorPLMNId
+pwsRestartHandling 0
+end
+
+crn GNBCUCPFunction=1,TermPointToAmf=NE_4
+
+administrativeState 1
+defaultAmf true
+domainName
+ipv4Address1 10.103.39.76
+ipv4Address2 10.103.39.78
+
+ipv6Address1 2401:4900:50:8::1:3d3
+ipv6Address2 2401:4900:50:8::1:3d5
+operatorPLMNId
+pwsRestartHandling 0
+end
+
+
+deb TermPointToAmf=[1-3]
+get TermPointToAmf=.*
+
+bl NRCELLDU=.*
+bl NRSectorCarrier=S.*_N11
+
+eset1 ^NRCellDU sNSSAIList sd=1,sst=1
+
+
+3. change below parameters on NR.
+
+
+set . secondaryCellOnly false
+set GNBDUFunction=1,Rrc=1 t310 2000
+set . transmitSib2 true
+
+set GNBCUCPFunction=1,AnrFunction=1,AnrFunctionNR=1 anrCgiMeasIntraFreqEnabled true
+set GNBCUCPFunction=1,AnrFunction=1,AnrFunctionNR=1 anrCgiMeasInterFreqMode 1
+set GNBCUCPFunction=1 nasInactivityTime 10
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Relations in SA
+
+ARFCN:L1800-1509
+L2100: 265
+
+get . earfcn
+
+lt all
+st cell
+
+
+gs+
+crn GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=1509
+arfcnValueEUtranDl 1509
+userLabel
+end
+gs-
+
+gs+
+crn GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=265
+arfcnValueEUtranDl 265
+userLabel
+end
+gs-
+
+gs+
+crn GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=3645
+arfcnValueEUtranDl 3645
+userLabel
+end
+gs-
+
+gs+
+crn GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=39150
+arfcnValueEUtranDl 39150
+userLabel
+end
+gs-
+
+gs+
+crn GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=39294
+arfcnValueEUtranDl 39294
+userLabel
+end
+gs-
+
+gs+
+crn GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=39151
+arfcnValueEUtranDl 39151
+userLabel
+end
+gs-
+
+gs+
+crn GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=39348
+arfcnValueEUtranDl 39348
+userLabel
+end
+gs-
+
+
+
+
+gs+
+ma nrcell GNBDUFunction=1,NRCellDU=
+for $mo in nrcell
+$mordn = rdn($mo)
+$mordn = $mordn -s NRCellDU= -r NRCellCU=
+crn GNBCUCPFunction=1,$mordn,EUtranFreqRelation=1509
+allowedMeasBandwidth 100
+allowedPlmnList
+cellReselectionPriority 6
+eUtranFallbackPrioEc 6
+eUtranFrequencyRef GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=1509
+mcpcPCellEUtranFreqRelProfileRef
+pMaxEUtra 23
+presenceAntennaPort1 false
+qQualMin -34
+qRxLevMin -128
+tReselectionEUtra 2
+tReselectionEutraSfHigh
+tReselectionEutraSfMedium
+threshXHighP 62
+threshXHighQ
+threshXLowP 0
+threshXLowQ
+ueMCEUtranFreqRelProfileRef
+userLabel
+voicePrio 0
+end
+gs-
+done
+
+gs+
+ma nrcell GNBDUFunction=1,NRCellDU=
+for $mo in nrcell
+$mordn = rdn($mo)
+$mordn = $mordn -s NRCellDU= -r NRCellCU=
+crn GNBCUCPFunction=1,$mordn,EUtranFreqRelation=265
+allowedMeasBandwidth 50
+allowedPlmnList
+cellReselectionPriority 5
+eUtranFallbackPrioEc 5
+eUtranFrequencyRef GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=265
+mcpcPCellEUtranFreqRelProfileRef
+pMaxEUtra 23
+presenceAntennaPort1 false
+qQualMin -34
+qRxLevMin -128
+tReselectionEUtra 2
+tReselectionEutraSfHigh
+tReselectionEutraSfMedium
+threshXHighP 62
+threshXHighQ
+threshXLowP 0
+threshXLowQ
+ueMCEUtranFreqRelProfileRef
+userLabel
+voicePrio 0
+end
+gs-
+done
+
+gs-
+
+
+
+gs+
+ma nrcell GNBDUFunction=1,NRCellDU=
+for $mo in nrcell
+$mordn = rdn($mo)
+$mordn = $mordn -s NRCellDU= -r NRCellCU=
+crn GNBCUCPFunction=1,$mordn,EUtranFreqRelation=3645
+allowedMeasBandwidth 25
+allowedPlmnList
+cellReselectionPriority 3
+eUtranFallbackPrioEc 4
+eUtranFrequencyRef GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=3645
+mcpcPCellEUtranFreqRelProfileRef
+pMaxEUtra 23
+presenceAntennaPort1 false
+qQualMin -34
+qRxLevMin -128
+tReselectionEUtra 2
+tReselectionEutraSfHigh
+tReselectionEutraSfMedium
+threshXHighP 62
+threshXHighQ
+threshXLowP 0
+threshXLowQ
+ueMCEUtranFreqRelProfileRef
+userLabel
+voicePrio 0
+end
+gs-
+done
+
+
+
+
+gs+
+ma nrcell GNBDUFunction=1,NRCellDU=
+for $mo in nrcell
+$mordn = rdn($mo)
+$mordn = $mordn -s NRCellDU= -r NRCellCU=
+crn GNBCUCPFunction=1,$mordn,EUtranFreqRelation=39150
+allowedMeasBandwidth 75
+allowedPlmnList
+cellReselectionPriority 6
+eUtranFallbackPrioEc 3
+eUtranFrequencyRef GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=39150
+mcpcPCellEUtranFreqRelProfileRef
+pMaxEUtra 23
+presenceAntennaPort1 false
+qQualMin -34
+qRxLevMin -128
+tReselectionEUtra 2
+tReselectionEutraSfHigh
+tReselectionEutraSfMedium
+threshXHighP 62
+threshXHighQ
+threshXLowP 0
+threshXLowQ
+ueMCEUtranFreqRelProfileRef
+userLabel
+voicePrio 0
+end
+gs-
+done
+
+gs+
+ma nrcell GNBDUFunction=1,NRCellDU=
+for $mo in nrcell
+$mordn = rdn($mo)
+$mordn = $mordn -s NRCellDU= -r NRCellCU=
+crn GNBCUCPFunction=1,$mordn,EUtranFreqRelation=39294
+allowedMeasBandwidth 75
+allowedPlmnList
+cellReselectionPriority 6
+eUtranFallbackPrioEc 0
+eUtranFrequencyRef GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=39294
+mcpcPCellEUtranFreqRelProfileRef
+pMaxEUtra 23
+presenceAntennaPort1 false
+qQualMin -34
+qRxLevMin -128
+tReselectionEUtra 2
+tReselectionEutraSfHigh
+tReselectionEutraSfMedium
+threshXHighP 62
+threshXHighQ
+threshXLowP 0
+threshXLowQ
+ueMCEUtranFreqRelProfileRef
+userLabel
+voicePrio 0
+end
+gs-
+done
+
+gs+
+ma nrcell GNBDUFunction=1,NRCellDU=
+for $mo in nrcell
+$mordn = rdn($mo)
+$mordn = $mordn -s NRCellDU= -r NRCellCU=
+crn GNBCUCPFunction=1,$mordn,EUtranFreqRelation=39348
+allowedMeasBandwidth 75
+allowedPlmnList
+cellReselectionPriority 4
+eUtranFallbackPrioEc -1
+eUtranFrequencyRef GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=39348
+mcpcPCellEUtranFreqRelProfileRef
+pMaxEUtra 23
+presenceAntennaPort1 false
+qQualMin -34
+qRxLevMin -128
+tReselectionEUtra 2
+tReselectionEutraSfHigh
+tReselectionEutraSfMedium
+threshXHighP 62
+threshXHighQ
+threshXLowP 0
+threshXLowQ
+ueMCEUtranFreqRelProfileRef
+userLabel
+voicePrio 0
+end
+gs-
+done
+
+gs+
+ma nrcell GNBDUFunction=1,NRCellDU=
+for $mo in nrcell
+$mordn = rdn($mo)
+$mordn = $mordn -s NRCellDU= -r NRCellCU=
+crn GNBCUCPFunction=1,$mordn,EUtranFreqRelation=39151
+allowedMeasBandwidth 75
+allowedPlmnList
+cellReselectionPriority 4
+eUtranFallbackPrioEc -1
+eUtranFrequencyRef GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=39151
+mcpcPCellEUtranFreqRelProfileRef
+pMaxEUtra 23
+presenceAntennaPort1 false
+qQualMin -34
+qRxLevMin -128
+tReselectionEUtra 2
+tReselectionEutraSfHigh
+tReselectionEutraSfMedium
+threshXHighP 62
+threshXHighQ
+threshXLowP 0
+threshXLowQ
+ueMCEUtranFreqRelProfileRef
+userLabel
+voicePrio 0
+end
+gs-
+done
+
+
+set GNBCUCPFunction=1,NRCellCU=.*,EUtranFreqRelation=.* anrMeasOn true
+
+
++++++++++++++++++Create Xn Interface++++++++++++++++
+
+
+crn Transport=1,SctpEndpoint=XN
+dtls
+dtlsNodeCredential
+dtlsSctpSecurityMode 0
+dtlsTrustCategory
+localIpAddress Transport=1,Router=LTEUP,InterfaceIPv6=NR,AddressIPv6=NR
+portNumber 38422
+sctpProfile SctpProfile=1
+userLabel
+end
+
+
+
+crn GNBCUCPFunction=1,EndpointResource=1,LocalSctpEndpoint=4
+interfaceUsed 6
+sctpEndpointRef SctpEndpoint=XN
+end
+
+
+set . transmitSib5 true
+
+deb NRCELLDU=.*
+deb NRSectorCarrier=S.*_N11
+
+
+
+confb+
+set CUUP5qiTable=1,CUUP5qi=5qi1                             dscp              34
+set CUUP5qiTable=1,CUUP5qi=5qi2                             dscp              34
+set CUUP5qiTable=1,CUUP5qi=5qi3                             dscp              12
+set CUUP5qiTable=1,CUUP5qi=5qi4                             dscp              12
+set CUUP5qiTable=1,CUUP5qi=5qi5                             dscp              46
+set CUUP5qiTable=1,CUUP5qi=5qi6                             dscp              32
+set CUUP5qiTable=1,CUUP5qi=5qi7                             dscp              40
+set CUUP5qiTable=1,CUUP5qi=5qi8                             dscp              30
+set CUUP5qiTable=1,CUUP5qi=5qi9                             dscp              26
+
+set DU5qiTable=1,DU5qi=1                                    dscp              34
+set DU5qiTable=1,DU5qi=2                                    dscp              34
+set DU5qiTable=1,DU5qi=3                                    dscp              12
+set DU5qiTable=1,DU5qi=4                                    dscp              12
+set DU5qiTable=1,DU5qi=5                                    dscp              46
+set DU5qiTable=1,DU5qi=6                                    dscp              32
+set DU5qiTable=1,DU5qi=7                                    dscp              40
+set DU5qiTable=1,DU5qi=8                                    dscp              30
+set DU5qiTable=1,DU5qi=9                                    dscp              26
+
+lt all
+
+confb-
+
+
+lt all
+
+
+confbd+
+
+lbl nrcell
+
 hget CXC4012493|CXC4012534|CXC4012538|CXC4012549|CXC4012550|CXC4012591|CXC4012592|CXC4012637|CXC4012607|CXC4012475|CXC4012548|CXC4012724|CXC4012680|CXC4012688|CXC4012601|CXC4012330|CXC4012406|CXC4012
-510|CXC4012562|CXC4012593|CXC4012638|CXC4012590|CXC4012218 featurestate|description|licensestate                                                                                                       
-                                                                                                                                                                                                       
-set CXC4012493|CXC4012534|CXC4012538|CXC4012549|CXC4012550|CXC4012591|CXC4012592|CXC4012637|CXC4012607|CXC4012475|CXC4012548|CXC4012724|CXC4012680|CXC4012688|CXC4012601|CXC4012330|CXC4012406|CXC40125
-10|CXC4012562|CXC4012593|CXC4012638|CXC4012590|CXC4012218 featurestate 1                                                                                                                               
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-set NRCellDU=.* secondaryCellOnly false                                                                                                                                                                
-set GNBDUFunction=1,Rrc=1    t300 1500                                                                                                                                                                 
-set GNBDUFunction=1,Rrc=1    t301 600                                                                                                                                                                  
-set GNBDUFunction=1,Rrc=1    t310 2000                                                                                                                                                                 
-set GNBDUFunction=1,Rrc=1    t311 3000                                                                                                                                                                 
-set GNBDUFunction=1,Rrc=1    t319 400                                                                                                                                                                  
-set GNBDUFunction=1,RadioBearerTable=1,SignalingRadioBearer=1 dlMaxRetxThreshold 32                                                                                                                    
-set GNBDUFunction=1,RadioBearerTable=1,SignalingRadioBearer=1 ulMaxRetxThreshold 32                                                                                                                    
-set GNBDUFunction=1,RadioBearerTable=1,SignalingRadioBearer=1 tPollRetransmitUl 80                                                                                                                     
-set GNBDUFunction=1,RadioBearerTable=1,SignalingRadioBearer=1 tPollRetransmitDl 80                                                                                                                     
-                                                                                                                                                                                                       
-set GNBCUCPFunction=1,AnrFunction=1,AnrFunctionNR=1 anrAutoCreateXnForEndc true                                                                                                                        
-set GNBCUCPFunction=1,AnrFunction=1,AnrFunctionNR=1         anrCgiMeasIntraFreqEnabled true                                                                                                            
-set GNBCUCPFunction=1,AnrFunction=1  promoteCellRelMobAttThresh  50                                                                                                                                    
-set GNBCUCPFunction=1,AnrFunction=1  demoteCellRelMobAttThresh  10                                                                                                                                     
-set GNBCUCPFunction=1,AnrFunction=1,AnrFunctionNR=1 anrCgiMeasInterFreqMode 1                                                                                                                          
-set GNBCUCPFunction=1,AnrFunction=1,AnrFunctionNR=1  anrEndcX2Enabled  true                                                                                                                            
-set GNBCUCPFunction=1,AnrFunction=1,AnrFunctionNR=1  ecgiDuringEpsFbEnabled true                                                                                                                       
-set GNBCUCPFunction=1,AnrFunction=1,AnrFunctionEUtran=1     anrCgiMeasIntraFreqEnabled true                                                                                                            
-                                                                                                                                                                                                       
-cr GNBCUCPFunction=1,AnrFunction=1,AnrFunctionEUtran=1                                                                                                                                                 
-lt all                                                                                                                                                                                                 
-set GNBCUCPFunction=1,AnrFunction=1,AnrFunctionEUtran=1 anrCgiMeasEUtranEnabled true                                                                                                                   
-                                                                                                                                                                                                       
-cr GNBCUCPFunction=1,AnrFunction=1,AnrFunctionEUtran=1,AnrFunctionEutranUeCfg=Base                                                                                                                     
-lt all                                                                                                                                                                                                 
-set GNBCUCPFunction=1,AnrFunction=1,AnrFunctionEUtran=1,AnrFunctionEutranUeCfg=Base ecgiDuringEpsFbEnabled true                                                                                        
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-set GNBDUFunction=1,UeCC=1,RadioLinkControl=1,UeAdaptiveRlc=1,UeAdaptiveRlcUeCfg=Base ueAdaptiveRlcRetxMode 0                                                                                          
-set GNBCUCPFunction=1,SecurityHandling=1    cipheringAlgoPrio 1,2,0                                                                                                                                    
-set GNBCUCPFunction=1,SecurityHandling=1    integrityProtectAlgoPrio 2,1                                                                                                                               
-set GNBDUFunction=1,UeCC=1,RadioLinkControl=1,DrbRlc=Default,DrbRlcUeCfg=Base tStatusProhibitDl 10                                                                                                     
-                                                                                                                                                                                                       
-set GNBDUFunction=1,Paging=1   defaultPagingCycle 128                                                                                                                                                  
-set GNBDUFunction=1,Paging=1 n 0                                                                                                                                                                       
-set GNBDUFunction=1,Paging=1 nS 1                                                                                                                                                                      
-set GNBDUFunction=1,Paging=1 pagingDiscardTimer 3                                                                                                                                                      
-set NRCellDU=.*   noOfCbraPreambles 16                                                                                                                                                                 
-set NRCellDU=.*   cfraEnabled true                                                                                                                                                                     
-set GNBDUFunction=1,UeCC=1,Rach=Default,RachUeCfg=Base      cfraEnabled  true                                                                                                                          
-set GNBCUCPFunction=1 maxCommonProcTime 30                                                                                                                                                             
-set GNBCUCPFunction=1 maxNgRetryTime    30                                                                                                                                                             
-set GNBCUCPFunction=1 nasInactivityTime 10                                                                                                                                                             
-set GNBCUCPFunction=1 ngcDedProcTime    5                                                                                                                                                              
-set NRCellCU=.* transmitSib2 true                                                                                                                                                                      
-set NRCellCU=.* transmitSib4 true                                                                                                                                                                      
-set NRCellCU=.* transmitSib5 true                                                                                                                                                                      
-set NRCellDU=.* sibType2 siBroadcastStatus=0                                                                                                                                                           
-set NRCellDU=.* sibType4 siBroadcastStatus=0                                                                                                                                                           
-set NRCellDU=.* sibType5 siBroadcastStatus=0                                                                                                                                                           
-set NRCellDU=.* sibType6 siBroadcastStatus=0                                                                                                                                                           
-set NRCellDU=.* sibType7 siBroadcastStatus=0                                                                                                                                                           
-set NRCellDU=.* sibType8 siBroadcastStatus=0                                                                                                                                                           
-set NRCellDU=.* sibType2 siPeriodicity=64                                                                                                                                                              
-set NRCellDU=.* sibType4 siPeriodicity=64                                                                                                                                                              
-set NRCellDU=.* sibType5 siPeriodicity=64                                                                                                                                                              
-set NRCellDU=.* sibType6 siPeriodicity=64                                                                                                                                                              
-set NRCellDU=.* sibType7 siPeriodicity=64                                                                                                                                                              
-set NRCellDU=.* sibType8 siPeriodicity=64                                                                                                                                                              
-set  NRCellDU=.*  cellBarred  1                                                                                                                                                                        
-set  NRCellDU=.* cellReservedForOperator 1                                                                                                                                                             
-set NRCellDU=.*   siWindowLength    20                                                                                                                                                                 
-set GNBCUCPFunction=1   xnIpAddrViaNgActive true                                                                                                                                                       
-set GNBCUCPFunction=1   rrcReestSupportType 2                                                                                                                                                          
-set NRCellDU=.* srsHoppingBandwidth 1                                                                                                                                                                  
-                                                                                                                                                                                                       
-cr GNBCUUPFunction=1,GtpuSupervision=1                                                                                                                                                                 
-crn GNBCUUPFunction=1,GtpuSupervision=1,GtpuSupervisionProfile=XN                                                                                                                                      
-gtpuEchoEnabled true                                                                                                                                                                                   
-gtpuEchoDscp 32                                                                                                                                                                                        
-interfaceList 6                                                                                                                                                                                        
-end                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-crn GNBCUUPFunction=1,GtpuSupervision=1,GtpuSupervisionProfile=NG                                                                                                                                      
-gtpuEchoEnabled true                                                                                                                                                                                   
-gtpuEchoDscp 32                                                                                                                                                                                        
-interfaceList 4                                                                                                                                                                                        
-end                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-#################LMS                                                                                                                                                                                   
-                                                                                                                                                                                                       
-set GNBCUUPFunction=1,UeCC=1,DcDlCfg=Default                dcDlAggAllowed true                                                                                                                        
-set GNBCUUPFunction=1,UeCC=1,UserPlaneProfile=Default,UserPlaneProfileUeCfg=Base dcDlAggCgPrio 2                                                                                                       
-set GNBCUUPFunction=1,UeCC=1,UserPlaneProfile=Default,UserPlaneProfileUeCfg=Base dcDlAggActTime 1                                                                                                      
-set GNBCUUPFunction=1,UeCC=1,UserPlaneProfile=Default,UserPlaneProfileUeCfg=Base dcDlAggExpiryTimer 100                                                                                                
-set GNBCUUPFunction=1,UeCC=1,UserPlaneProfile=Default,UserPlaneProfileUeCfg=Base dlPdcpMcgInitialRate 20                                                                                               
-set GNBCUUPFunction=1,UeCC=1,UserPlaneProfile=Default,UserPlaneProfileUeCfg=Base dlPdcpScgInitialRate 100                                                                                              
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-set NRCellDU=.*   qRxLevMin -110                                                                                                                                                                       
-set NRCellDU=.*   qRxLevMinOffset                                                                                                                                                                      
-set NRCellDU=.*   qQualMin -43                                                                                                                                                                         
-set NRCellDU=.*   qQualMinOffset                                                                                                                                                                       
-set NRCellCU=.*   sNonIntraSearchP 6                                                                                                                                                                   
-set NRCellCU=.*   sNonIntraSearchQ                                                                                                                                                                     
-set NRCellCU=.*   threshServingLowP 4                                                                                                                                                                  
-set NRCellCU=.*   qHyst 4                                                                                                                                                                              
-set NRNetwork=1,NRFrequency=627936-.* arfcnValueNRDl 627936                                                                                                                                            
-set NRNetwork=1,NRFrequency=627936-.* gscn 7811                                                                                                                                                        
-set NRNetwork=1,NRFrequency=627936-.* smtcDuration                                                                                                                                                     
-set NRNetwork=1,NRFrequency=627936-.* smtcDuration 1                                                                                                                                                   
-set NRNetwork=1,NRFrequency=627936-.* smtcScs  30                                                                                                                                                      
-set NRNetwork=1,NRFrequency=627936-.* smtcPeriodicity 20                                                                                                                                               
-set NRNetwork=1,NRFrequency=627936-.* smtcOffset 0                                                                                                                                                     
-set NRCellCU=.*,NRFreqRelation=627936 qOffsetFreq 0                                                                                                                                                    
-set NRCellCU=.*,NRFreqRelation=627936 sIntraSearchP 40                                                                                                                                                 
-set NRCellCU=.*,NRFreqRelation=627936 sIntraSearchQ 0                                                                                                                                                  
-set NRCellCU=.*,NRFreqRelation=627936 threshXHighP  0                                                                                                                                                  
-set NRCellCU=.*,NRFreqRelation=627936 tReselectionNR 2                                                                                                                                                 
-set NRCellCU=.*,NRFreqRelation=627936 cellReselectionPriority 7                                                                                                                                        
-set NRCellCU=.*,NRFreqRelation=627936 pMax  26                                                                                                                                                         
-set NRCellCU=.*,NRFreqRelation=627936 qRxLevMin  -110                                                                                                                                                  
-set NRCellCU=.* nRFrequencyRef NRNetwork=1,NRFrequency=627936-30                                                                                                                                       
-                                                                                                                                                                                                       
-set NRCellCU=.*,NRFreqRelation=.* mcpcPCellNrFreqRelProfileRef Mcpc=1,McpcPCellNrFreqRelProfile=Default                                                                                                
-set Mcpc=1,McpcPCellEUtranFreqRelProfile=Default,McpcPCellEUtranFreqRelProfileUeCfg=Base inhibitMeasForCellCandidate False                                                                             
-set Mcpc=1,McpcPCellNrFreqRelProfile=Default,McpcPCellNrFreqRelProfileUeCfg=Base rsrpCandidateA5Offsets threshold1Offset=0,threshold2Offset=0                                                          
-set Mcpc=1,McpcPSCellNrFreqRelProfile=Default,McpcPSCellNrFreqRelProfileUeCfg=Base rsrpCandidateA5Offsets threshold1Offset=0,threshold2Offset=0                                                        
-set Mcpc=1,McpcPCellEUtranFreqRelProfile=Default,McpcPCellEUtranFreqRelProfileUeCfg=Base inhibitMeasForCellCandidate false                                                                             
-set Mcpc=1,McpcPCellEUtranFreqRelProfile=Default,McpcPCellEUtranFreqRelProfileUeCfg=Base rsrpCandidateB2Offsets threshold1Offset=0,threshold2EUtraOffset=0                                             
-set NRCellCU=.*,NRCellRelation=40416-.* isHoAllowed   true                                                                                                                                             
-set NRCellCU=.*,EUtranFreqRelation=265 cellReselectionPriority 5                                                                                                                                       
-set NRCellCU=.*,EUtranFreqRelation=3645 cellReselectionPriority 3                                                                                                                                      
-set NRCellCU=.*,EUtranFreqRelation=1509 cellReselectionPriority 6                                                                                                                                      
-set NRCellCU=.*,EUtranFreqRelation=39151 cellReselectionPriority 4                                                                                                                                     
-set NRCellCU=.*,EUtranFreqRelation=39150 cellReselectionPriority 6                                                                                                                                     
-set NRCellCU=.*,EUtranFreqRelation=39348 cellReselectionPriority 4                                                                                                                                     
-set NRCellCU=.*,EUtranFreqRelation=39294 cellReselectionPriority 6                                                                                                                                     
-                                                                                                                                                                                                       
-set NRCellCU=.*,EUtranFreqRelation=265 eUtranFallbackPrioEc  5                                                                                                                                         
-set NRCellCU=.*,EUtranFreqRelation=3645 eUtranFallbackPrioEc  4                                                                                                                                        
-set NRCellCU=.*,EUtranFreqRelation=1509 eUtranFallbackPrioEc  6                                                                                                                                        
-set NRCellCU=.*,EUtranFreqRelation=39151 eUtranFallbackPrioEc  -1                                                                                                                                      
-set NRCellCU=.*,EUtranFreqRelation=39150 eUtranFallbackPrioEc  3                                                                                                                                       
-set NRCellCU=.*,EUtranFreqRelation=39348 eUtranFallbackPrioEc  -1                                                                                                                                      
-set NRCellCU=.*,EUtranFreqRelation=39294 eUtranFallbackPrioEc  3                                                                                                                                       
-                                                                                                                                                                                                       
-set NRCellCU=.*,EUtranFreqRelation=.* tReselectionEUtra 2                                                                                                                                              
-set NRCellCU=.*,EUtranFreqRelation=.* threshXHighP 62                                                                                                                                                  
-set NRCellCU=.*,EUtranFreqRelation=.* threshXLowP 16                                                                                                                                                   
-                                                                                                                                                                                                       
-set NRCellCU=.*,EUtranFreqRelation=3645 voicePrio 4                                                                                                                                                    
-set NRCellCU=.*,EUtranFreqRelation=265 voicePrio 5                                                                                                                                                     
-set NRCellCU=.*,EUtranFreqRelation=1509 voicePrio 6                                                                                                                                                    
-set NRCellCU=.*,EUtranFreqRelation=39151 voicePrio -1                                                                                                                                                  
-set NRCellCU=.*,EUtranFreqRelation=39150 voicePrio 3                                                                                                                                                   
-set NRCellCU=.*,EUtranFreqRelation=39348 voicePrio -1                                                                                                                                                  
-set NRCellCU=.*,EUtranFreqRelation=39294 voicePrio 3                                                                                                                                                   
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-set NRCellCU=.*,EUtranFreqRelation=.* qRxLevMin  -128                                                                                                                                                  
-set NRCellCU=.*,EUtranFreqRelation=.* anrMeasOn true                                                                                                                                                   
-                                                                                                                                                                                                       
-set NRCellCU=.*,EUtranFreqRelation=1509 eUtranFrequencyRef GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=1509                                                                                       
-set NRCellCU=.*,EUtranFreqRelation=265 eUtranFrequencyRef GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=265                                                                                         
-set NRCellCU=.*,EUtranFreqRelation=3645 eUtranFrequencyRef GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=3645                                                                                       
-set NRCellCU=.*,EUtranFreqRelation=39... eUtranFrequencyRef GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=39...                                                                                     
-                                                                                                                                                                                                       
-set NRCellCU=.*,EUtranFreqRelation=.* trStSaEUtranFreqRelProfileRef TrafficSteering=1,TrStSaEUtranFreqRelProfile=Default                                                                               
-set TrafficSteering=1,TrStSaEUtranFreqRelProfile=Default,TrStSaEUtranFreqRelProfileUeCfg=Base rsrpPCellCandidateB1Offset 0                                                                             
-set NRCellCU=.*,EUtranCellRelation=40416-.* isHoAllowed   true                                                                                                                                         
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-set NRCellCU=.* ueMCCellProfileRef UeMC=1,UeMCCellProfile=Default                                                                                                                                      
-set UeMC=1,UeMCCellProfile=Default  sMeasure                                                                                                                                                           
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-crn GNBCUCPFunction=1,Mcpc=1,McpcPCellProfile=MidBand                                                                                                                                                  
-end                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-lt all                                                                                                                                                                                                 
-                                                                                                                                                                                                       
-set NRCellCU=TN_5_EE_T1_.* mcpcPCellProfileRef Mcpc=1,McpcPCellProfile=MidBand                                                                                                                         
-set GNBCUCPFunction=1,Mcpc=1,McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=Base rsrpCandidateA5 threshold1=-105,threshold2=-113,timeToTrigger=640,hysteresis=10                                       
-set GNBCUCPFunction=1,Mcpc=1,McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=Base rsrpCandidateB2 threshold1=-107,threshold2EUtra=-113,hysteresis=10,timeToTrigger=640                                  
-set GNBCUCPFunction=1,Mcpc=1,McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=Base rsrpSearchZone threshold=-105,hysteresis=10,timeToTrigger=320                                                         
-set GNBCUCPFunction=1,Mcpc=1,McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=Base rsrpSearchTimeRestriction -1                                                                                          
-set GNBCUCPFunction=1,Mcpc=1,McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=Base rsrpCriticalEnabled  true                                                                                             
-set GNBCUCPFunction=1,Mcpc=1,McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=Base rsrpCritical threshold=-113,hysteresis=10,timeToTrigger=320                                                           
-set GNBCUCPFunction=1,Mcpc=1,McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=Base mcpcQuantityList 0                                                                                                    
-set NRCellCU=.* mcpcPCellEnabled True                                                                                                                                                                  
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-cr GNBCUCPFunction=1,UeMC=1,UeMCNrFreqRelProfile=Midband                                                                                                                                               
-lt all                                                                                                                                                                                                 
-                                                                                                                                                                                                       
-set  GNBCUCPFunction=1,UeMC=1,UeMCNrFreqRelProfile=Midband,UeMCNrFreqRelProfileUeCfg=Base connModePrioPCell 7                                                                                          
-set  GNBCUCPFunction=1,UeMC=1,UeMCNrFreqRelProfile=Midband,UeMCNrFreqRelProfileUeCfg=Base connModeAllowedPCell True                                                                                    
-                                                                                                                                                                                                       
-set NRCellCU=.*,NRFreqRelation=.* ueMCNrFreqRelProfileRef UeMC=1,UeMCNrFreqRelProfile=Midband                                                                                                          
-                                                                                                                                                                                                       
-cr GNBCUCPFunction=1,Mcpc=1,McpcPCellEUtranFreqRelProfile=HO                                                                                                                                           
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-lt all                                                                                                                                                                                                 
-                                                                                                                                                                                                       
-set  NRCellCU=.*,EUtranFreqRelation=3645 mcpcPCellEUtranFreqRelProfileRef Mcpc=1,McpcPCellEUtranFreqRelProfile=HO                                                                                      
-set  NRCellCU=.*,EUtranFreqRelation=265 mcpcPCellEUtranFreqRelProfileRef Mcpc=1,McpcPCellEUtranFreqRelProfile=HO                                                                                       
-set  NRCellCU=.*,EUtranFreqRelation=1509 mcpcPCellEUtranFreqRelProfileRef Mcpc=1,McpcPCellEUtranFreqRelProfile=HO                                                                                      
-set  NRCellCU=.*,EUtranFreqRelation=39... mcpcPCellEUtranFreqRelProfileRef Mcpc=1,McpcPCellEUtranFreqRelProfile=HO                                                                                     
-set GNBCUCPFunction=1,Mcpc=1,McpcPCellEUtranFreqRelProfile=HO,McpcPCellEUtranFreqRelProfileUeCfg=Base inhibitMeasForCellCandidate False                                                                
-set GNBCUCPFunction=1,Mcpc=1,McpcPCellEUtranFreqRelProfile=HO,McpcPCellEUtranFreqRelProfileUeCfg=Base  rsrpCandidateB2Offsets threshold1Offset=0,threshold2EUtraOffset=0                               
-                                                                                                                                                                                                       
-cr GNBCUCPFunction=1,Mcpc=1,McpcPCellEUtranFreqRelProfile=NOHO                                                                                                                                         
-                                                                                                                                                                                                       
-lt all                                                                                                                                                                                                 
-                                                                                                                                                                                                       
-set GNBCUCPFunction=1,Mcpc=1,McpcPCellEUtranFreqRelProfile=NOHO,McpcPCellEUtranFreqRelProfileUeCfg=Base inhibitMeasForCellCandidate  True                                                              
-set GNBCUCPFunction=1,Mcpc=1,McpcPCellEUtranFreqRelProfile=NOHO,McpcPCellEUtranFreqRelProfileUeCfg=Base  rsrpCandidateB2Offsets threshold1Offset=0,threshold2EUtraOffset=0                             
-                                                                                                                                                                                                       
-cr GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L2100                                                                                                                                             
-lt all                                                                                                                                                                                                 
-set GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L2100,UeMCEUtranFreqRelProfileUeCfg=Base blindRwrAllowed False                                                                                   
-set GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L2100,UeMCEUtranFreqRelProfileUeCfg=Base connModeAllowedPCell true                                                                               
-set GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L2100,UeMCEUtranFreqRelProfileUeCfg=Base  connModePrioPCell 4                                                                                    
-                                                                                                                                                                                                       
-cr GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L1800                                                                                                                                             
-lt all                                                                                                                                                                                                 
-set GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L1800,UeMCEUtranFreqRelProfileUeCfg=Base blindRwrAllowed False                                                                                   
-set GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L1800,UeMCEUtranFreqRelProfileUeCfg=Base connModeAllowedPCell true                                                                               
-set GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L1800,UeMCEUtranFreqRelProfileUeCfg=Base  connModePrioPCell 6                                                                                    
-                                                                                                                                                                                                       
-cr GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L900                                                                                                                                              
-lt all                                                                                                                                                                                                 
-set GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L900,UeMCEUtranFreqRelProfileUeCfg=Base blindRwrAllowed False                                                                                    
-set GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L900,UeMCEUtranFreqRelProfileUeCfg=Base connModeAllowedPCell true                                                                                
-set GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L900,UeMCEUtranFreqRelProfileUeCfg=Base  connModePrioPCell 3                                                                                     
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-set NRCellCU=.*,EUtranFreqRelation=265 ueMCEUtranFreqRelProfileRef UeMC=1,UeMCEUtranFreqRelProfile=L2100                                                                                               
-set NRCellCU=.*,EUtranFreqRelation=1509 ueMCEUtranFreqRelProfileRef UeMC=1,UeMCEUtranFreqRelProfile=L1800                                                                                              
-set NRCellCU=.*,EUtranFreqRelation=3645 ueMCEUtranFreqRelProfileRef UeMC=1,UeMCEUtranFreqRelProfile=L900                                                                                               
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-set GNBDUFunction=1,UeCC=1,DrxProfile=Default,DrxProfileUeCfg=Base ueGroupList                                                                                                                         
-                                                                                                                                                                                                       
-set GNBCUCPFunction=1,UeCC=1,InactivityProfile=Default,InactivityProfileUeCfg=Base tInactivityTimer 10                                                                                                 
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-cr GNBCUCPFunction=1,Mcfb=1                                                                                                                                                                            
-cr GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1                                                                                                                                                          
-                                                                                                                                                                                                       
-lt all                                                                                                                                                                                                 
-                                                                                                                                                                                                       
-set NRCellCU=.*  mcfbCellProfileRef Mcfb=1,McfbCellProfile=1                                                                                                                                           
-set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFallbackOperationEm 1                                                                                                     
-set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFbTargetSearchTimer 500                                                                                                   
-set  Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFbAtSessionSetup 1                                                                                                                          
-set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFallbackOperation 1                                                                                                       
-set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base rejectVoiceIncHoAtEpsFb false                                                                                                
-set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base triggerQuantity 0                                                                                                            
-set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base rsrpCriticalCoverage threshold=-109,hysteresis=10,timeToTrigger=160                                                          
-set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base rsrpCellCandidate threshold=-104,hysteresis=10,timeToTrigger=40                                                              
-set  Mcfb=1  voiceEpsFbPossible true                                                                                                                                                                   
-                                                                                                                                                                                                       
-set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=.*,McfbCellProfileUeCfg=Base epsFallbackOperation 1                                                                                                      
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-crn GNBCUCPFunction=1,UeGroupSelection=1,UeGroupSelectionProfile=5QI6                                                                                                                                  
-selectionCriteria 5qi==6                                                                                                                                                                               
-ueGroupId 66                                                                                                                                                                                           
-ueGroupPriority 65533                                                                                                                                                                                  
-end                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-crn GNBCUCPFunction=1,UeGroupSelection=1,UeGroupSelectionProfile=qci6                                                                                                                                  
-selectionCriteria qci==6                                                                                                                                                                               
-ueGroupId 6                                                                                                                                                                                            
-ueGroupPriority 65534                                                                                                                                                                                  
-end                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-crn GNBCUCPFunction=1,UeGroupSelection=1,UeServiceGroupDefinition=5QI6                                                                                                                                 
-selectionCriteria 5qi==6                                                                                                                                                                               
-ueServiceGroupId 66                                                                                                                                                                                    
-ueServiceGroupPriority 65533                                                                                                                                                                           
-end                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-crn GNBCUCPFunction=1,UeGroupSelection=1,UeServiceGroupDefinition=qci6                                                                                                                                 
-selectionCriteria qci==6                                                                                                                                                                               
-ueServiceGroupId 6                                                                                                                                                                                     
-ueServiceGroupPriority 65534                                                                                                                                                                           
-end                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-crn GNBCUCPFunction=1,UeGroupSelection=1,PrefUeGroupSelectionProfile=qci6                                                                                                                              
-prefUeGroupId 6                                                                                                                                                                                        
-prefUeGroupPriority 65534                                                                                                                                                                              
-selectionCriteria qci==6                                                                                                                                                                               
-end                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-crn GNBCUCPFunction=1,UeGroupSelection=1,PrefUeGroupSelectionProfile=5QI6                                                                                                                              
-prefUeGroupId 66                                                                                                                                                                                       
-prefUeGroupPriority 65533                                                                                                                                                                              
-selectionCriteria 5qi==6                                                                                                                                                                               
-end                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-crn GNBCUCPFunction=1,UeGroupSelection=1,UeMobilityGroupDefinition=5QI6                                                                                                                                
-ueMobilityGroupId 66                                                                                                                                                                                   
-ueMobilityGroupPriority  65533                                                                                                                                                                         
-selectionCriteria 5qi==6                                                                                                                                                                               
-end                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-crn GNBCUCPFunction=1,UeGroupSelection=1,UeMobilityGroupDefinition=qci6                                                                                                                                
-ueMobilityGroupId 6                                                                                                                                                                                    
-ueMobilityGroupPriority  65534                                                                                                                                                                         
-selectionCriteria qci==6                                                                                                                                                                               
-end                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-crn GNBCUCPFunction=1,UeGroupSelection=1,UeGroupSelectionProfile=5QI7                                                                                                                                  
-selectionCriteria 5qi==7                                                                                                                                                                               
-ueGroupId 77                                                                                                                                                                                           
-ueGroupPriority 999                                                                                                                                                                                    
-end                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-crn GNBCUCPFunction=1,UeGroupSelection=1,UeGroupSelectionProfile=qci7                                                                                                                                  
-selectionCriteria qci==7                                                                                                                                                                               
-ueGroupId 7                                                                                                                                                                                            
-ueGroupPriority 1000                                                                                                                                                                                   
-end                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-crn GNBCUCPFunction=1,UeGroupSelection=1,UeServiceGroupDefinition=5QI7                                                                                                                                 
-selectionCriteria 5qi==7                                                                                                                                                                               
-ueServiceGroupId 77                                                                                                                                                                                    
-ueServiceGroupPriority 999                                                                                                                                                                             
-end                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-crn GNBCUCPFunction=1,UeGroupSelection=1,UeServiceGroupDefinition=qci7                                                                                                                                 
-selectionCriteria qci==7                                                                                                                                                                               
-ueServiceGroupId 7                                                                                                                                                                                     
-ueServiceGroupPriority 1000                                                                                                                                                                            
-end                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-crn GNBCUCPFunction=1,UeGroupSelection=1,PrefUeGroupSelectionProfile=5QI7                                                                                                                              
-prefUeGroupId 77                                                                                                                                                                                       
-prefUeGroupPriority 999                                                                                                                                                                                
-selectionCriteria 5qi==7                                                                                                                                                                               
-end                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-crn GNBCUCPFunction=1,UeGroupSelection=1,PrefUeGroupSelectionProfile=qci7                                                                                                                              
-prefUeGroupId 7                                                                                                                                                                                        
-prefUeGroupPriority 1000                                                                                                                                                                               
-selectionCriteria qci==7                                                                                                                                                                               
-end                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-crn GNBCUCPFunction=1,UeGroupSelection=1,UeMobilityGroupDefinition=5QI7                                                                                                                                
-ueMobilityGroupId 77                                                                                                                                                                                   
-ueMobilityGroupPriority  999                                                                                                                                                                           
-selectionCriteria 5qi==7                                                                                                                                                                               
-end                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-crn GNBCUCPFunction=1,UeGroupSelection=1,UeMobilityGroupDefinition=qci7                                                                                                                                
-ueMobilityGroupId 7                                                                                                                                                                                    
-ueMobilityGroupPriority  1000                                                                                                                                                                          
-selectionCriteria qci==7                                                                                                                                                                               
-end                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-crn GNBCUCPFunction=1,UeGroupSelection=1,UeGroupSelectionProfile=5QI9                                                                                                                                  
-selectionCriteria 5qi==9                                                                                                                                                                               
-ueGroupId 99                                                                                                                                                                                           
-ueGroupPriority 899                                                                                                                                                                                    
-end                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-crn GNBCUCPFunction=1,UeGroupSelection=1,UeGroupSelectionProfile=qci9                                                                                                                                  
-selectionCriteria qci==9                                                                                                                                                                               
-ueGroupId 9                                                                                                                                                                                            
-ueGroupPriority 900                                                                                                                                                                                    
-end                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-crn GNBCUCPFunction=1,UeGroupSelection=1,UeServiceGroupDefinition=5QI9                                                                                                                                 
-selectionCriteria 5qi==9                                                                                                                                                                               
-ueServiceGroupId 99                                                                                                                                                                                    
-ueServiceGroupPriority 899                                                                                                                                                                             
-end                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-crn GNBCUCPFunction=1,UeGroupSelection=1,UeServiceGroupDefinition=qci9                                                                                                                                 
-selectionCriteria qci==9                                                                                                                                                                               
-ueServiceGroupId 9                                                                                                                                                                                     
-ueServiceGroupPriority 900                                                                                                                                                                             
-end                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-crn GNBCUCPFunction=1,UeGroupSelection=1,PrefUeGroupSelectionProfile=5QI9                                                                                                                              
-prefUeGroupId 99                                                                                                                                                                                       
-prefUeGroupPriority 899                                                                                                                                                                                
-selectionCriteria 5qi==9                                                                                                                                                                               
-end                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-crn GNBCUCPFunction=1,UeGroupSelection=1,PrefUeGroupSelectionProfile=qci9                                                                                                                              
-prefUeGroupId 9                                                                                                                                                                                        
-prefUeGroupPriority 900                                                                                                                                                                                
-selectionCriteria qci==9                                                                                                                                                                               
-end                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-crn GNBCUCPFunction=1,UeGroupSelection=1,UeMobilityGroupDefinition=5QI9                                                                                                                                
-ueMobilityGroupId 99                                                                                                                                                                                   
-ueMobilityGroupPriority  899                                                                                                                                                                           
-selectionCriteria 5qi==9                                                                                                                                                                               
-end                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-crn GNBCUCPFunction=1,UeGroupSelection=1,UeMobilityGroupDefinition=qci9                                                                                                                                
-ueMobilityGroupId 9                                                                                                                                                                                    
-ueMobilityGroupPriority  900                                                                                                                                                                           
-selectionCriteria qci==9                                                                                                                                                                               
-end                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-crn GNBCUCPFunction=1,UeCC=1,RrcInactiveProfile=Default,RrcInactiveProfileUeCfg=5QI6                                                                                                                   
-ueConfGroupList 66                                                                                                                                                                                     
-ueGroupList 66                                                                                                                                                                                         
-end                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-crn GNBCUCPFunction=1,UeCC=1,RrcInactiveProfile=Default,RrcInactiveProfileUeCfg=5QI7                                                                                                                   
-ueConfGroupList 77                                                                                                                                                                                     
-ueGroupList 77                                                                                                                                                                                         
-end                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-crn GNBCUCPFunction=1,UeCC=1,RrcInactiveProfile=Default,RrcInactiveProfileUeCfg=5QI9                                                                                                                   
-ueConfGroupList 99                                                                                                                                                                                     
-ueGroupList 99                                                                                                                                                                                         
-end                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-set GNBCUCPFunction=1,UeCC=1,RrcInactiveProfile=Default,RrcInactiveProfileUeCfg=5QI6 rrcInactiveStateSupport true                                                                                      
-set GNBCUCPFunction=1,UeCC=1,RrcInactiveProfile=Default,RrcInactiveProfileUeCfg=5QI6 periodicRnaUpdateTimer 30                                                                                         
-set GNBCUCPFunction=1,UeCC=1,RrcInactiveProfile=Default,RrcInactiveProfileUeCfg=5QI6 periodicRnaUpdateCount 1                                                                                          
-                                                                                                                                                                                                       
-set GNBCUCPFunction=1,UeCC=1,RrcInactiveProfile=Default,RrcInactiveProfileUeCfg=5QI7 rrcInactiveStateSupport true                                                                                      
-set GNBCUCPFunction=1,UeCC=1,RrcInactiveProfile=Default,RrcInactiveProfileUeCfg=5QI7 periodicRnaUpdateTimer 30                                                                                         
-set GNBCUCPFunction=1,UeCC=1,RrcInactiveProfile=Default,RrcInactiveProfileUeCfg=5QI7 periodicRnaUpdateCount 1                                                                                          
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-set GNBCUCPFunction=1,UeCC=1,RrcInactiveProfile=Default,RrcInactiveProfileUeCfg=5QI9 rrcInactiveStateSupport true                                                                                      
-set GNBCUCPFunction=1,UeCC=1,RrcInactiveProfile=Default,RrcInactiveProfileUeCfg=5QI9 periodicRnaUpdateTimer 30                                                                                         
-set GNBCUCPFunction=1,UeCC=1,RrcInactiveProfile=Default,RrcInactiveProfileUeCfg=5QI9 periodicRnaUpdateCount 1                                                                                          
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-crn GNBDUFunction=1,UeCC=1,UeBb=1,UeBbProfile=Default,UeBbProfileUeCfg=MBB                                                                                                                             
-ueConfGroupList 1                                                                                                                                                                                      
-ueGroupList 66,77                                                                                                                                                                                      
-end                                                                                                                                                                                                    
-lt all                                                                                                                                                                                                 
-set GNBDUFunction=1,UeCC=1,UeBb=1,UeBbProfile=Default,UeBbProfileUeCfg=MBB bsrUeCfgRef GNBDUFunction=1,UeCC=1,Bsr=1,BsrUeCfg=Base                                                                      
-set GNBDUFunction=1,UeCC=1,UeBb=1,UeBbProfile=Default,UeBbProfileUeCfg=MBB linkAdaptationUeCfgRef GNBDUFunction=1,UeCC=1,LinkAdaptation=1,LinkAdaptationUeCfg=Base                                     
-set GNBDUFunction=1,UeCC=1,UeBb=1,UeBbProfile=Default,UeBbProfileUeCfg=MBB harqUeCfgRef GNBDUFunction=1,UeCC=1,Harq=1,HarqUeCfg=Base                                                                   
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-set GNBCUCPFunction=1,UeCovMeas=1,UcmCellProfile=Default ucmEnabled true                                                                                                                               
-set GNBCUCPFunction=1,UeCovMeas=1,UcmCellProfile=Default ucmSelectionProbability 100                                                                                                                   
-set GNBCUCPFunction=1,UeCovMeas=1,UcmCellProfile=Default ucmCellTargetIntensity 10                                                                                                                     
-set NBCUCPFunction=1,UeCovMeas=1,UcmCellProfile=Default,UcmCellProfileUeCfg=Base ucmMaxFreqLayerToMeas 7                                                                                               
-set GNBCUCPFunction=1,UeCovMeas=1,UcmNrFreqRelProfile=Default ucmTargetFactor 1                                                                                                                        
-set GNBCUCPFunction=1,UeCovMeas=1,UcmNrFreqRelProfile=Default reportConfigPeriodical includeBeamMeas=false                                                                                             
-set GNBCUCPFunction=1,UeCovMeas=1,UcmNrFreqRelProfile=Default reportConfigPeriodical maxNoOfRsIndexesToReport=1                                                                                        
-set GNBCUCPFunction=1,UeCovMeas=1,UcmNrFreqRelProfile=Default reportConfigPeriodical maxReportCells=8                                                                                                  
-set GNBCUCPFunction=1,UeCovMeas=1,UcmNrFreqRelProfile=Default reportConfigPeriodical reportAddNeighMeas=true                                                                                           
-set GNBCUCPFunction=1,UeCovMeas=1,UcmNrFreqRelProfile=Default reportConfigPeriodical reportAmounT=1                                                                                                    
-set GNBCUCPFunction=1,UeCovMeas=1,UcmNrFreqRelProfile=Default reportConfigPeriodical reportInterval=2                                                                                                  
-set GNBCUCPFunction=1,UeCovMeas=1,UcmNrFreqRelProfile=Default reportConfigPeriodical reportQuantityCell=6                                                                                              
-set GNBCUCPFunction=1,UeCovMeas=1,UcmNrFreqRelProfile=Default reportConfigPeriodical reportQuantityRsIndex=6                                                                                           
-                                                                                                                                                                                                       
-############################################!LTE#############################################                                                                                                          
-                                                                                                                                                                                                       
-set CXC4012578|CXC4012385|CXC4012371|CXC4010620 featurestate 1                                                                                                                                         
-set CXC4012324|CXC4012580 featurestate 0                                                                                                                                                               
-                                                                                                                                                                                                       
-set ENodeBFunction=1,EUtranCell.DD=.*,GUtranFreqRelation=.* anrMeasOn true                                                                                                                             
-set ENodeBFunction=1,AnrFunction=1,AnrFunctionNR=1          anrStateNR  1                                                                                                                              
-set UePolicyOptimization=1               zzzTemporary1  1                                                                                                                                              
-set ENodeBFunction=1,EUtranCell.DD=.*,UeMeasControl=1,ReportConfigB1NR=1 triggerQuantityB1NR 0                                                                                                         
-set ENodeBFunction=1,EUtranCell.DD=.*,UeMeasControl=1,ReportConfigB1NR=1 b1ThresholdRsrp -107                                                                                                          
-set ENodeBFunction=1,EUtranCell.DD=.*,UeMeasControl=1,ReportConfigB1NR=1 hysteresisB1 2                                                                                                                
-set ENodeBFunction=1,EUtranCell.DD=.*,UeMeasControl=1,ReportConfigB1NR=1 timeToTriggerB1 640                                                                                                           
-                                                                                                                                                                                                       
+510|CXC4012562|CXC4012593|CXC4012638|CXC4012590|CXC4012218 featurestate|description|licensestate
+
+
+set CXC4012493|CXC4012534|CXC4012538|CXC4012549|CXC4012550|CXC4012591|CXC4012592|CXC4012637|CXC4012607|CXC4012475|CXC4012548|CXC4012724|CXC4012680|CXC4012688|CXC4012601|CXC4012330|CXC4015156|CXC4012510|CXC4012562|CXC4012593|CXC4012638|CXC4012590|CXC4012218 featurestate 1
+
+
+
+set NRCellDU=.* secondaryCellOnly false
+set GNBDUFunction=1,Rrc=1    t300 1500
+set GNBDUFunction=1,Rrc=1    t301 600
+set GNBDUFunction=1,Rrc=1    t310 2000
+set GNBDUFunction=1,Rrc=1    t311 3000
+set GNBDUFunction=1,Rrc=1    t319 400
+set GNBDUFunction=1,RadioBearerTable=1,SignalingRadioBearer=1 dlMaxRetxThreshold 32
+set GNBDUFunction=1,RadioBearerTable=1,SignalingRadioBearer=1 ulMaxRetxThreshold 32
+set GNBDUFunction=1,RadioBearerTable=1,SignalingRadioBearer=1 tPollRetransmitUl 80
+set GNBDUFunction=1,RadioBearerTable=1,SignalingRadioBearer=1 tPollRetransmitDl 80
+
+set GNBCUCPFunction=1,AnrFunction=1,AnrFunctionNR=1 anrAutoCreateXnForEndc true
+set GNBCUCPFunction=1,AnrFunction=1,AnrFunctionNR=1         anrCgiMeasIntraFreqEnabled true
+set GNBCUCPFunction=1,AnrFunction=1  promoteCellRelMobAttThresh  50
+set GNBCUCPFunction=1,AnrFunction=1  demoteCellRelMobAttThresh  10
+set GNBCUCPFunction=1,AnrFunction=1,AnrFunctionNR=1 anrCgiMeasInterFreqMode 1
+set GNBCUCPFunction=1,AnrFunction=1,AnrFunctionNR=1  anrEndcX2Enabled  true
+set GNBCUCPFunction=1,AnrFunction=1,AnrFunctionNR=1  ecgiDuringEpsFbEnabled true
+set GNBCUCPFunction=1,AnrFunction=1,AnrFunctionEUtran=1     anrCgiMeasIntraFreqEnabled true
+
+cr GNBCUCPFunction=1,AnrFunction=1,AnrFunctionEUtran=1
+lt all
+set GNBCUCPFunction=1,AnrFunction=1,AnrFunctionEUtran=1 anrCgiMeasEUtranEnabled true
+
+cr GNBCUCPFunction=1,AnrFunction=1,AnrFunctionEUtran=1,AnrFunctionEutranUeCfg=Base
+lt all
+set GNBCUCPFunction=1,AnrFunction=1,AnrFunctionEUtran=1,AnrFunctionEutranUeCfg=Base ecgiDuringEpsFbEnabled true
+
+
+set GNBDUFunction=1,UeCC=1,RadioLinkControl=1,UeAdaptiveRlc=1,UeAdaptiveRlcUeCfg=Base ueAdaptiveRlcRetxMode 0
+set GNBCUCPFunction=1,SecurityHandling=1    cipheringAlgoPrio 1,2,0
+set GNBCUCPFunction=1,SecurityHandling=1    integrityProtectAlgoPrio 2,1
+set GNBDUFunction=1,UeCC=1,RadioLinkControl=1,DrbRlc=Default,DrbRlcUeCfg=Base tStatusProhibitDl 10
+
+set GNBDUFunction=1,Paging=1   defaultPagingCycle 128
+set GNBDUFunction=1,Paging=1 n 0
+set GNBDUFunction=1,Paging=1 nS 1
+set GNBDUFunction=1,Paging=1 pagingDiscardTimer 3
+set NRCellDU=.*   noOfCbraPreambles 16
+set NRCellDU=.*   cfraEnabled true
+set GNBDUFunction=1,UeCC=1,Rach=Default,RachUeCfg=Base      cfraEnabled  true
+set GNBCUCPFunction=1 maxCommonProcTime 30
+set GNBCUCPFunction=1 maxNgRetryTime    30
+set GNBCUCPFunction=1 nasInactivityTime 10
+set GNBCUCPFunction=1 ngcDedProcTime    5
+set NRCellCU=.* transmitSib2 true
+set NRCellCU=.* transmitSib4 true
+set NRCellCU=.* transmitSib5 true
+set NRCellDU=.* sibType2 siBroadcastStatus=0
+set NRCellDU=.* sibType4 siBroadcastStatus=0
+set NRCellDU=.* sibType5 siBroadcastStatus=0
+set NRCellDU=.* sibType6 siBroadcastStatus=0
+set NRCellDU=.* sibType7 siBroadcastStatus=0
+set NRCellDU=.* sibType8 siBroadcastStatus=0
+set NRCellDU=.* sibType2 siPeriodicity=64
+set NRCellDU=.* sibType4 siPeriodicity=64
+set NRCellDU=.* sibType5 siPeriodicity=64
+set NRCellDU=.* sibType6 siPeriodicity=64
+set NRCellDU=.* sibType7 siPeriodicity=64
+set NRCellDU=.* sibType8 siPeriodicity=64
+set  NRCellDU=.*  cellBarred  1
+set  NRCellDU=.* cellReservedForOperator 1
+set NRCellDU=.*   siWindowLength    20
+set GNBCUCPFunction=1   xnIpAddrViaNgActive true
+set GNBCUCPFunction=1   rrcReestSupportType 2
+set NRCellDU=.* srsHoppingBandwidth 1
+
+cr GNBCUUPFunction=1,GtpuSupervision=1
+crn GNBCUUPFunction=1,GtpuSupervision=1,GtpuSupervisionProfile=XN
+gtpuEchoEnabled true
+gtpuEchoDscp 32
+interfaceList 6
+end
+
+
+crn GNBCUUPFunction=1,GtpuSupervision=1,GtpuSupervisionProfile=NG
+gtpuEchoEnabled true
+gtpuEchoDscp 32
+interfaceList 4
+end
+
+
+
+
+#################LMS
+
+set GNBCUUPFunction=1,UeCC=1,DcDlCfg=Default                dcDlAggAllowed true
+set GNBCUUPFunction=1,UeCC=1,UserPlaneProfile=Default,UserPlaneProfileUeCfg=Base dcDlAggCgPrio 2
+set GNBCUUPFunction=1,UeCC=1,UserPlaneProfile=Default,UserPlaneProfileUeCfg=Base dcDlAggActTime 1
+set GNBCUUPFunction=1,UeCC=1,UserPlaneProfile=Default,UserPlaneProfileUeCfg=Base dcDlAggExpiryTimer 100
+set GNBCUUPFunction=1,UeCC=1,UserPlaneProfile=Default,UserPlaneProfileUeCfg=Base dlPdcpMcgInitialRate 20
+set GNBCUUPFunction=1,UeCC=1,UserPlaneProfile=Default,UserPlaneProfileUeCfg=Base dlPdcpScgInitialRate 100
+
+
+set NRCellDU=.*   qRxLevMin -110
+set NRCellDU=.*   qRxLevMinOffset
+set NRCellDU=.*   qQualMin -43
+set NRCellDU=.*   qQualMinOffset
+set NRCellCU=.*   sNonIntraSearchP 6
+set NRCellCU=.*   sNonIntraSearchQ
+set NRCellCU=.*   threshServingLowP 4
+set NRCellCU=.*   qHyst 4
+set NRNetwork=1,NRFrequency=627936-.* arfcnValueNRDl 627936
+set NRNetwork=1,NRFrequency=627936-.* gscn 7811
+set NRNetwork=1,NRFrequency=627936-.* smtcDuration
+set NRNetwork=1,NRFrequency=627936-.* smtcDuration 1
+set NRNetwork=1,NRFrequency=627936-.* smtcScs  30
+set NRNetwork=1,NRFrequency=627936-.* smtcPeriodicity 20
+set NRNetwork=1,NRFrequency=627936-.* smtcOffset 0
+set NRCellCU=.*,NRFreqRelation=627936 qOffsetFreq 0
+set NRCellCU=.*,NRFreqRelation=627936 sIntraSearchP 40
+set NRCellCU=.*,NRFreqRelation=627936 sIntraSearchQ 0
+set NRCellCU=.*,NRFreqRelation=627936 threshXHighP  0
+set NRCellCU=.*,NRFreqRelation=627936 tReselectionNR 2
+set NRCellCU=.*,NRFreqRelation=627936 cellReselectionPriority 7
+set NRCellCU=.*,NRFreqRelation=627936 pMax  26
+set NRCellCU=.*,NRFreqRelation=627936 qRxLevMin  -110
+set NRCellCU=.* nRFrequencyRef NRNetwork=1,NRFrequency=627936-30
+
+set NRCellCU=.*,NRFreqRelation=.* mcpcPCellNrFreqRelProfileRef Mcpc=1,McpcPCellNrFreqRelProfile=Default
+set Mcpc=1,McpcPCellEUtranFreqRelProfile=Default,McpcPCellEUtranFreqRelProfileUeCfg=Base inhibitMeasForCellCandidate False
+set Mcpc=1,McpcPCellNrFreqRelProfile=Default,McpcPCellNrFreqRelProfileUeCfg=Base rsrpCandidateA5Offsets threshold1Offset=0,threshold2Offset=0
+set Mcpc=1,McpcPSCellNrFreqRelProfile=Default,McpcPSCellNrFreqRelProfileUeCfg=Base rsrpCandidateA5Offsets threshold1Offset=0,threshold2Offset=0
+set Mcpc=1,McpcPCellEUtranFreqRelProfile=Default,McpcPCellEUtranFreqRelProfileUeCfg=Base inhibitMeasForCellCandidate false
+set Mcpc=1,McpcPCellEUtranFreqRelProfile=Default,McpcPCellEUtranFreqRelProfileUeCfg=Base rsrpCandidateB2Offsets threshold1Offset=0,threshold2EUtraOffset=0
+set NRCellCU=.*,NRCellRelation=40416-.* isHoAllowed   true
+set NRCellCU=.*,EUtranFreqRelation=265 cellReselectionPriority 5
+set NRCellCU=.*,EUtranFreqRelation=3645 cellReselectionPriority 3
+set NRCellCU=.*,EUtranFreqRelation=1509 cellReselectionPriority 6
+set NRCellCU=.*,EUtranFreqRelation=39151 cellReselectionPriority 4
+set NRCellCU=.*,EUtranFreqRelation=39150 cellReselectionPriority 6
+set NRCellCU=.*,EUtranFreqRelation=39348 cellReselectionPriority 4
+set NRCellCU=.*,EUtranFreqRelation=39294 cellReselectionPriority 6
+
+set NRCellCU=.*,EUtranFreqRelation=265 eUtranFallbackPrioEc  5
+set NRCellCU=.*,EUtranFreqRelation=3645 eUtranFallbackPrioEc  4
+set NRCellCU=.*,EUtranFreqRelation=1509 eUtranFallbackPrioEc  6
+set NRCellCU=.*,EUtranFreqRelation=39151 eUtranFallbackPrioEc  -1
+set NRCellCU=.*,EUtranFreqRelation=39150 eUtranFallbackPrioEc  3
+set NRCellCU=.*,EUtranFreqRelation=39348 eUtranFallbackPrioEc  -1
+set NRCellCU=.*,EUtranFreqRelation=39294 eUtranFallbackPrioEc  3
+
+set NRCellCU=.*,EUtranFreqRelation=.* tReselectionEUtra 2
+set NRCellCU=.*,EUtranFreqRelation=.* threshXHighP 62
+set NRCellCU=.*,EUtranFreqRelation=.* threshXLowP 16
+
+set NRCellCU=.*,EUtranFreqRelation=3645 voicePrio 4
+set NRCellCU=.*,EUtranFreqRelation=265 voicePrio 5
+set NRCellCU=.*,EUtranFreqRelation=1509 voicePrio 6
+set NRCellCU=.*,EUtranFreqRelation=39151 voicePrio -1
+set NRCellCU=.*,EUtranFreqRelation=39150 voicePrio 3
+set NRCellCU=.*,EUtranFreqRelation=39348 voicePrio -1
+set NRCellCU=.*,EUtranFreqRelation=39294 voicePrio 3
+
+
+set NRCellCU=.*,EUtranFreqRelation=.* qRxLevMin  -128
+set NRCellCU=.*,EUtranFreqRelation=.* anrMeasOn true
+
+set NRCellCU=.*,EUtranFreqRelation=1509 eUtranFrequencyRef GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=1509
+set NRCellCU=.*,EUtranFreqRelation=265 eUtranFrequencyRef GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=265
+set NRCellCU=.*,EUtranFreqRelation=3645 eUtranFrequencyRef GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=3645
+set NRCellCU=.*,EUtranFreqRelation=39... eUtranFrequencyRef GNBCUCPFunction=1,EUtraNetwork=1,EUtranFrequency=39...
+
+set NRCellCU=.*,EUtranFreqRelation=.* trStSaEUtranFreqRelProfileRef TrafficSteering=1,TrStSaEUtranFreqRelProfile=Default
+set TrafficSteering=1,TrStSaEUtranFreqRelProfile=Default,TrStSaEUtranFreqRelProfileUeCfg=Base rsrpPCellCandidateB1Offset 0
+set NRCellCU=.*,EUtranCellRelation=40416-.* isHoAllowed   true
+
+
+
+
+set NRCellCU=.* ueMCCellProfileRef UeMC=1,UeMCCellProfile=Default
+set UeMC=1,UeMCCellProfile=Default  sMeasure
+
+
+crn GNBCUCPFunction=1,Mcpc=1,McpcPCellProfile=MidBand
+end
+
+lt all
+
+set NRCellCU=TN_5_EE_T1_.* mcpcPCellProfileRef Mcpc=1,McpcPCellProfile=MidBand
+set GNBCUCPFunction=1,Mcpc=1,McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=Base rsrpCandidateA5 threshold1=-105,threshold2=-113,timeToTrigger=640,hysteresis=10
+set GNBCUCPFunction=1,Mcpc=1,McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=Base rsrpCandidateB2 threshold1=-107,threshold2EUtra=-113,hysteresis=10,timeToTrigger=640
+set GNBCUCPFunction=1,Mcpc=1,McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=Base rsrpSearchZone threshold=-105,hysteresis=10,timeToTrigger=320
+set GNBCUCPFunction=1,Mcpc=1,McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=Base rsrpSearchTimeRestriction -1
+set GNBCUCPFunction=1,Mcpc=1,McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=Base rsrpCriticalEnabled  true
+set GNBCUCPFunction=1,Mcpc=1,McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=Base rsrpCritical threshold=-113,hysteresis=10,timeToTrigger=320
+set GNBCUCPFunction=1,Mcpc=1,McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=Base mcpcQuantityList 0
+set NRCellCU=.* mcpcPCellEnabled True
+
+
+cr GNBCUCPFunction=1,UeMC=1,UeMCNrFreqRelProfile=Midband
+lt all
+
+set  GNBCUCPFunction=1,UeMC=1,UeMCNrFreqRelProfile=Midband,UeMCNrFreqRelProfileUeCfg=Base connModePrioPCell 7
+set  GNBCUCPFunction=1,UeMC=1,UeMCNrFreqRelProfile=Midband,UeMCNrFreqRelProfileUeCfg=Base connModeAllowedPCell True
+
+set NRCellCU=.*,NRFreqRelation=.* ueMCNrFreqRelProfileRef UeMC=1,UeMCNrFreqRelProfile=Midband
+
+cr GNBCUCPFunction=1,Mcpc=1,McpcPCellEUtranFreqRelProfile=HO
+
+
+lt all
+
+set  NRCellCU=.*,EUtranFreqRelation=3645 mcpcPCellEUtranFreqRelProfileRef Mcpc=1,McpcPCellEUtranFreqRelProfile=HO
+set  NRCellCU=.*,EUtranFreqRelation=265 mcpcPCellEUtranFreqRelProfileRef Mcpc=1,McpcPCellEUtranFreqRelProfile=HO
+set  NRCellCU=.*,EUtranFreqRelation=1509 mcpcPCellEUtranFreqRelProfileRef Mcpc=1,McpcPCellEUtranFreqRelProfile=HO
+set  NRCellCU=.*,EUtranFreqRelation=39... mcpcPCellEUtranFreqRelProfileRef Mcpc=1,McpcPCellEUtranFreqRelProfile=HO
+set GNBCUCPFunction=1,Mcpc=1,McpcPCellEUtranFreqRelProfile=HO,McpcPCellEUtranFreqRelProfileUeCfg=Base inhibitMeasForCellCandidate False
+set GNBCUCPFunction=1,Mcpc=1,McpcPCellEUtranFreqRelProfile=HO,McpcPCellEUtranFreqRelProfileUeCfg=Base  rsrpCandidateB2Offsets threshold1Offset=0,threshold2EUtraOffset=0
+
+cr GNBCUCPFunction=1,Mcpc=1,McpcPCellEUtranFreqRelProfile=NOHO
+
+lt all
+
+set GNBCUCPFunction=1,Mcpc=1,McpcPCellEUtranFreqRelProfile=NOHO,McpcPCellEUtranFreqRelProfileUeCfg=Base inhibitMeasForCellCandidate  True
+set GNBCUCPFunction=1,Mcpc=1,McpcPCellEUtranFreqRelProfile=NOHO,McpcPCellEUtranFreqRelProfileUeCfg=Base  rsrpCandidateB2Offsets threshold1Offset=0,threshold2EUtraOffset=0
+
+cr GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L2100
+lt all
+set GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L2100,UeMCEUtranFreqRelProfileUeCfg=Base blindRwrAllowed False
+set GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L2100,UeMCEUtranFreqRelProfileUeCfg=Base connModeAllowedPCell true
+set GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L2100,UeMCEUtranFreqRelProfileUeCfg=Base  connModePrioPCell 4
+
+cr GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L1800
+lt all
+set GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L1800,UeMCEUtranFreqRelProfileUeCfg=Base blindRwrAllowed False
+set GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L1800,UeMCEUtranFreqRelProfileUeCfg=Base connModeAllowedPCell true
+set GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L1800,UeMCEUtranFreqRelProfileUeCfg=Base  connModePrioPCell 6
+
+cr GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L900
+lt all
+set GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L900,UeMCEUtranFreqRelProfileUeCfg=Base blindRwrAllowed False
+set GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L900,UeMCEUtranFreqRelProfileUeCfg=Base connModeAllowedPCell true
+set GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L900,UeMCEUtranFreqRelProfileUeCfg=Base  connModePrioPCell 3
+
+
+
+set NRCellCU=.*,EUtranFreqRelation=265 ueMCEUtranFreqRelProfileRef UeMC=1,UeMCEUtranFreqRelProfile=L2100
+set NRCellCU=.*,EUtranFreqRelation=1509 ueMCEUtranFreqRelProfileRef UeMC=1,UeMCEUtranFreqRelProfile=L1800
+set NRCellCU=.*,EUtranFreqRelation=3645 ueMCEUtranFreqRelProfileRef UeMC=1,UeMCEUtranFreqRelProfile=L900
+
+
+
+
+set GNBDUFunction=1,UeCC=1,DrxProfile=Default,DrxProfileUeCfg=Base ueGroupList
+
+set GNBCUCPFunction=1,UeCC=1,InactivityProfile=Default,InactivityProfileUeCfg=Base tInactivityTimer 10
+
+
+cr GNBCUCPFunction=1,Mcfb=1
+cr GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1
+
+lt all
+
+set NRCellCU=.*  mcfbCellProfileRef Mcfb=1,McfbCellProfile=1
+set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFallbackOperationEm 1
+set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFbTargetSearchTimer 500
+set  Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFbAtSessionSetup 1
+set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFallbackOperation 1
+set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base rejectVoiceIncHoAtEpsFb false
+set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base triggerQuantity 0
+set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base rsrpCriticalCoverage threshold=-109,hysteresis=10,timeToTrigger=160
+set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base rsrpCellCandidate threshold=-104,hysteresis=10,timeToTrigger=40
+set  Mcfb=1  voiceEpsFbPossible true
+
+set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=.*,McfbCellProfileUeCfg=Base epsFallbackOperation 1
+
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,UeGroupSelectionProfile=5QI6
+selectionCriteria 5qi==6
+ueGroupId 66
+ueGroupPriority 65533
+end
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,UeGroupSelectionProfile=qci6
+selectionCriteria qci==6
+ueGroupId 6
+ueGroupPriority 65534
+end
+
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,UeServiceGroupDefinition=5QI6
+selectionCriteria 5qi==6
+ueServiceGroupId 66
+ueServiceGroupPriority 65533
+end
+
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,UeServiceGroupDefinition=qci6
+selectionCriteria qci==6
+ueServiceGroupId 6
+ueServiceGroupPriority 65534
+end
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,PrefUeGroupSelectionProfile=qci6
+prefUeGroupId 6
+prefUeGroupPriority 65534
+selectionCriteria qci==6
+end
+
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,PrefUeGroupSelectionProfile=5QI6
+prefUeGroupId 66
+prefUeGroupPriority 65533
+selectionCriteria 5qi==6
+end
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,UeMobilityGroupDefinition=5QI6
+ueMobilityGroupId 66
+ueMobilityGroupPriority  65533
+selectionCriteria 5qi==6
+end
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,UeMobilityGroupDefinition=qci6
+ueMobilityGroupId 6
+ueMobilityGroupPriority  65534
+selectionCriteria qci==6
+end
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,UeGroupSelectionProfile=5QI7
+selectionCriteria 5qi==7
+ueGroupId 77
+ueGroupPriority 999
+end
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,UeGroupSelectionProfile=qci7
+selectionCriteria qci==7
+ueGroupId 7
+ueGroupPriority 1000
+end
+
+
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,UeServiceGroupDefinition=5QI7
+selectionCriteria 5qi==7
+ueServiceGroupId 77
+ueServiceGroupPriority 999
+end
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,UeServiceGroupDefinition=qci7
+selectionCriteria qci==7
+ueServiceGroupId 7
+ueServiceGroupPriority 1000
+end
+
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,PrefUeGroupSelectionProfile=5QI7
+prefUeGroupId 77
+prefUeGroupPriority 999
+selectionCriteria 5qi==7
+end
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,PrefUeGroupSelectionProfile=qci7
+prefUeGroupId 7
+prefUeGroupPriority 1000
+selectionCriteria qci==7
+end
+
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,UeMobilityGroupDefinition=5QI7
+ueMobilityGroupId 77
+ueMobilityGroupPriority  999
+selectionCriteria 5qi==7
+end
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,UeMobilityGroupDefinition=qci7
+ueMobilityGroupId 7
+ueMobilityGroupPriority  1000
+selectionCriteria qci==7
+end
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,UeGroupSelectionProfile=5QI9
+selectionCriteria 5qi==9
+ueGroupId 99
+ueGroupPriority 899
+end
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,UeGroupSelectionProfile=qci9
+selectionCriteria qci==9
+ueGroupId 9
+ueGroupPriority 900
+end
+
+
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,UeServiceGroupDefinition=5QI9
+selectionCriteria 5qi==9
+ueServiceGroupId 99
+ueServiceGroupPriority 899
+end
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,UeServiceGroupDefinition=qci9
+selectionCriteria qci==9
+ueServiceGroupId 9
+ueServiceGroupPriority 900
+end
+
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,PrefUeGroupSelectionProfile=5QI9
+prefUeGroupId 99
+prefUeGroupPriority 899
+selectionCriteria 5qi==9
+end
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,PrefUeGroupSelectionProfile=qci9
+prefUeGroupId 9
+prefUeGroupPriority 900
+selectionCriteria qci==9
+end
+
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,UeMobilityGroupDefinition=5QI9
+ueMobilityGroupId 99
+ueMobilityGroupPriority  899
+selectionCriteria 5qi==9
+end
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,UeMobilityGroupDefinition=qci9
+ueMobilityGroupId 9
+ueMobilityGroupPriority  900
+selectionCriteria qci==9
+end
+
+
+crn GNBCUCPFunction=1,UeCC=1,RrcInactiveProfile=Default,RrcInactiveProfileUeCfg=5QI6
+ueConfGroupList 66
+ueGroupList 66
+end
+
+
+crn GNBCUCPFunction=1,UeCC=1,RrcInactiveProfile=Default,RrcInactiveProfileUeCfg=5QI7
+ueConfGroupList 77
+ueGroupList 77
+end
+
+crn GNBCUCPFunction=1,UeCC=1,RrcInactiveProfile=Default,RrcInactiveProfileUeCfg=5QI9
+ueConfGroupList 99
+ueGroupList 99
+end
+
+
+set GNBCUCPFunction=1,UeCC=1,RrcInactiveProfile=Default,RrcInactiveProfileUeCfg=5QI6 rrcInactiveStateSupport true
+set GNBCUCPFunction=1,UeCC=1,RrcInactiveProfile=Default,RrcInactiveProfileUeCfg=5QI6 periodicRnaUpdateTimer 30
+set GNBCUCPFunction=1,UeCC=1,RrcInactiveProfile=Default,RrcInactiveProfileUeCfg=5QI6 periodicRnaUpdateCount 1
+
+set GNBCUCPFunction=1,UeCC=1,RrcInactiveProfile=Default,RrcInactiveProfileUeCfg=5QI7 rrcInactiveStateSupport true
+set GNBCUCPFunction=1,UeCC=1,RrcInactiveProfile=Default,RrcInactiveProfileUeCfg=5QI7 periodicRnaUpdateTimer 30
+set GNBCUCPFunction=1,UeCC=1,RrcInactiveProfile=Default,RrcInactiveProfileUeCfg=5QI7 periodicRnaUpdateCount 1
+
+
+set GNBCUCPFunction=1,UeCC=1,RrcInactiveProfile=Default,RrcInactiveProfileUeCfg=5QI9 rrcInactiveStateSupport true
+set GNBCUCPFunction=1,UeCC=1,RrcInactiveProfile=Default,RrcInactiveProfileUeCfg=5QI9 periodicRnaUpdateTimer 30
+set GNBCUCPFunction=1,UeCC=1,RrcInactiveProfile=Default,RrcInactiveProfileUeCfg=5QI9 periodicRnaUpdateCount 1
+
+
+
+
+crn GNBDUFunction=1,UeCC=1,UeBb=1,UeBbProfile=Default,UeBbProfileUeCfg=MBB
+ueConfGroupList 1
+ueGroupList 66,77
+end
+lt all
+set GNBDUFunction=1,UeCC=1,UeBb=1,UeBbProfile=Default,UeBbProfileUeCfg=MBB bsrUeCfgRef GNBDUFunction=1,UeCC=1,Bsr=1,BsrUeCfg=Base
+set GNBDUFunction=1,UeCC=1,UeBb=1,UeBbProfile=Default,UeBbProfileUeCfg=MBB linkAdaptationUeCfgRef GNBDUFunction=1,UeCC=1,LinkAdaptation=1,LinkAdaptationUeCfg=Base
+set GNBDUFunction=1,UeCC=1,UeBb=1,UeBbProfile=Default,UeBbProfileUeCfg=MBB harqUeCfgRef GNBDUFunction=1,UeCC=1,Harq=1,HarqUeCfg=Base
+
+
+set GNBCUCPFunction=1,UeCovMeas=1,UcmCellProfile=Default ucmEnabled true
+set GNBCUCPFunction=1,UeCovMeas=1,UcmCellProfile=Default ucmSelectionProbability 100
+set GNBCUCPFunction=1,UeCovMeas=1,UcmCellProfile=Default ucmCellTargetIntensity 10
+set NBCUCPFunction=1,UeCovMeas=1,UcmCellProfile=Default,UcmCellProfileUeCfg=Base ucmMaxFreqLayerToMeas 7
+set GNBCUCPFunction=1,UeCovMeas=1,UcmNrFreqRelProfile=Default ucmTargetFactor 1
+set GNBCUCPFunction=1,UeCovMeas=1,UcmNrFreqRelProfile=Default reportConfigPeriodical includeBeamMeas=false
+set GNBCUCPFunction=1,UeCovMeas=1,UcmNrFreqRelProfile=Default reportConfigPeriodical maxNoOfRsIndexesToReport=1
+set GNBCUCPFunction=1,UeCovMeas=1,UcmNrFreqRelProfile=Default reportConfigPeriodical maxReportCells=8
+set GNBCUCPFunction=1,UeCovMeas=1,UcmNrFreqRelProfile=Default reportConfigPeriodical reportAddNeighMeas=true
+set GNBCUCPFunction=1,UeCovMeas=1,UcmNrFreqRelProfile=Default reportConfigPeriodical reportAmounT=1
+set GNBCUCPFunction=1,UeCovMeas=1,UcmNrFreqRelProfile=Default reportConfigPeriodical reportInterval=2
+set GNBCUCPFunction=1,UeCovMeas=1,UcmNrFreqRelProfile=Default reportConfigPeriodical reportQuantityCell=6
+set GNBCUCPFunction=1,UeCovMeas=1,UcmNrFreqRelProfile=Default reportConfigPeriodical reportQuantityRsIndex=6
+
+############################################!LTE#############################################
+
+set CXC4012578|CXC4012385|CXC4012371|CXC4010620 featurestate 1
+set CXC4012324|CXC4012580 featurestate 0
+
+set ENodeBFunction=1,EUtranCell.DD=.*,GUtranFreqRelation=.* anrMeasOn true
+set ENodeBFunction=1,AnrFunction=1,AnrFunctionNR=1          anrStateNR  1
+set UePolicyOptimization=1               zzzTemporary1  1
+set ENodeBFunction=1,EUtranCell.DD=.*,UeMeasControl=1,ReportConfigB1NR=1 triggerQuantityB1NR 0
+set ENodeBFunction=1,EUtranCell.DD=.*,UeMeasControl=1,ReportConfigB1NR=1 b1ThresholdRsrp -107
+set ENodeBFunction=1,EUtranCell.DD=.*,UeMeasControl=1,ReportConfigB1NR=1 hysteresisB1 2
+set ENodeBFunction=1,EUtranCell.DD=.*,UeMeasControl=1,ReportConfigB1NR=1 timeToTriggerB1 640
+
 set ^EUtranCell.DD= changeNotification changeNotificationSIB1=true,changeNotificationSIB13=true,changeNotificationSIB15=true,changeNotificationSIB16=true,changeNotificationSIB2=true,changeNotificatio
-nSIB24=true,changeNotificationSIB3=true,changeNotificationSIB4=true,changeNotificationSIB5=true,changeNotificationSIB6=true,changeNotificationSIB7=true,changeNotificationSIB8=true                    
-set EUtranCell.DD=.*  mappingInfo  mappingInfoSIB24=1                                                                                                                                                  
-set EUtranCell.DD=.*,GUtranFreqRelation=627936 connectedModeMobilityPrio 7                                                                                                                             
-set EUtranCell.DD=.*,GUtranFreqRelation=627936 cellReselectionPriority 7                                                                                                                               
-set EUtranCell.DD=.*,GUtranFreqRelation=627936 qRxLevMin         -110                                                                                                                                  
-set EUtranCell.DD=.*,GUtranFreqRelation=627936 threshXHigh 4                                                                                                                                           
-set EUtranCell.DD=.*,GUtranFreqRelation=627936 pMaxNR 33                                                                                                                                               
-set EUtranCell.DD=.*,GUtranFreqRelation=627936 anrMeasOn true                                                                                                                                          
-                                                                                                                                                                                                       
-set EUtranCell.DD=.*  sib1AltSchInfo   false                                                                                                                                                           
-set . rwrToNRAllowed true                                                                                                                                                                              
-set . nrB1MeasEnabled true                                                                                                                                                                             
-set . nrB1MeasAtEndcEnabled True                                                                                                                                                                       
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-set EUtranCell.DD=.*,UeMeasControl=1  waitForStartNRMeas 6000                                                                                                                                          
-set EUtranCell.DD=.*,UeMeasControl=1  waitForResumeNRMeas 6000                                                                                                                                         
-set EUtranCell.DD=.*,UeMeasControl=1  nrB1MobilityTimerLessTtt 600                                                                                                                                     
-set ENodeBFunction=1,EUtranCell.DD=.*,UeMeasControl=1 sMeasure 0                                                                                                                                       
-set EUtranCell.DD=.*,UeMeasControl=1  nrB1MeasEnabled true                                                                                                                                             
-                                                                                                                                                                                                       
-#############################################################################################                                                                                                          
-                                                                                                                                                                                                       
-lt all                                                                                                                                                                                                 
-                                                                                                                                                                                                       
-set CUUP5qiTable=1,CUUP5qi=5qi1                             dscp              34                                                                                                                       
-set CUUP5qiTable=1,CUUP5qi=5qi2                             dscp              34                                                                                                                       
-set CUUP5qiTable=1,CUUP5qi=5qi3                             dscp              12                                                                                                                       
-set CUUP5qiTable=1,CUUP5qi=5qi4                             dscp              12                                                                                                                       
-set CUUP5qiTable=1,CUUP5qi=5qi5                             dscp              46                                                                                                                       
-set CUUP5qiTable=1,CUUP5qi=5qi6                             dscp              32                                                                                                                       
-set CUUP5qiTable=1,CUUP5qi=5qi7                             dscp              40                                                                                                                       
-set CUUP5qiTable=1,CUUP5qi=5qi8                             dscp              30                                                                                                                       
-set CUUP5qiTable=1,CUUP5qi=5qi9                             dscp              26                                                                                                                       
-                                                                                                                                                                                                       
-set DU5qiTable=1,DU5qi=1                                    dscp              34                                                                                                                       
-set DU5qiTable=1,DU5qi=2                                    dscp              34                                                                                                                       
-set DU5qiTable=1,DU5qi=3                                    dscp              12                                                                                                                       
-set DU5qiTable=1,DU5qi=4                                    dscp              12                                                                                                                       
-set DU5qiTable=1,DU5qi=5                                    dscp              46                                                                                                                       
-set DU5qiTable=1,DU5qi=6                                    dscp              32                                                                                                                       
-set DU5qiTable=1,DU5qi=7                                    dscp              40                                                                                                                       
-set DU5qiTable=1,DU5qi=8                                    dscp              30                                                                                                                       
-set DU5qiTable=1,DU5qi=9                                    dscp              26                                                                                                                       
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-set GNBDUFunction=1,DU5qiTable=1,DU5qi=1 packetDelayBudget  80                                                                                                                                         
-set GNBDUFunction=1,DU5qiTable=1,DU5qi=2 packetDelayBudget  80                                                                                                                                         
-set GNBDUFunction=1,DU5qiTable=1,DU5qi=5 packetDelayBudget 80                                                                                                                                          
-set GNBDUFunction=1,DU5qiTable=1,DU5qi=6 packetDelayBudget  280                                                                                                                                        
-set GNBDUFunction=1,DU5qiTable=1,DU5qi=7 packetDelayBudget 280                                                                                                                                         
-set GNBDUFunction=1,DU5qiTable=1,DU5qi=8 packetDelayBudget  280                                                                                                                                        
-set GNBDUFunction=1,DU5qiTable=1,DU5qi=9 packetDelayBudget  280                                                                                                                                        
-set GNBDUFunction=1,DU5qiTable=1,DU5qi=2 packetDelayBudgetOffset 50                                                                                                                                    
-set GNBDUFunction=1,DU5qiTable=1,DU5qi=2 priorityLevel 30                                                                                                                                              
-set GNBDUFunction=1,DU5qiTable=1,DU5qi=9 priorityLevel 80                                                                                                                                              
-                                                                                                                                                                                                       
-cr GNBDUFunction=1,bwp=Init_DL_100                                                                                                                                                                     
-cr GNBDUFunction=1,bwp=Init_UL_100                                                                                                                                                                     
-cr GNBDUFunction=1,bwp=DenseSS_DL_100                                                                                                                                                                  
-cr GNBDUFunction=1,bwp=DenseSS_UL_100                                                                                                                                                                  
-cr GNBDUFunction=1,bwp=SparseSS_DL_100                                                                                                                                                                 
-cr GNBDUFunction=1,bwp=SparseSS_UL_100                                                                                                                                                                 
-                                                                                                                                                                                                       
-set bwp numberOfRBs 273                                                                                                                                                                                
-set GNBDUFunction=1,bwp=Init_UL_100 bwpContext 1                                                                                                                                                       
-set GNBDUFunction=1,bwp=DenseSS_UL_100 bwpContext 1                                                                                                                                                    
-set GNBDUFunction=1,bwp=SparseSS_UL_100 bwpContext 1                                                                                                                                                   
-set GNBDUFunction=1,bwp=Init_DL_100 bwpContext 0                                                                                                                                                       
-set GNBDUFunction=1,bwp=DenseSS_DL_100 bwpContext 0                                                                                                                                                    
-set GNBDUFunction=1,bwp=SparseSS_DL_100 bwpContext 0                                                                                                                                                   
-set GNBDUFunction=1,bwp=DenseSS_DL_100 isInitialBwp false                                                                                                                                              
-set GNBDUFunction=1,bwp=DenseSS_UL_100 isInitialBwp false                                                                                                                                              
-set GNBDUFunction=1,bwp=SparseSS_DL_100 isInitialBwp false                                                                                                                                             
-set GNBDUFunction=1,bwp=SparseSS_UL_100 isInitialBwp false                                                                                                                                             
-                                                                                                                                                                                                       
-set CXC4012607 featurestate 1                                                                                                                                                                          
-set NRCellDU=TN_5_EE_T1_.* bwpref GNBDUFunction=1,bwp=Init_DL_100 GNBDUFunction=1,bwp=Init_UL_100                                                                                                      
-set NRCellDU=TN_5_EE_T1_.* bWPSetRef GNBDUFunction=1,BWPSet=100                                                                                                                                        
-                                                                                                                                                                                                       
-crn1x GNBDUFunction=1,BWPSet=100                                                                                                                                                                       
-allBWPRegularRef GNBDUFunction=1,bwp=DenseSS_DL_100 GNBDUFunction=1,bwp=DenseSS_UL_100 GNBDUFunction=1,bwp=SparseSS_DL_100 GNBDUFunction=1,bwp=SparseSS_UL_100                                         
-startBWPDlRef GNBDUFunction=1,bwp=DenseSS_DL_100                                                                                                                                                       
-startBWPUlRef GNBDUFunction=1,bwp=DenseSS_UL_100                                                                                                                                                       
-end                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-crn1x GNBDUFunction=1,BWPSet=100,BWPSetUeCfg=1                                                                                                                                                         
-prefUeGroupList                                                                                                                                                                                        
-ueConfGroupList                                                                                                                                                                                        
-ueGroupList                                                                                                                                                                                            
-userLabel                                                                                                                                                                                              
-end                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-crn1x GNBDUFunction=1,BWPSet=100,BWPSetUeCfg=1,BWPSetCfg=0                                                                                                                                             
-bWPDlRef GNBDUFunction=1,bwp=DenseSS_DL_100                                                                                                                                                            
-bWPUlRef GNBDUFunction=1,bwp=DenseSS_UL_100                                                                                                                                                            
-userLabel                                                                                                                                                                                              
-end                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-cr1x BWPSet=100,DynPowerOpt=1                                                                                                                                                                          
-                                                                                                                                                                                                       
-crn1x GNBDUFunction=1,BWPSet=100,BWPSetUeCfg=1,BWPSetCfg=1                                                                                                                                             
-bWPDlRef GNBDUFunction=1,bwp=SparseSS_DL_100                                                                                                                                                           
-bWPUlRef GNBDUFunction=1,bwp=SparseSS_UL_100                                                                                                                                                           
-dynPowerOptRef BWPSet=100,DynPowerOpt=1                                                                                                                                                                
-userLabel                                                                                                                                                                                              
-end                                                                                                                                                                                                    
-commit                                                                                                                                                                                                 
-                                                                                                                                                                                                       
-set NRCellDU=TN_5_EE_T1_.* bWPSetRef GNBDUFunction=1,BWPSet=100                                                                                                                                        
-                                                                                                                                                                                                       
-setm GNBDUFunction=1,BWPSet=100,DynPowerOpt=1 downDlThreshold 200 downUlThreshold 200 upDlThreshold 300 upUlThreshold 300                                                                              
-                                                                                                                                                                                                       
-ldeb carrier                                                                                                                                                                                           
-ldeb nrcelldu                                                                                                                                                                                          
-                                                                                                                                                                                                       
-confbd-                                                                                                                                                                                                
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-lt all                                                                                                                                                                                                 
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-confb+                                                                                                                                                                                                 
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-set CXC4012592 featurestate 1                                                                                                                                                                          
-set CXC4012538 featurestate 1                                                                                                                                                                          
-                                                                                                                                                                                                       
-crn GNBCUCPFunction=1,Mcpc=1,McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=VONR                                                                                                                       
-ueConfGroupList 5                                                                                                                                                                                      
-ueGroupList 5                                                                                                                                                                                          
-end                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-lt all                                                                                                                                                                                                 
-                                                                                                                                                                                                       
-set GNBCUCPFunction=1,Mcpc=1,McpcPCellProfile=Midband,McpcPCellProfileUeCfg=VONR mcpcQuantityList 0                                                                                                    
-set GNBCUCPFunction=1,Mcpc=1,McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=VONR rsrpSearchZone threshold=-99,hysteresis=10,timeToTrigger=320                                                          
-set GNBCUCPFunction=1,Mcpc=1,McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=VONR rsrpCandidateA5 threshold1=-99,threshold2=-101,timeToTrigger=640,hysteresis=10                                        
-set GNBCUCPFunction=1,Mcpc=1,McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=VONR rsrpCandidateB2 threshold1=-99,threshold2EUtra=-113,hysteresis=10,timeToTrigger=640                                   
-set GNBCUCPFunction=1,Mcpc=1,McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=VONR rsrpCritical threshold=-111,hysteresis=10,timeToTrigger=320                                                           
-set Mcpc=1,McpcPCellProfile=Midband,McpcPCellProfileUeCfg=VONR rsrpCriticalEnabled False                                                                                                               
-set Mcpc=1,McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=VONR rsrpSearchTimeRestriction -1                                                                                                            
-set Mcpc=1,McpcPCellProfile=Midband,McpcPCellProfileUeCfg=VONR ueGroupList 1                                                                                                                           
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-cr GNBCUCPFunction=1,Mcfb=1                                                                                                                                                                            
-cr GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1                                                                                                                                                          
-                                                                                                                                                                                                       
-wait 5                                                                                                                                                                                                 
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-lt all                                                                                                                                                                                                 
-                                                                                                                                                                                                       
-set NRCellCU=.*  mcfbCellProfileRef Mcfb=1,McfbCellProfile=1                                                                                                                                           
-set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFallbackOperationEm 1                                                                                                     
-set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFbTargetSearchTimer 500                                                                                                   
-set  Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base      epsFbAtSessionSetup 1                                                                                                                     
-set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFallbackOperation 1                                                                                                       
-set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base rejectVoiceIncHoAtEpsFb false                                                                                                
-set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base triggerQuantity 0                                                                                                            
-set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base rsrpCriticalCoverage threshold=-109,hysteresis=10,timeToTrigger=160                                                          
-set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base rsrpCellCandidate threshold=-104,hysteresis=10,timeToTrigger=40                                                              
-set Mcfb=1  voiceEpsFbPossible true                                                                                                                                                                    
-                                                                                                                                                                                                       
-set GNBCUCPFunction=1,UeCC=1,Rohc=1,RohcUeCfg=Base rohc5qiList 1                                                                                                                                       
-                                                                                                                                                                                                       
-cr GNBDUFunction=1,QosPriorityMapping=1                                                                                                                                                                
-cr GNBDUFunction=1,QosPriorityMapping=1,PriorityDomainMapping=1                                                                                                                                        
-set QosPriorityMapping=1,PriorityDomainMapping=1            priorityDomain 16                                                                                                                          
-                                                                                                                                                                                                       
-cr GNBDUFunction=1,UeCC=1,SrHandling=5QI_5                                                                                                                                                             
-                                                                                                                                                                                                       
-wait 5                                                                                                                                                                                                 
-                                                                                                                                                                                                       
-lt all                                                                                                                                                                                                 
-set GNBDUFunction=1,UeCC=1,SrHandling=5QI_5,SrHandlingUeCfg=Base srHandlingMode  1                                                                                                                     
-set GNBDUFunction=1,UeCC=1,SrHandling=5QI_5,SrHandlingUeCfg=Base conditional5qi  1                                                                                                                     
-set GNBDUFunction=1,DU5qiTable=1,DU5qi=5 srHandlingRef GNBDUFunction=1,UeCC=1,SrHandling=5QI_5                                                                                                         
-set DU5qiTable=1,DU5qi=1                                    drbRlcInDu5qiEnabled false                                                                                                                 
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-crn GNBDUFunction=1,UeCC=1,RadioLinkControl=1,DrbRlc=Default,DrbRlcUeCfg=VoNR                                                                                                                          
-tReassemblyDl 65                                                                                                                                                                                       
-tReassemblyUl 65                                                                                                                                                                                       
-rlcSNLength 12                                                                                                                                                                                         
-ueConfGroupList 1                                                                                                                                                                                      
-ueGroupList 1                                                                                                                                                                                          
-end                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-cr GNBCUCPFunction=1,EmCall=1                                                                                                                                                                          
-                                                                                                                                                                                                       
-wait 5                                                                                                                                                                                                 
-                                                                                                                                                                                                       
-lt all                                                                                                                                                                                                 
-                                                                                                                                                                                                       
-set GNBCUCPFunction=1,EmCall=1 arpPrioEm5qi1List 1                                                                                                                                                     
-set GNBCUCPFunction=1,EmCall=1 arpPrioEm5qi5List 1                                                                                                                                                     
-                                                                                                                                                                                                       
-set NRCellDU=.* drxProfileRef GNBDUFunction=1,UeCC=1,DrxProfile=Default                                                                                                                                
-set NRCellDU=.* drxProfileEnabled true                                                                                                                                                                 
-set NRCellDU=.* imsEmSupportEnabled true                                                                                                                                                               
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-crn GNBDUFunction=1,UeCC=1,DrxProfile=Default,DrxProfileUeCfg=VoNR                                                                                                                                     
-drxEnabled true                                                                                                                                                                                        
-drxInactivityTimer 5                                                                                                                                                                                   
-drxLongCycle 4                                                                                                                                                                                         
-drxOnDurationTimer 36                                                                                                                                                                                  
-drxRetransmissionTimerDl 6                                                                                                                                                                             
-drxRetransmissionTimerUl 6                                                                                                                                                                             
-prefUeGroupList                                                                                                                                                                                        
-ueGroupList 1                                                                                                                                                                                          
-userLabel                                                                                                                                                                                              
-end                                                                                                                                                                                                    
-gs-                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-crn GNBCUCPFunction=1,UeCC=1,InactivityProfile=Default,InactivityProfileUeCfg=VoNR                                                                                                                     
-tInactivityTimer 15                                                                                                                                                                                    
-tInactivityTimerEndcSn 10                                                                                                                                                                              
-tInactivityTimerNrdcSn 10                                                                                                                                                                              
-ueGroupList 1                                                                                                                                                                                          
-end                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-crn GNBCUCPFunction=1,UeGroupSelection=1,UeGroupSelectionProfile=VoNR                                                                                                                                  
-selectionCriteria 5qi==1                                                                                                                                                                               
-ueGroupId 1                                                                                                                                                                                            
-ueGroupPriority 65535                                                                                                                                                                                  
-end                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-crn GNBCUCPFunction=1,UeGroupSelection=1,UeServiceGroupDefinition=VoNR                                                                                                                                 
-selectionCriteria 5qi==1                                                                                                                                                                               
-ueServiceGroupId 1                                                                                                                                                                                     
-ueServiceGroupPriority 65535                                                                                                                                                                           
-end                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-crn GNBCUCPFunction=1,UeGroupSelection=1,PrefUeGroupSelectionProfile=VoNR                                                                                                                              
-prefUeGroupId 1                                                                                                                                                                                        
-prefUeGroupPriority 65535                                                                                                                                                                              
-selectionCriteria 5qi==1                                                                                                                                                                               
-end                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-crn GNBCUCPFunction=1,UeGroupSelection=1,UeMobilityGroupDefinition=VoNR                                                                                                                                
-ueMobilityGroupId 1                                                                                                                                                                                    
-ueMobilityGroupPriority  65535                                                                                                                                                                         
-selectionCriteria 5qi==1                                                                                                                                                                               
-end                                                                                                                                                                                                    
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-lbl nrcelldu                                                                                                                                                                                           
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-# BWP - Define VoNR-specific BWP Settings -                                                                                                                                                            
-crn1x bwpset=100,bwpsetuecfg=vonr                                                                                                                                                                      
-ueConfGroupList 1                                                                                                                                                                                      
-bwpSwitchingFilterRelaxation false                                                                                                                                                                     
-end                                                                                                                                                                                                    
-crn1x bwpset=100,BWPSetUeCfg=vonr,bwpsetcfg=0                                                                                                                                                          
-bWPDlRef BWP=DenseSS_DL_100                                                                                                                                                                            
-bWPUlRef BWP=DenseSS_UL_100                                                                                                                                                                            
-end                                                                                                                                                                                                    
-cr1x BWPSet=100,DynPowerOpt=vonr                                                                                                                                                                       
-crn1x bwpset=100,BWPSetUeCfg=vonr,bwpsetcfg=1                                                                                                                                                          
-bWPDlRef BWP=SparseSS_DL_100                                                                                                                                                                           
-bWPUlRef BWP=SparseSS_UL_100                                                                                                                                                                           
-dynPowerOptRef BWPSet=100,DynPowerOpt=vonr                                                                                                                                                             
-end                                                                                                                                                                                                    
-commit                                                                                                                                                                                                 
-                                                                                                                                                                                                       
-# BWP - Change threshold for BWP                                                                                                                                                                       
-setm GNBDUFunction=1,BWPSet=100,DynPowerOpt=vonr downDlThreshold 10 downUlThreshold 10 upDlThreshold 30 upUlThreshold 30                                                                               
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-ldeb nrcelldu                                                                                                                                                                                          
-                                                                                                                                                                                                       
-confb-                                                                                                                                                                                                 
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-lt all                                                                                                                                                                                                 
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-confb+                                                                                                                                                                                                 
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-set CXC4012578|CXC4012385|CXC4012371|CXC4010620 featurestate 1                                                                                                                                         
-set CXC4012324|CXC4012580 featurestate 0                                                                                                                                                               
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-set ENodeBFunction=1,EUtranCell.DD=.*,GUtranFreqRelation=.* anrMeasOn true                                                                                                                             
-set ENodeBFunction=1,AnrFunction=1,AnrFunctionNR=1          anrStateNR  1                                                                                                                              
-set UePolicyOptimization=1               zzzTemporary1  1                                                                                                                                              
-set ENodeBFunction=1,EUtranCell.DD=.*,UeMeasControl=1,ReportConfigB1NR=1 triggerQuantityB1NR 0                                                                                                         
-set ENodeBFunction=1,EUtranCell.DD=.*,UeMeasControl=1,ReportConfigB1NR=1 b1ThresholdRsrp -107                                                                                                          
-set ENodeBFunction=1,EUtranCell.DD=.*,UeMeasControl=1,ReportConfigB1NR=1 hysteresisB1 2                                                                                                                
-set ENodeBFunction=1,EUtranCell.DD=.*,UeMeasControl=1,ReportConfigB1NR=1 timeToTriggerB1 640                                                                                                           
-                                                                                                                                                                                                       
+nSIB24=true,changeNotificationSIB3=true,changeNotificationSIB4=true,changeNotificationSIB5=true,changeNotificationSIB6=true,changeNotificationSIB7=true,changeNotificationSIB8=true
+set EUtranCell.DD=.*  mappingInfo  mappingInfoSIB24=1
+set EUtranCell.DD=.*,GUtranFreqRelation=627936 connectedModeMobilityPrio 7
+set EUtranCell.DD=.*,GUtranFreqRelation=627936 cellReselectionPriority 7
+set EUtranCell.DD=.*,GUtranFreqRelation=627936 qRxLevMin         -110
+set EUtranCell.DD=.*,GUtranFreqRelation=627936 threshXHigh 4
+set EUtranCell.DD=.*,GUtranFreqRelation=627936 pMaxNR 33
+set EUtranCell.DD=.*,GUtranFreqRelation=627936 anrMeasOn true
+
+set EUtranCell.DD=.*  sib1AltSchInfo   false
+set . rwrToNRAllowed true
+set . nrB1MeasEnabled true
+set . nrB1MeasAtEndcEnabled True
+
+
+set EUtranCell.DD=.*,UeMeasControl=1  waitForStartNRMeas 6000
+set EUtranCell.DD=.*,UeMeasControl=1  waitForResumeNRMeas 6000
+set EUtranCell.DD=.*,UeMeasControl=1  nrB1MobilityTimerLessTtt 600
+set ENodeBFunction=1,EUtranCell.DD=.*,UeMeasControl=1 sMeasure 0
+set EUtranCell.DD=.*,UeMeasControl=1  nrB1MeasEnabled true
+
+#############################################################################################
+
+lt all
+
+set CUUP5qiTable=1,CUUP5qi=5qi1                             dscp              34
+set CUUP5qiTable=1,CUUP5qi=5qi2                             dscp              34
+set CUUP5qiTable=1,CUUP5qi=5qi3                             dscp              12
+set CUUP5qiTable=1,CUUP5qi=5qi4                             dscp              12
+set CUUP5qiTable=1,CUUP5qi=5qi5                             dscp              46
+set CUUP5qiTable=1,CUUP5qi=5qi6                             dscp              32
+set CUUP5qiTable=1,CUUP5qi=5qi7                             dscp              40
+set CUUP5qiTable=1,CUUP5qi=5qi8                             dscp              30
+set CUUP5qiTable=1,CUUP5qi=5qi9                             dscp              26
+
+set DU5qiTable=1,DU5qi=1                                    dscp              34
+set DU5qiTable=1,DU5qi=2                                    dscp              34
+set DU5qiTable=1,DU5qi=3                                    dscp              12
+set DU5qiTable=1,DU5qi=4                                    dscp              12
+set DU5qiTable=1,DU5qi=5                                    dscp              46
+set DU5qiTable=1,DU5qi=6                                    dscp              32
+set DU5qiTable=1,DU5qi=7                                    dscp              40
+set DU5qiTable=1,DU5qi=8                                    dscp              30
+set DU5qiTable=1,DU5qi=9                                    dscp              26
+
+
+set GNBDUFunction=1,DU5qiTable=1,DU5qi=1 packetDelayBudget  80
+set GNBDUFunction=1,DU5qiTable=1,DU5qi=2 packetDelayBudget  80
+set GNBDUFunction=1,DU5qiTable=1,DU5qi=5 packetDelayBudget 80
+set GNBDUFunction=1,DU5qiTable=1,DU5qi=6 packetDelayBudget  280
+set GNBDUFunction=1,DU5qiTable=1,DU5qi=7 packetDelayBudget 280
+set GNBDUFunction=1,DU5qiTable=1,DU5qi=8 packetDelayBudget  280
+set GNBDUFunction=1,DU5qiTable=1,DU5qi=9 packetDelayBudget  280
+set GNBDUFunction=1,DU5qiTable=1,DU5qi=2 packetDelayBudgetOffset 50
+set GNBDUFunction=1,DU5qiTable=1,DU5qi=2 priorityLevel 30
+set GNBDUFunction=1,DU5qiTable=1,DU5qi=9 priorityLevel 80
+
+cr GNBDUFunction=1,bwp=Init_DL_100
+cr GNBDUFunction=1,bwp=Init_UL_100
+cr GNBDUFunction=1,bwp=DenseSS_DL_100
+cr GNBDUFunction=1,bwp=DenseSS_UL_100
+cr GNBDUFunction=1,bwp=SparseSS_DL_100
+cr GNBDUFunction=1,bwp=SparseSS_UL_100
+
+set bwp numberOfRBs 273
+set GNBDUFunction=1,bwp=Init_UL_100 bwpContext 1
+set GNBDUFunction=1,bwp=DenseSS_UL_100 bwpContext 1
+set GNBDUFunction=1,bwp=SparseSS_UL_100 bwpContext 1
+set GNBDUFunction=1,bwp=Init_DL_100 bwpContext 0
+set GNBDUFunction=1,bwp=DenseSS_DL_100 bwpContext 0
+set GNBDUFunction=1,bwp=SparseSS_DL_100 bwpContext 0
+set GNBDUFunction=1,bwp=DenseSS_DL_100 isInitialBwp false
+set GNBDUFunction=1,bwp=DenseSS_UL_100 isInitialBwp false
+set GNBDUFunction=1,bwp=SparseSS_DL_100 isInitialBwp false
+set GNBDUFunction=1,bwp=SparseSS_UL_100 isInitialBwp false
+
+set CXC4012607 featurestate 1
+set NRCellDU=TN_5_EE_T1_.* bwpref GNBDUFunction=1,bwp=Init_DL_100 GNBDUFunction=1,bwp=Init_UL_100
+set NRCellDU=TN_5_EE_T1_.* bWPSetRef GNBDUFunction=1,BWPSet=100
+
+crn1x GNBDUFunction=1,BWPSet=100
+allBWPRegularRef GNBDUFunction=1,bwp=DenseSS_DL_100 GNBDUFunction=1,bwp=DenseSS_UL_100 GNBDUFunction=1,bwp=SparseSS_DL_100 GNBDUFunction=1,bwp=SparseSS_UL_100
+startBWPDlRef GNBDUFunction=1,bwp=DenseSS_DL_100
+startBWPUlRef GNBDUFunction=1,bwp=DenseSS_UL_100
+end
+
+crn1x GNBDUFunction=1,BWPSet=100,BWPSetUeCfg=1
+prefUeGroupList
+ueConfGroupList
+ueGroupList
+userLabel
+end
+
+crn1x GNBDUFunction=1,BWPSet=100,BWPSetUeCfg=1,BWPSetCfg=0
+bWPDlRef GNBDUFunction=1,bwp=DenseSS_DL_100
+bWPUlRef GNBDUFunction=1,bwp=DenseSS_UL_100
+userLabel
+end
+
+cr1x BWPSet=100,DynPowerOpt=1
+
+crn1x GNBDUFunction=1,BWPSet=100,BWPSetUeCfg=1,BWPSetCfg=1
+bWPDlRef GNBDUFunction=1,bwp=SparseSS_DL_100
+bWPUlRef GNBDUFunction=1,bwp=SparseSS_UL_100
+dynPowerOptRef BWPSet=100,DynPowerOpt=1
+userLabel
+end
+commit
+
+set NRCellDU=TN_5_EE_T1_.* bWPSetRef GNBDUFunction=1,BWPSet=100
+
+setm GNBDUFunction=1,BWPSet=100,DynPowerOpt=1 downDlThreshold 200 downUlThreshold 200 upDlThreshold 300 upUlThreshold 300
+
+ldeb carrier
+ldeb nrcelldu
+
+confbd-
+
+
+lt all
+
+
+
+
+confb+
+
+
+set CXC4012592 featurestate 1
+set CXC4012538 featurestate 1
+
+crn GNBCUCPFunction=1,Mcpc=1,McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=VONR
+ueConfGroupList 5
+ueGroupList 5
+end
+
+lt all
+
+set GNBCUCPFunction=1,Mcpc=1,McpcPCellProfile=Midband,McpcPCellProfileUeCfg=VONR mcpcQuantityList 0
+set GNBCUCPFunction=1,Mcpc=1,McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=VONR rsrpSearchZone threshold=-99,hysteresis=10,timeToTrigger=320
+set GNBCUCPFunction=1,Mcpc=1,McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=VONR rsrpCandidateA5 threshold1=-99,threshold2=-101,timeToTrigger=640,hysteresis=10
+set GNBCUCPFunction=1,Mcpc=1,McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=VONR rsrpCandidateB2 threshold1=-99,threshold2EUtra=-113,hysteresis=10,timeToTrigger=640
+set GNBCUCPFunction=1,Mcpc=1,McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=VONR rsrpCritical threshold=-111,hysteresis=10,timeToTrigger=320
+set Mcpc=1,McpcPCellProfile=Midband,McpcPCellProfileUeCfg=VONR rsrpCriticalEnabled False
+set Mcpc=1,McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=VONR rsrpSearchTimeRestriction -1
+set Mcpc=1,McpcPCellProfile=Midband,McpcPCellProfileUeCfg=VONR ueGroupList 1
+
+
+cr GNBCUCPFunction=1,Mcfb=1
+cr GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1
+
+wait 5
+
+
+lt all
+
+set NRCellCU=.*  mcfbCellProfileRef Mcfb=1,McfbCellProfile=1
+set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFallbackOperationEm 1
+set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFbTargetSearchTimer 500
+set  Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base      epsFbAtSessionSetup 1
+set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFallbackOperation 1
+set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base rejectVoiceIncHoAtEpsFb false
+set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base triggerQuantity 0
+set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base rsrpCriticalCoverage threshold=-109,hysteresis=10,timeToTrigger=160
+set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base rsrpCellCandidate threshold=-104,hysteresis=10,timeToTrigger=40
+set Mcfb=1  voiceEpsFbPossible true
+
+set GNBCUCPFunction=1,UeCC=1,Rohc=1,RohcUeCfg=Base rohc5qiList 1
+
+cr GNBDUFunction=1,QosPriorityMapping=1
+cr GNBDUFunction=1,QosPriorityMapping=1,PriorityDomainMapping=1
+set QosPriorityMapping=1,PriorityDomainMapping=1            priorityDomain 16
+
+cr GNBDUFunction=1,UeCC=1,SrHandling=5QI_5
+
+wait 5
+
+lt all
+set GNBDUFunction=1,UeCC=1,SrHandling=5QI_5,SrHandlingUeCfg=Base srHandlingMode  1
+set GNBDUFunction=1,UeCC=1,SrHandling=5QI_5,SrHandlingUeCfg=Base conditional5qi  1
+set GNBDUFunction=1,DU5qiTable=1,DU5qi=5 srHandlingRef GNBDUFunction=1,UeCC=1,SrHandling=5QI_5
+set DU5qiTable=1,DU5qi=1                                    drbRlcInDu5qiEnabled false
+
+
+crn GNBDUFunction=1,UeCC=1,RadioLinkControl=1,DrbRlc=Default,DrbRlcUeCfg=VoNR
+tReassemblyDl 65
+tReassemblyUl 65
+rlcSNLength 12
+ueConfGroupList 1
+ueGroupList 1
+end
+
+
+
+cr GNBCUCPFunction=1,EmCall=1
+
+wait 5
+
+lt all
+
+set GNBCUCPFunction=1,EmCall=1 arpPrioEm5qi1List 1
+set GNBCUCPFunction=1,EmCall=1 arpPrioEm5qi5List 1
+
+set NRCellDU=.* drxProfileRef GNBDUFunction=1,UeCC=1,DrxProfile=Default
+set NRCellDU=.* drxProfileEnabled true
+set NRCellDU=.* imsEmSupportEnabled true
+
+
+
+crn GNBDUFunction=1,UeCC=1,DrxProfile=Default,DrxProfileUeCfg=VoNR
+drxEnabled true
+drxInactivityTimer 5
+drxLongCycle 4
+drxOnDurationTimer 36
+drxRetransmissionTimerDl 6
+drxRetransmissionTimerUl 6
+prefUeGroupList
+ueGroupList 1
+userLabel
+end
+gs-
+
+
+crn GNBCUCPFunction=1,UeCC=1,InactivityProfile=Default,InactivityProfileUeCfg=VoNR
+tInactivityTimer 15
+tInactivityTimerEndcSn 10
+tInactivityTimerNrdcSn 10
+ueGroupList 1
+end
+
+
+
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,UeGroupSelectionProfile=VoNR
+selectionCriteria 5qi==1
+ueGroupId 1
+ueGroupPriority 65535
+end
+
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,UeServiceGroupDefinition=VoNR
+selectionCriteria 5qi==1
+ueServiceGroupId 1
+ueServiceGroupPriority 65535
+end
+
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,PrefUeGroupSelectionProfile=VoNR
+prefUeGroupId 1
+prefUeGroupPriority 65535
+selectionCriteria 5qi==1
+end
+
+
+crn GNBCUCPFunction=1,UeGroupSelection=1,UeMobilityGroupDefinition=VoNR
+ueMobilityGroupId 1
+ueMobilityGroupPriority  65535
+selectionCriteria 5qi==1
+end
+
+
+
+lbl nrcelldu
+
+
+# BWP - Define VoNR-specific BWP Settings -
+crn1x bwpset=100,bwpsetuecfg=vonr
+ueConfGroupList 1
+bwpSwitchingFilterRelaxation false
+end
+crn1x bwpset=100,BWPSetUeCfg=vonr,bwpsetcfg=0
+bWPDlRef BWP=DenseSS_DL_100
+bWPUlRef BWP=DenseSS_UL_100
+end
+cr1x BWPSet=100,DynPowerOpt=vonr
+crn1x bwpset=100,BWPSetUeCfg=vonr,bwpsetcfg=1
+bWPDlRef BWP=SparseSS_DL_100
+bWPUlRef BWP=SparseSS_UL_100
+dynPowerOptRef BWPSet=100,DynPowerOpt=vonr
+end
+commit
+
+# BWP - Change threshold for BWP
+setm GNBDUFunction=1,BWPSet=100,DynPowerOpt=vonr downDlThreshold 10 downUlThreshold 10 upDlThreshold 30 upUlThreshold 30
+
+
+ldeb nrcelldu
+
+confb-
+
+
+lt all
+
+
+
+confb+
+
+
+set CXC4012578|CXC4012385|CXC4012371|CXC4010620 featurestate 1
+set CXC4012324|CXC4012580 featurestate 0
+
+
+set ENodeBFunction=1,EUtranCell.DD=.*,GUtranFreqRelation=.* anrMeasOn true
+set ENodeBFunction=1,AnrFunction=1,AnrFunctionNR=1          anrStateNR  1
+set UePolicyOptimization=1               zzzTemporary1  1
+set ENodeBFunction=1,EUtranCell.DD=.*,UeMeasControl=1,ReportConfigB1NR=1 triggerQuantityB1NR 0
+set ENodeBFunction=1,EUtranCell.DD=.*,UeMeasControl=1,ReportConfigB1NR=1 b1ThresholdRsrp -107
+set ENodeBFunction=1,EUtranCell.DD=.*,UeMeasControl=1,ReportConfigB1NR=1 hysteresisB1 2
+set ENodeBFunction=1,EUtranCell.DD=.*,UeMeasControl=1,ReportConfigB1NR=1 timeToTriggerB1 640
+
 set ^EUtranCell.DD= changeNotification changeNotificationSIB1=true,changeNotificationSIB13=true,changeNotificationSIB15=true,changeNotificationSIB16=true,changeNotificationSIB2=true,changeNotificatio
-nSIB24=true,changeNotificationSIB3=true,changeNotificationSIB4=true,changeNotificationSIB5=true,changeNotificationSIB6=true,changeNotificationSIB7=true,changeNotificationSIB8=true                    
-set EUtranCell.DD=.*  mappingInfo  mappingInfoSIB24=1                                                                                                                                                  
-set EUtranCell.DD=.*,GUtranFreqRelation=627936 connectedModeMobilityPrio 7                                                                                                                             
-set EUtranCell.DD=.*,GUtranFreqRelation=627936 cellReselectionPriority 7                                                                                                                               
-set EUtranCell.DD=.*,GUtranFreqRelation=627936 qRxLevMin         -110                                                                                                                                  
-set EUtranCell.DD=.*,GUtranFreqRelation=627936 threshXHigh 4                                                                                                                                           
-set EUtranCell.DD=.*,GUtranFreqRelation=627936 pMaxNR 33                                                                                                                                               
-set EUtranCell.DD=.*,GUtranFreqRelation=627936 anrMeasOn true                                                                                                                                          
-                                                                                                                                                                                                       
-set EUtranCell.DD=.*  sib1AltSchInfo   false                                                                                                                                                           
-set . rwrToNRAllowed true                                                                                                                                                                              
-set . nrB1MeasEnabled true                                                                                                                                                                             
-set . nrB1MeasAtEndcEnabled True                                                                                                                                                                       
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-set EUtranCell.DD=.*,UeMeasControl=1  waitForStartNRMeas 6000                                                                                                                                          
-set EUtranCell.DD=.*,UeMeasControl=1  waitForResumeNRMeas 6000                                                                                                                                         
-set EUtranCell.DD=.*,UeMeasControl=1  nrB1MobilityTimerLessTtt 600                                                                                                                                     
-set ENodeBFunction=1,EUtranCell.DD=.*,UeMeasControl=1 sMeasure 0                                                                                                                                       
-set EUtranCell.DD=.*,UeMeasControl=1  nrB1MeasEnabled true                                                                                                                                             
-                                                                                                                                                                                                       
-confb-                                                                                                                                                                                                 
-                                                                                                                                                                                                       
-                                                                                                                                                                                                       
-cvms Pre_Intra_NR_Relation                                                                                                                                                                             
-                                                                                                                                                                                                       
-get GNBCUUPFunction=1 gNBId$ > $gnbid                                                                                                                                                                  
-                                                                                                                                                                                                       
-mr nrgroupsub                                                                                                                                                                                          
-ma nrgroupsub ^NRCellCU=NE_5_EE_T1                                                                                                                                                                     
-                                                                                                                                                                                                       
-func Relation_NRCELLREL                                                                                                                                                                                
-for $mo in nrgroupsub                                                                                                                                                                                  
-$mordnsub = rdn($mo)                                                                                                                                                                                   
-if $mordnsub != $mordnmain                                                                                                                                                                             
-get $mordnmain ^cellLocalId$ > $cellLocalId                                                                                                                                                            
-crn $mordnsub,NRCellRelation=40416-$gnbid-$cellLocalId                                                                                                                                                 
-cellIndividualOffsetNR 0                                                                                                                                                                               
-colocationIndicator 0                                                                                                                                                                                  
-coverageIndicator 1                                                                                                                                                                                    
-isHoAllowed true                                                                                                                                                                                       
-isRemoveAllowed false                                                                                                                                                                                  
-nRCellRef $mordnmain                                                                                                                                                                                   
-nRFreqRelationRef $mordnsub,NRFreqRelation=627936                                                                                                                                                      
-sCellCandidate 1                                                                                                                                                                                       
-end                                                                                                                                                                                                    
-fi                                                                                                                                                                                                     
-done                                                                                                                                                                                                   
-endfunc                                                                                                                                                                                                
-                                                                                                                                                                                                       
-mr nrgroupmain                                                                                                                                                                                         
-ma nrgroupmain ^NRCellCU=NE_5_EE_T1                                                                                                                                                                    
-                                                                                                                                                                                                       
-func NRRelation_final                                                                                                                                                                                  
-for $mo in nrgroupmain                                                                                                                                                                                 
-$mordnmain = rdn($mo)                                                                                                                                                                                  
-Relation_NRCELLREL                                                                                                                                                                                     
-done                                                                                                                                                                                                   
-endfunc                                                                                                                                                                                                
-NRRelation_final                                                                                                                                                                                       
-                                                                                                                                                                                                       
-                                                                                                                                                                            
-                                                                                                                                                                                                       
-confb+                                                                                                                                                                                                 
-                                                                                                                                                                                                       
-eset1 ^NRCellDU sNSSAIList sd=1,sst=1;sd=2,sst=1;sd=3,sst=1;sd=4,sst=1                                                                                                                                 
-eset1 ^NRCellCU sNSSAIList sd=1,sst=1;sd=2,sst=1;sd=3,sst=1;sd=4,sst=1                                                                                                                                 
-eset1 ^GNBCUUPFunction=1 sNSSAIList sd=1,sst=1;sd=2,sst=1;sd=3,sst=1;sd=4,sst=1                                                                                                                        
-set NRCellDU=.* nrrrpenabled true       
+nSIB24=true,changeNotificationSIB3=true,changeNotificationSIB4=true,changeNotificationSIB5=true,changeNotificationSIB6=true,changeNotificationSIB7=true,changeNotificationSIB8=true
+set EUtranCell.DD=.*  mappingInfo  mappingInfoSIB24=1
+set EUtranCell.DD=.*,GUtranFreqRelation=627936 connectedModeMobilityPrio 7
+set EUtranCell.DD=.*,GUtranFreqRelation=627936 cellReselectionPriority 7
+set EUtranCell.DD=.*,GUtranFreqRelation=627936 qRxLevMin         -110
+set EUtranCell.DD=.*,GUtranFreqRelation=627936 threshXHigh 4
+set EUtranCell.DD=.*,GUtranFreqRelation=627936 pMaxNR 33
+set EUtranCell.DD=.*,GUtranFreqRelation=627936 anrMeasOn true
+
+set EUtranCell.DD=.*  sib1AltSchInfo   false
+set . rwrToNRAllowed true
+set . nrB1MeasEnabled true
+set . nrB1MeasAtEndcEnabled True
+
+
+set EUtranCell.DD=.*,UeMeasControl=1  waitForStartNRMeas 6000
+set EUtranCell.DD=.*,UeMeasControl=1  waitForResumeNRMeas 6000
+set EUtranCell.DD=.*,UeMeasControl=1  nrB1MobilityTimerLessTtt 600
+set ENodeBFunction=1,EUtranCell.DD=.*,UeMeasControl=1 sMeasure 0
+set EUtranCell.DD=.*,UeMeasControl=1  nrB1MeasEnabled true
+
+confb-
+
+
+cvms Pre_Intra_NR_Relation
+
+get GNBCUUPFunction=1 gNBId$ > $gnbid
+
+mr nrgroupsub
+ma nrgroupsub ^NRCellCU=NE_5_EE_T1
+
+func Relation_NRCELLREL
+for $mo in nrgroupsub
+$mordnsub = rdn($mo)
+if $mordnsub != $mordnmain
+get $mordnmain ^cellLocalId$ > $cellLocalId
+crn $mordnsub,NRCellRelation=40416-$gnbid-$cellLocalId
+cellIndividualOffsetNR 0
+colocationIndicator 0
+coverageIndicator 1
+isHoAllowed true
+isRemoveAllowed false
+nRCellRef $mordnmain
+nRFreqRelationRef $mordnsub,NRFreqRelation=627936
+sCellCandidate 1
+end
+fi
+done
+endfunc
+
+mr nrgroupmain
+ma nrgroupmain ^NRCellCU=NE_5_EE_T1
+
+func NRRelation_final
+for $mo in nrgroupmain
+$mordnmain = rdn($mo)
+Relation_NRCELLREL
+done
+endfunc
+NRRelation_final
+
+
+
+confb+
+
+eset1 ^NRCellDU sNSSAIList sd=1,sst=1;sd=2,sst=1;sd=3,sst=1;sd=4,sst=1
+eset1 ^NRCellCU sNSSAIList sd=1,sst=1;sd=2,sst=1;sd=3,sst=1;sd=4,sst=1
+eset1 ^GNBCUUPFunction=1 sNSSAIList sd=1,sst=1;sd=2,sst=1;sd=3,sst=1;sd=4,sst=1
+
+confb+
+gs+
+
+
+
+gs+
+
+crn GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L900,UeMCEUtranFreqRelProfileUeCfg=VoNR
+blindRwrAllowed false
+connModeAllowedPCell true
+connModePrioPCell 2
+prefUeGroupList
+ueConfGroupList
+ueGroupList 1
+userLabel
+end
+
+crn GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L2300_20_2_ULS,UeMCEUtranFreqRelProfileUeCfg=VoNR
+blindRwrAllowed false
+connModeAllowedPCell true
+connModePrioPCell 4
+prefUeGroupList
+ueConfGroupList
+ueGroupList 1
+userLabel
+end
+
+crn GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L2300_20_2,UeMCEUtranFreqRelProfileUeCfg=VoNR
+blindRwrAllowed false
+connModeAllowedPCell true
+connModePrioPCell 1
+prefUeGroupList
+ueConfGroupList
+ueGroupList 1
+userLabel
+end
+
+crn GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L2300_20_1_ULS,UeMCEUtranFreqRelProfileUeCfg=VoNR
+blindRwrAllowed false
+connModeAllowedPCell true
+connModePrioPCell 4
+prefUeGroupList
+ueConfGroupList
+ueGroupList 1
+userLabel
+end
+
+crn GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L2300_20_1,UeMCEUtranFreqRelProfileUeCfg=VoNR
+blindRwrAllowed false
+connModeAllowedPCell true
+connModePrioPCell 1
+prefUeGroupList
+ueConfGroupList
+ueGroupList 1
+userLabel
+end
+
+crn GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L2100,UeMCEUtranFreqRelProfileUeCfg=VoNR
+blindRwrAllowed true
+connModeAllowedPCell true
+connModePrioPCell 7
+prefUeGroupList
+ueConfGroupList
+ueGroupList 1
+userLabel
+end
+
+crn GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L1800,UeMCEUtranFreqRelProfileUeCfg=VoNR
+blindRwrAllowed true
+connModeAllowedPCell true
+connModePrioPCell 6
+prefUeGroupList
+ueConfGroupList
+ueGroupList 1
+userLabel
+end
+gs-
+
+
+################################################################################################
+
+
+
+gs+
+
+crn GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L900,UeMCEUtranFreqRelProfileUeCfg=Base
+blindRwrAllowed false
+connModeAllowedPCell true
+connModePrioPCell 3
+prefUeGroupList
+ueConfGroupList
+ueGroupList
+userLabel
+end
+
+crn GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L2300_20_ULS,UeMCEUtranFreqRelProfileUeCfg=Base
+blindRwrAllowed false
+connModeAllowedPCell false
+connModePrioPCell 7
+prefUeGroupList
+ueConfGroupList
+ueGroupList
+userLabel
+end
+
+crn GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L2300_20_2_ULS,UeMCEUtranFreqRelProfileUeCfg=Base
+blindRwrAllowed false
+connModeAllowedPCell true
+connModePrioPCell 6
+prefUeGroupList
+ueConfGroupList
+ueGroupList
+userLabel
+end
+
+crn GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L2300_20_2,UeMCEUtranFreqRelProfileUeCfg=Base
+blindRwrAllowed false
+connModeAllowedPCell true
+connModePrioPCell 4
+prefUeGroupList
+ueConfGroupList
+ueGroupList
+userLabel
+end
+
+crn GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L2300_20_1_ULS,UeMCEUtranFreqRelProfileUeCfg=Base
+blindRwrAllowed false
+connModeAllowedPCell true
+connModePrioPCell 6
+prefUeGroupList
+ueConfGroupList
+ueGroupList
+userLabel
+end
+
+crn GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L2300_20_1,UeMCEUtranFreqRelProfileUeCfg=Base
+blindRwrAllowed false
+connModeAllowedPCell true
+connModePrioPCell 4
+prefUeGroupList
+ueConfGroupList
+ueGroupList
+userLabel
+end
+
+crn GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L2300_20,UeMCEUtranFreqRelProfileUeCfg=Base
+blindRwrAllowed false
+connModeAllowedPCell false
+connModePrioPCell 7
+prefUeGroupList
+ueConfGroupList
+ueGroupList
+userLabel
+end
+
+
+
+crn GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L2100,UeMCEUtranFreqRelProfileUeCfg=Base
+blindRwrAllowed true
+connModeAllowedPCell true
+connModePrioPCell 6
+prefUeGroupList
+ueConfGroupList
+ueGroupList
+userLabel
+end
+
+crn GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L1800,UeMCEUtranFreqRelProfileUeCfg=Base
+blindRwrAllowed true
+connModeAllowedPCell true
+connModePrioPCell 5
+prefUeGroupList
+ueConfGroupList
+ueGroupList
+userLabel
+end
+
+crn GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=Default,UeMCEUtranFreqRelProfileUeCfg=Base
+blindRwrAllowed false
+connModeAllowedPCell false
+connModePrioPCell 7
+prefUeGroupList
+ueConfGroupList
+ueGroupList
+userLabel
+end
+gs-
+
+
+set NRCellDU=.* nrrrpenabled true
 
 
 lset CXC4012559 featurestate 1
@@ -5740,13 +5931,977 @@ lset CXC4012729 featurestate 1
 $date = `date +%y%m%d_%H%M`
 cvms Post_SA_Slicing_$date
 
+#################SA_sgk_Overwrite (as RJ)#######################
+
+
+
+
+Confbd+
+gs+
+set GNBCUUPFunction=1,UeCC=1,AqmCfg=Default_application_signaling estimatedE2ERTT   0
+set GNBCUUPFunction=1,UeCC=1,AqmCfg=Default_conversational_media estimatedE2ERTT   0
+set GNBCUUPFunction=1,UeCC=1,AqmCfg=Default_other           estimatedE2ERTT   50
+set GNBDUFunction=1,UeCC=1,AqmCfg=Default_application_signaling estimatedE2ERTT   0
+set GNBDUFunction=1,UeCC=1,AqmCfg=Default_conversational_media estimatedE2ERTT   0
+set GNBDUFunction=1,UeCC=1,AqmCfg=Default_other             estimatedE2ERTT   50
+set BWPSet=100,DynPowerOpt=1                                upUlThreshold     300
+set BWPSet=100,DynPowerOpt=vonr                             upUlThreshold     30
+set BWPSet=100,DynPowerOpt=1                                downUlThreshold   200
+set BWPSet=100,DynPowerOpt=vonr                             downUlThreshold   10
+set DESManagementFunction=1 periodicEsDuration 60
+set DESManagementFunction=1 intraRatEsActivationOriginalCellLoadParameters threshold=15,timeDuration=900
+set DESManagementFunction=1 requiredWakeUpTime 360
+SET MassiveMimoSleep=1,MMimoSleepProfile=1                  switchUpPrbThreshDl 20
+SET MassiveMimoSleep=1,MMimoSleepProfile=1                  switchDownPrbThreshDl 10
+set . altDepHServAdapUPProfEnabled true
+set . srsHoppingBandwidth 0
+set DESManagementFunction=1 desSwitch         true
+set ENodeBFunction=1                                        timeAndPhaseSynchAlignment true
+
+confbd-
+gs-
+
+
+confbd+
+bl nrcell
+set CXC4012547 featurestate 1
+Set GNBCUUPFunction=1,UeCC=1,DcDlCfg=Default dcDlAggAllowed true
+set GNBDUFunction=1,UeCC=1,CgSwitchCfg=Default dlCgSwitchMode 1
+set GNBDUFunction=1,UeCC=1,CgSwitchCfg=Default dlScgLowQualThresh 0
+set GNBDUFunction=1,UeCC=1,CgSwitchCfg=Default dlScgLowQualHyst 30
+set GNBDUFunction=1,UeCC=1,UlCgSwitchCfg=Default ulCgSwitchMode 1
+set GNBDUFunction=1,UeCC=1,UlCgSwitchCfg=Default ulScgLowQualThresh 120
+set GNBDUFunction=1,UeCC=1,UlCgSwitchCfg=Default ulScgLowQualHyst 60
+set nrcelldu srsHoppingBandwidth 0
+set GNBDUFunction=1 mixedSrsModeEnabled False
+setm nrcelldu aperiodicSrsEnabled False advancedDlSuMimoEnabled False maxNoOfAdvancedDlMuMimoLayers 0 srsCapacityBoostEnabled False
+set CXC4012790 Featurestate 1
+setm nrcelldu aperiodicSrsEnabled True advancedDlSuMimoEnabled True maxNoOfAdvancedDlMuMimoLayers 16 srsCapacityBoostEnabled True
+set GNBDUFunction=1 mixedSrsModeEnabled true
+set GNBCUCPFunction=1,Mcpc=1,McpcPSCellProfile=Default,McpcPSCellProfileUeCfg=Base rsrpCandidateA5 threshold1=-112,threshold2=-115,timeToTrigger=640,hysteresis=10
+Set McpcPSCellProfile=Default_copy,McpcPSCellProfileUeCfg=Base  rsrpSearchZone hysteresis=10,threshold=-112,timeToTrigger=160,timeToTriggerA1=160
+set GNBCUCPFunction=1,UeCC=1,RrcInactiveProfile=Default,RrcInactiveProfileUeCfg=5QI7 rrcInactiveStateSupport false
+set EUtranCell.*DD=.*UeMeasControl=1      nrB1MeasAtEndcEnabled true
+set EUtranCell.*DD=.*UeMeasControl=1      nrB1MeasEnabled true
+set UePolicyOptimization=1 zzzTemporary1 3
+set UePolicyOptimization=1 loadAwareImc true
+set GNBCUCPFunction=1,UeCC=1,UlDataSplit=Default_endc,UlDataSplitUeCfg=Base initialUlPrimaryPathMode 2
+set GNBCUCPFunction=1,UeCC=1,UlDataSplit=Default_endc,UlDataSplitUeCfg=Base ulDataSplitThreshMcg -1
+set GNBCUCPFunction=1,UeCC=1,UlDataSplit=Default_endc,UlDataSplitUeCfg=Base ulDataSplitThreshScg 102400
+set GNBDUFunction=1,UeCC=1,DlBeamOptProfile=1,DlBeamOptProfileUeCfg=Base pdcchBeamOptMode 2
+set GNBDUFunction=1,UeCC=1,RadioLinkControl=1,DrbRlc=Default,DrbRlcUeCfg=Base rlcSNLength 12
+deb nrcell
+
+lset CXC4012559 featurestate 1
+lset CXC4012379 featurestate 1
+lset CXC4012475 featurestate 1
+lset CXC4012531 featurestate 1
+lset CXC4012659 featurestate 1
+lset CXC4012729 featurestate 1
+lset CXC4012635 featurestate 1
+
+set Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base      epsFallbackOperation 5
+set . nrB1MeasAtEndcEnabled true
+set . nrB1MeasEnabled true
+
+
+set DESManagementFunction=1 desSwitch         true
+
+
+
+
+lset Mcfb=1,McfbCellProfile=.*,McfbCellProfileUeCfg=Base$ epsFallbackOperation 5
+lset  UeMeasControl=1,ReportConfigB1NR=1$ b1ThresholdRsrp -103
+lset  GUtranFreqRelation= threshXHigh 8
+set FeatureState=CXC4012580  featureState 0
+lset  McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=Base$ rsrpSearchZone threshold=-105
+lset  McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=Base$ rsrpCandidateB2 threshold1=-107
+lset  McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=Base$ rsrpCritical threshold=-111
+lset NRCellCU= sNonIntraSearchP 4
+lset NRCellCU= threshServingLowP 2
+lset NRCellCU=.*,EUtranFreqRelation=.* threshXLowP 16
+lset Mcfb=1,McfbCellProfile=.*,McfbCellProfileUeCfg=Base$ rsrpCellCandidate threshold=-113
+
+
+
+confb+
+gs+
+
+
+
+cr GNBCUCPFunction=1,UeGroupSelection=1,UeGroupSelectionProfile=QCI9
+9
+10000
+
+set GNBCUCPFunction=1,UeGroupSelection=1,UeGroupSelectionProfile=qci9 selectionCriteria                        qci==9
+set GNBCUCPFunction=1,UeGroupSelection=1,UeGroupSelectionProfile=qci9         ueGroupId         9
+set GNBCUCPFunction=1,UeGroupSelection=1,UeGroupSelectionProfile=qci9         ueGroupPriority   10000
+
+
+cr GNBCUCPFunction=1,UeGroupSelection=1,UeServiceGroupDefinition=QCI9
+9
+10000
+
+set GNBCUCPFunction=1,UeGroupSelection=1,UeServiceGroupDefinition=qci9  selectionCriteria                      qci==9
+set GNBCUCPFunction=1,UeGroupSelection=1,UeServiceGroupDefinition=qci9        ueServiceGroupId  9
+set GNBCUCPFunction=1,UeGroupSelection=1,UeServiceGroupDefinition=qci9        ueServiceGroupPriority 10000
+
+
+cr GNBCUCPFunction=1,UeGroupSelection=1,PrefUeGroupSelectionProfile=QCI9
+9
+10000
+
+set GNBCUCPFunction=1,UeGroupSelection=1,PrefUeGroupSelectionProfile=qci9 selectionCriteria                    qci==9
+set GNBCUCPFunction=1,UeGroupSelection=1,PrefUeGroupSelectionProfile=qci9     prefUeGroupId     9
+set GNBCUCPFunction=1,UeGroupSelection=1,PrefUeGroupSelectionProfile=qci9     prefUeGroupPriority 10000
+
+cr GNBCUCPFunction=1,UeGroupSelection=1,UeMobilityGroupDefinition=QCI9
+9
+10000
+
+set GNBCUCPFunction=1,UeGroupSelection=1,UeMobilityGroupDefinition=qci9 selectionCriteria                      qci==9
+set GNBCUCPFunction=1,UeGroupSelection=1,UeMobilityGroupDefinition=qci9       ueMobilityGroupId 9
+set GNBCUCPFunction=1,UeGroupSelection=1,UeMobilityGroupDefinition=qci9       ueMobilityGroupPriority 10000
+
+
+################################################################################################
+
+cr GNBCUCPFunction=1,UeGroupSelection=1,UeGroupSelectionProfile=5QI9
+99
+9999
+
+set GNBCUCPFunction=1,UeGroupSelection=1,UeGroupSelectionProfile=5QI9 selectionCriteria                        5qi==9
+set GNBCUCPFunction=1,UeGroupSelection=1,UeGroupSelectionProfile=5QI9         ueGroupId         99
+set GNBCUCPFunction=1,UeGroupSelection=1,UeGroupSelectionProfile=5QI9         ueGroupPriority   9999
+
+
+
+cr GNBCUCPFunction=1,UeGroupSelection=1,UeServiceGroupDefinition=5QI9
+99
+9999
+
+set GNBCUCPFunction=1,UeGroupSelection=1,UeServiceGroupDefinition=5QI9 selectionCriteria                        5qi==9
+set GNBCUCPFunction=1,UeGroupSelection=1,UeServiceGroupDefinition=5QI9         ueGroupId         99
+set GNBCUCPFunction=1,UeGroupSelection=1,UeServiceGroupDefinition=5QI9         ueGroupPriority   9999
+
+
+cr GNBCUCPFunction=1,UeGroupSelection=1,PrefUeGroupSelectionProfile=5QI9
+99
+9999
+
+set GNBCUCPFunction=1,UeGroupSelection=1,PrefUeGroupSelectionProfile=5QI9 selectionCriteria                    5qi==9
+set GNBCUCPFunction=1,UeGroupSelection=1,PrefUeGroupSelectionProfile=5QI9     prefUeGroupId     99
+set GNBCUCPFunction=1,UeGroupSelection=1,PrefUeGroupSelectionProfile=5QI9     prefUeGroupPriority 9999
+
+
+cr GNBCUCPFunction=1,UeGroupSelection=1,UeMobilityGroupDefinition=5QI9
+99
+9999
+
+set GNBCUCPFunction=1,UeGroupSelection=1,UeMobilityGroupDefinition=5QI9 selectionCriteria                    5qi==9
+set GNBCUCPFunction=1,UeGroupSelection=1,UeMobilityGroupDefinition=5QI9     prefUeGroupId     99
+set GNBCUCPFunction=1,UeGroupSelection=1,UeMobilityGroupDefinition=5QI9     prefUeGroupPriority 9999
+
+##############################################################################
+
+
+cr GNBCUCPFunction=1,UeGroupSelection=1,UeGroupSelectionProfile=5QI6
+66
+65533
+
+set GNBCUCPFunction=1,UeGroupSelection=1,UeGroupSelectionProfile=5QI6 selectionCriteria                        5qi==6
+set GNBCUCPFunction=1,UeGroupSelection=1,UeGroupSelectionProfile=5QI6         ueGroupId         66
+set GNBCUCPFunction=1,UeGroupSelection=1,UeGroupSelectionProfile=5QI6         ueGroupPriority   65533
+
+
+cr GNBCUCPFunction=1,UeGroupSelection=1,UeServiceGroupDefinition=5QI6
+66
+65533
+
+set GNBCUCPFunction=1,UeGroupSelection=1,UeServiceGroupDefinition=5QI6 selectionCriteria                        5qi==6
+set GNBCUCPFunction=1,UeGroupSelection=1,UeServiceGroupDefinition=5QI6         ueGroupId         66
+set GNBCUCPFunction=1,UeGroupSelection=1,UeServiceGroupDefinition=5QI6         ueGroupPriority   65533
+
+
+
+cr GNBCUCPFunction=1,UeGroupSelection=1,PrefUeGroupSelectionProfile=5QI6
+66
+65533
+
+set GNBCUCPFunction=1,UeGroupSelection=1,PrefUeGroupSelectionProfile=5QI6 selectionCriteria                        5qi==6
+set GNBCUCPFunction=1,UeGroupSelection=1,PrefUeGroupSelectionProfile=5QI6         ueGroupId         66
+set GNBCUCPFunction=1,UeGroupSelection=1,PrefUeGroupSelectionProfile=5QI6         ueGroupPriority   65533
+
+
+cr GNBCUCPFunction=1,UeGroupSelection=1,UeMobilityGroupDefinition=5QI6
+66
+65533
+
+set GNBCUCPFunction=1,UeGroupSelection=1,UeMobilityGroupDefinition=5QI6 selectionCriteria                        5qi==6
+set GNBCUCPFunction=1,UeGroupSelection=1,UeMobilityGroupDefinition=5QI6         ueGroupId         66
+set GNBCUCPFunction=1,UeGroupSelection=1,UeMobilityGroupDefinition=5QI6         ueGroupPriority   65533
+
+##################################################################################
+
+
+cr GNBCUCPFunction=1,UeGroupSelection=1,UeGroupSelectionProfile=5QI7
+77
+999
+
+set GNBCUCPFunction=1,UeGroupSelection=1,UeGroupSelectionProfile=5QI7 selectionCriteria                        5qi==7
+set GNBCUCPFunction=1,UeGroupSelection=1,UeGroupSelectionProfile=5QI7         ueGroupId         77
+set GNBCUCPFunction=1,UeGroupSelection=1,UeGroupSelectionProfile=5QI7         ueGroupPriority   999
+
+
+cr GNBCUCPFunction=1,UeGroupSelection=1,UeServiceGroupDefinition=5QI7
+77
+999
+
+set GNBCUCPFunction=1,UeGroupSelection=1,UeServiceGroupDefinition=5QI7 selectionCriteria                        5qi==7
+set GNBCUCPFunction=1,UeGroupSelection=1,UeServiceGroupDefinition=5QI7         ueGroupId         77
+set GNBCUCPFunction=1,UeGroupSelection=1,UeServiceGroupDefinition=5QI7         ueGroupPriority   999
+
+
+cr GNBCUCPFunction=1,UeGroupSelection=1,PrefUeGroupSelectionProfile=5QI7
+77
+999
+
+set GNBCUCPFunction=1,UeGroupSelection=1,PrefUeGroupSelectionProfile=5QI7 selectionCriteria                        5qi==7
+set GNBCUCPFunction=1,UeGroupSelection=1,PrefUeGroupSelectionProfile=5QI7         ueGroupId         77
+set GNBCUCPFunction=1,UeGroupSelection=1,PrefUeGroupSelectionProfile=5QI7         ueGroupPriority   999
+
+
+cr GNBCUCPFunction=1,UeGroupSelection=1,UeMobilityGroupDefinition=5QI7
+77
+999
+
+set GNBCUCPFunction=1,UeGroupSelection=1,UeMobilityGroupDefinition=5QI7 selectionCriteria                        5qi==7
+set GNBCUCPFunction=1,UeGroupSelection=1,UeMobilityGroupDefinition=5QI7         ueGroupId         77
+set GNBCUCPFunction=1,UeGroupSelection=1,UeMobilityGroupDefinition=5QI7         ueGroupPriority   999
+
+
+#####################################################################################################333
+
+
+
+set . srsCapacityBoostEnabled true
+set . pdcchBeamOptMode  2
+set . prefUeResourceAllocDlTypeFr1 2
+set . dedicatedSib1AtHo true
+set Mcpc=1,McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=VONR rsrpCandidateB2 threshold1=-99
+set GNBCUCPFunction=1,Mcfb=1 voiceEpsFbPossible                   true
+set Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base      epsFallbackOperation 5
+set Mcfb=1,McfbCellProfile=Default,McfbCellProfileUeCfg=Base epsFallbackOperation 5
+set Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base      rsrpCellCandidate threshold=-113
+set Mcfb=1,McfbCellProfile=Default,McfbCellProfileUeCfg=Base rsrpCellCandidate threshold=-113
+
+
+
+
+
+
+cvms updatechn
+
+gs-
+confbd-
+
+
+
+
+
+
+
+confb+
+gs+
+
+lbl nrcell
+lbl nrcell
+
+lbl cell
+
+
+
+
+set CarrierAggregationFunction=1                            dcSCellActDeactDataThres 30
+set CarrierAggregationFunction=1                            dcSCellActDeactDataThresHyst 30
+set CarrierAggregationFunction=1                            dcSCellDeactDelayTimer 200
+set NRSectorCarrier=.*,CommonBeamforming=1              cbfMacroTaperType 0
+set GNBDUFunction=1,UeCC=1,RadioLinkControl=1,DrbRlc=Default,DrbRlcUeCfg=Base tStatusProhibitUl 10
+set GNBDUFunction=1,UeCC=1,RadioLinkControl=1,DrbRlc=Default,DrbRlcUeCfg=VoNR tStatusProhibitUl 10
+set GNBDUFunction=1,UeCC=1,DrxProfile=Default,DrxProfileUeCfg=Base drxInactivityTimer 15
+set GNBDUFunction=1,UeCC=1,DrxProfile=Default,DrxProfileUeCfg=VoNR drxInactivityTimer 5
+set GNBDUFunction=1,UeCC=1,DrxProfile=Default,DrxProfileUeCfg=Base drxLongCycle      10
+set GNBDUFunction=1,UeCC=1,DrxProfile=Default,DrxProfileUeCfg=VoNR drxLongCycle      4
+set GNBDUFunction=1,UeCC=1,DrxProfile=Default,DrxProfileUeCfg=Base drxOnDurationTimer 39
+set GNBDUFunction=1,UeCC=1,DrxProfile=Default,DrxProfileUeCfg=VoNR drxOnDurationTimer 36
+set NRCellDU=.*                   cellRange         15000
+set EUtranCellFDD cellRange 6
+
+set EUtranCellTDD cellRange 6
+set NRCellDU=.*                   rachPreambleFormat 0
+set NRCellDU=.*                   csiRsConfig32P    csiRsControl32Ports=1,i11Restriction=FFFFFFFF,i12Restriction=FF
+
+set NRCellDU=.*                   csiRsShiftingPrimary 1
+
+set NRCellDU=.*                   csiRsShiftingSecondary 1
+
+set NRCellDU=.*                   dl256QamEnabled   true
+
+set NRCellDU=.*                   maxUeSpeed        2
+
+set NRCellDU=.*                   pdschStartPrbStrategy 3
+
+set NRCellDU=.*                   puschStartPrbStrategy 3
+
+set NRCellDU=.*                   pZeroNomPucch     -114
+
+set NRCellDU=.*                   pZeroUePuschOffset256Qam 4
+
+set NRCellDU=.*                   secondaryCellOnly false
+
+set NRCellDU=.*                   ssbDuration       1
+
+set NRCellDU=.*                   ssbOffset         0
+
+set NRCellDU=.*                   ssbPeriodicity    20
+
+set NRCellDU=.*                   ssbPowerBoost     6
+
+set NRCellDU=.*                   ssbSubCarrierSpacing 30
+
+set NRCellDU=.*                   subCarrierSpacing 30
+
+set NRCellDU=.*                   trsPeriodicity    20
+
+set NRCellDU=.*                   trsPowerBoosting  0
+
+set NRCellDU=.*                   ul256QamEnabled   true
+
+set EUtranCellFDD=.*,UeMeasControl=1      endcMeasRestartTime 10000
+set EUtranCellTDD=.*,UeMeasControl=1      endcMeasRestartTime 10000
+
+set GNBCUCPFunction=1,UeCC=1,InactivityProfile=Default,InactivityProfileUeCfg=Base tInactivityTimerEndcSn 5
+
+set NRSectorCarrier=.*                                 configuredMaxTxPower 200000
+
+set NRCellDU=.*                   tddUlDlPattern    1
+
+set NRCellDU=.*                   tddSpecialSlotPattern 3
+
+set NRCellDU=.*                   advancedDlSuMimoEnabled true
+
+set NRCellDU=.*                   pZeroNomSrs       -110
+
+set NRCellDU=.*                   srsPeriodicity    40
+
+set NRCellDU=.*                   maxNoOfAdvancedDlMuMimoLayers 8
+
+set NRCellDU=.*                   srsHoppingBandwidth 0
+
+set NRCellDU=.*                   csiRsConfig4P     csiRsControl4Ports=OFF,i11Restriction=,i12Restriction=
+
+set NRCellDU=.*                   csiRsConfig8P     csiRsControl8Ports=1,i11Restriction=FFFF,i12Restriction=
+
+set NRCellDU=.*                   csiRsPeriodicity  40
+
+set NRCellDU=.*                   pdschAllowedInDmrsSym true
+
+set NRCellDU=.*                   dlDmrsMuxSinrThresh -10
+
+set NRCellDU=.*                   puschAllowedInDmrsSym true
+
+set NRCellDU=.*                   additionalPucchForCaEnabled false
+
+set NRSectorCarrier=.*                                  nRMicroSleepTxEnabled true
+
+set NRSectorCarrier=.*,CommonBeamforming=1              coverageShape     1
+
+set NRCellDU=.*                   nrSrsDlPacketAgeThr 0
+
+set NRCellDU=.*                   dlMaxMuMimoLayers 8
+
+set NRCellDU=.*                   ulMaxMuMimoLayers 4
+
+set ENodeBFunction=1,AnrFunction=1,AnrFunctionNR=1          anrStateNR        1
+
+set . anrAutoCreateXnForEndc               true
+
+set . anrCgiMeasIntraFreqEnabled           true
+
+set . anrEndcX2Enabled                     true
+set GNBCUCPFunction=1,AnrFunction=1                         removeEnbTime     7
+
+set GNBCUCPFunction=1,AnrFunction=1                         removeGnbTime     7
+
+set GNBCUCPFunction=1,AnrFunction=1                         removeNrelTime    7
+
+set NRCellDU=.*                   rachPreambleRecTargetPower -110
+
+set NRCellDU=.*                   rachPreambleTransMax 10
+
+set NRCellDU=.*                   maxUsersRachSchedPusch 100
+
+set EUtranCellFDD=.*                      measGapPattEndc   1
+
+set GNBDUFunction=1,Rrc=1                                   n310              20
+
+set GNBDUFunction=1,Rrc=1                                   n311              1
+
+set GNBDUFunction=1,Rrc=1                                   t319              400
+
+set GNBDUFunction=1,Rrc=1                                   t311              3000
+
+set GNBDUFunction=1,Rrc=1                                   t310              2000
+
+set GNBDUFunction=1,Rrc=1                                   t304              2000
+
+set GNBDUFunction=1,Rrc=1                                   t301              600
+
+set GNBDUFunction=1,Rrc=1                                   t300              1500
+
+set GNBDUFunction=1,UeCC=1,Prescheduling=1,PreschedulingUeCfg=Base preschedulingDataSize 86
+
+set GNBDUFunction=1,UeCC=1,Prescheduling=1,PreschedulingUeCfg=Base preschedulingDuration 100
+
+set GNBDUFunction=1,UeCC=1,Prescheduling=1,PreschedulingUeCfg=Base preschedulingUeMode 1
+
+set GNBDUFunction=1,UeCC=1,DrxProfile=Default,DrxProfileUeCfg=Base drxRetransmissionTimerUl 8
+
+set GNBDUFunction=1,UeCC=1,DrxProfile=Default,DrxProfileUeCfg=Base drxRetransmissionTimerDl 8
+
+set EUtranCellFDD=.*,UeMeasControl=1      endcMeasTime      2000
+
+set EUtranCellTDD=.*,UeMeasControl=1      endcMeasTime      2000
+
+set EUtranCellFDD=.*,UeMeasControl=1      endcB1MeasWindow  40
+
+set EUtranCellTDD=.*,UeMeasControl=1      endcB1MeasWindow  40
+
+set EUtranCellFDD=.*,UeMeasControl=1      maxMeasB1Endc     3
+
+set EUtranCellTDD=.*,UeMeasControl=1      maxMeasB1Endc     3
+
+set ENodeBFunction=1                                        endcDataUsageReportEnabled true
+
+
+crn ENodeBFunction=1,EndcProfile=1
+
+meNbS1TermReqArpLev                  0
+
+splitNotAllowedUeArpLev              0
+
+userLabel
+
+end
+
+crn ENodeBFunction=1,EndcProfile=2
+
+meNbS1TermReqArpLev                  15
+
+splitNotAllowedUeArpLev              0
+
+userLabel
+
+end
+
+set EndcProfile=1                                           splitNotAllowedUeArpLev 0
+
+set EndcProfile=2                                           meNbS1TermReqArpLev 15
+
+set ENodeBFunction=1,EndcProfile=1 meNbS1TermReqArpLev 0
+
+set ENodeBFunction=1,EndcProfile=1 splitNotAllowedUeArpLev 0
+
+set GNBDUFunction=1,RadioBearerTable=1,SignalingRadioBearer=1 tPollRetransmitDl 80
+
+set GNBDUFunction=1,RadioBearerTable=1,SignalingRadioBearer=1 tPollRetransmitDl 80
+
+set NRCellDU=.*                   pdcchSymbConfig   0
+
+set ENodeBFunction=1                                        zzzTemporary81    1
+
+set ENodeBFunction=1                                        endcS1OverlapMode true
+
+
+
+
+
+set QosProfiles=1,DscpPcpMap=1  pcp0
+
+set QosProfiles=1,DscpPcpMap=1  pcp1
+
+set QosProfiles=1,DscpPcpMap=1  pcp2
+
+set QosProfiles=1,DscpPcpMap=1  pcp3
+
+set QosProfiles=1,DscpPcpMap=1  pcp4
+
+set QosProfiles=1,DscpPcpMap=1  pcp5
+
+set QosProfiles=1,DscpPcpMap=1  pcp6
+
+set QosProfiles=1,DscpPcpMap=1  pcp7
+
+set Transport=1,QosProfiles=1,DscpPcpMap=1 pcp0 0,1,2,3,5,7,9,11,13,15,17,19,21,23,25,27,29,31,33,35,36,37,38,39,41,43,45,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63
+
+set Transport=1,QosProfiles=1,DscpPcpMap=1 pcp2 22 24 26
+
+set Transport=1,QosProfiles=1,DscpPcpMap=1 pcp3 6 8 10 30 32
+
+set Transport=1,QosProfiles=1,DscpPcpMap=1 pcp4 12 14 40
+
+set Transport=1,QosProfiles=1,DscpPcpMap=1 pcp5 4 28
+
+set Transport=1,QosProfiles=1,DscpPcpMap=1 pcp6 16 18 34 42 44
+
+set Transport=1,QosProfiles=1,DscpPcpMap=1 pcp7 20 46
+
+
+
+set QosProfiles=1,DscpPcpMap=1    pcp7   20 46
+
+set QosProfiles=1,DscpPcpMap=1    pcp6   16 18 34 42 44
+
+set QosProfiles=1,DscpPcpMap=1    pcp5   4 28
+
+set QosProfiles=1,DscpPcpMap=1    pcp4   12 14 40
+
+set QosProfiles=1,DscpPcpMap=1    pcp3   6 8 10 30 32
+
+set QosProfiles=1,DscpPcpMap=1    pcp2   22 24 26
+
+set QosProfiles=1,DscpPcpMap=1    pcp0   0 1 2 3 5 7 9 11 13 15 17 19 21 23 25 27 29 31 33 35 36 37 38 39 41 43 45 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63
+
+
+
+
+set GNBDUFunction=1,RadioBearerTable=1,SignalingRadioBearer=1 dlMaxRetxThreshold 32
+set GNBDUFunction=1,RadioBearerTable=1,SignalingRadioBearer=1 ulMaxRetxThreshold 32
+
+set . anrMeasOn true
+set . drxEnabled true
+set . anrStateNR 1
+set . gNodebIdLength 26
+set . gtpuEchoEnabled true
+set GtpuSupervision=1,GtpuSupervisionProfile=S1             gtpuEchoDscp      32
+set GtpuSupervision=1,GtpuSupervisionProfile=X2             gtpuEchoDscp      32
+set NRCellDU=.*                   pMax              26
+
+set NRCellDU=.*                   dftSOfdmPuschEnabled true
+
+set NRCellDU=.*                   dftSOfdmMsg3Enabled true
+set IntraFreqMC=1,IntraFreqMCCellProfile=1,IntraFreqMCCellProfileUeCfg=Base endcActionEvalFail 1
+
+set GNBCUCPFunction=1                                       tDcOverall        11
+
+
+set ENodeBFunction=1                                        timeAndPhaseSynchAlignment true
+set ENodeBFunction=1                                        timeAndPhaseSynchCritical false
+
+
+set GNBDUFunction=1,RadioBearerTable=1,SignalingRadioBearer=1 tPollRetransmitUl 80
+set GNBDUFunction=1,RadioBearerTable=1,SignalingRadioBearer=1 tPollRetransmitDl 80
+
+set CarrierAggregationFunction=1                            endcCaPolicy      1
+set ENodeBFunction=1                                        x2retryTimerMaxAuto 1440
+set . nrSrsDlBufferVolThr 100
+set . pdcchLaSinrOffset -20
+set ENodeBFunction=1,AnrFunction=1,AnrFunctionNR=1          anrStateNR        1
+
+set . cellAddRsrpThresholdNR -110
+set . cellAddRsrqThresholdNR -435
+
+set ENodeBFunction=1,AnrFunction=1                          removeNgnbTime    7
+
+set GNBCUCPFunction=1,AnrFunction=1                         promoteCellRelMobAttThresh 50
+set GNBCUCPFunction=1,AnrFunction=1                         demoteCellRelMobAttThresh 10
+
+set .  desSwitch false
+set NRCellCU=.*,DESManagementFunction=1 esNotAllowedTimePeriod starttime=00:29,endtime=18:31
+set . intraRatEsActivationOriginalCellLoadParameters  threshold=15,timeDuration=900set . periodicEsDuration 0
+
+set DESManagementFunction=1 esNotAllowedTimePeriod endTime=18:31,fri=true,mon=true,sat=true,startTime=00:29,sun=true,thu=true,tue=true,wed=true
+
+set . periodicEsDuration 0
+set .  desSwitch true
+
+
+set GNBCUCPFunction=1,AnrFunction=1,AnrFunctionNR=1         anrAutoCreateXnForEndc true
+set GNBCUCPFunction=1,AnrFunction=1,AnrFunctionNR=1         anrCgiMeasInterFreqMode 1
+set GNBCUCPFunction=1,AnrFunction=1,AnrFunctionNR=1         anrCgiMeasIntraFreqEnabled true
+set GNBCUCPFunction=1,AnrFunction=1,AnrFunctionNR=1         anrEndcX2Enabled  true
+set GNBCUCPFunction=1,AnrFunction=1,AnrFunctionEUtran=1,AnrFunctionEUtranUeCfg=Base ecgiDuringEpsFbEnabled true
+set GNBCUCPFunction=1,AnrFunction=1,AnrFunctionEUtran=1     anrCgiMeasEUtranEnabled true
+set GNBCUCPFunction=1,AnrFunction=1,AnrFunctionNR=1,AnrFunctionNRUeCfg=Base anrRsrpThreshold  -112
+set GNBCUCPFunction=1,AnrFunction=1,AnrFunctionNR=1,AnrFunctionNRUeCfg=Base anrRsrqThreshold  -435
+set GNBCUCPFunction=1,AnrFunction=1,AnrFunctionNR=1,AnrFunctionNRUeCfg=Base anrSinrThreshold  -230
+set ENodeBFunction=1                                        endcOverheatingAssistance true
+set ENodeBFunction=1                                        overheatingIndProhibitTimer 20
+
+
+set . loopingEndcProtectionEnabled true
+set . loopingEndcBackoffDuration 200
+set . loopingEndcShortScgSessTime 3000
+set .  loopingEndcConsecFailThr 5
+set ENodeBFunction=1                                        pciConflictReportType 2
+set ENodeBFunction=1,AnrFunction=1,AnrFunctionNR=1          pciConflictDetectionType 3
+set ENodeBFunction=1,AnrFunction=1,AnrFunctionNR=1          endcRachFailThrPerUe 5
+set ENodeBFunction=1,AnrFunction=1,AnrFunctionNR=1          maxNoOfUeForPciConflictDetect 5
+set ENodeBFunction=1,AnrFunction=1,AnrFunctionNR=1          scgSessTimeForEndcRachFail 2500
+
+set . requiredWakeUpTime
+set . desSwitch         true
+
+set GNBCUCPFunction=1,UeCC=1,UlDataSplit=Default_endc,UlDataSplitUeCfg=Base ulDataSplitThreshScg 102400
+
+
+cr GNBDUFunction=1,MassiveMimoSleep=1
+cr GNBDUFunction=1,MassiveMimoSleep=1,MMimoSleepProfile=1
+cr GNBDUFunction=1,MassiveMimoSleep=1,MMimoSleepTimeGroup=1
+cr GNBDUFunction=1,MassiveMimoSleep=1,MMimoSleepProfile=1
+set NRSectorCarrier= mMimoSleepTimeGroupRef GNBDUFunction=1,MassiveMimoSleep=1,MMimoSleepTimeGroup=1
+
+set . massiveMimoSleepEnabled 1
+set . mMimoSleepTimeGroupRef MassiveMimoSleep=1,MMimoSleepTimeGroup=1
+set MassiveMimoSleep=1,MMimoSleepProfile=1                  sleepMode         0
+set MassiveMimoSleep=1,MMimoSleepProfile=1                  switchDownMonitorDurTimer 60
+set MassiveMimoSleep=1,MMimoSleepProfile=1                  switchUpPrbThreshDl 20
+set MassiveMimoSleep=1,MMimoSleepProfile=1                  switchDownPrbThreshDl 10
+
+set MassiveMimoSleep=1,MMimoSleepProfile=1                  switchUpMonitorDurTimer 30
+set . dayOfWeek 0
+set MassiveMimoSleep=1,MMimoSleepTimeGroup=1,MMimoSleepTimeWindow=1 mMimoSleepProfileRef MassiveMimoSleep=1,MMimoSleepProfile=1
+set . pZeroNomPuschGrant 1000
+set . autoSelectedModeOffset 6
+set . pZeroNomPuschOffset 0
+
+cr GNBDUFunction=1,UeCC=1,PowerControl=1,PowerControlUeCfg=clpc
+set GNBDUFunction=1,UeCC=1,UeBb=1,UeBbProfile=Default,UeBbProfileUeCfg=Base powerControlUeCfgRef GNBDUFunction=1,UeCC=1,PowerControl=1,PowerControlUeCfg=clpc
+set GNBDUFunction=1,UeCC=1,PowerControl=1,PowerControlUeCfg=clpc puschPowerControlModeFr1 1
+set GNBDUFunction=1,UeCC=1,RadioLinkControl=1,UeAdaptiveRlc=1,UeAdaptiveRlcUeCfg=Base ueAdaptiveRlcRetxMode                0
+
+
+
+set . ssbPowerBoostMMimoSleep 3
+set GNBCUUPFunction=1,CardinalityLimits=1                   maxS1UPath        1800
+set . tStatusProhibitDl 10
+get . defaultPagingCycle 128
+set . GNBDUFunction=1,Paging=1                                pagingDiscardTimer 3
+set . cfraEnabled       true
+set GNBCUUPFunction=1,CUUP5qiTable=1,CUUP5qi=5qi1  dscp                                 34
+set GNBDUFunction=1,DU5qiTable=1,DU5qi=1 dscp                                 34
+set GNBDUFunction=1,DU5qiTable=1,DU5qi=1 logicalChannelGroupId                1
+set GNBDUFunction=1,DU5qiTable=1,DU5qi=1 packetDelayBudget                    80
+set GNBDUFunction=1,DU5qiTable=1,DU5qi=1 priorityLevel                        20
+
+set GNBDUFunction=1,DU5qiTable=1,DU5qi=2 dscp                                 34
+set GNBDUFunction=1,DU5qiTable=1,DU5qi=2 logicalChannelGroupId                1
+set GNBDUFunction=1,DU5qiTable=1,DU5qi=2 packetDelayBudget                    130
+set GNBDUFunction=1,DU5qiTable=1,DU5qi=2 priorityLevel                        20
+
+set GNBDUFunction=1,DU5qiTable=1,DU5qi=5 dscp                                 46
+set GNBDUFunction=1,DU5qiTable=1,DU5qi=5 logicalChannelGroupId                3
+set GNBDUFunction=1,DU5qiTable=1,DU5qi=5 packetDelayBudget                    80
+set GNBDUFunction=1,DU5qiTable=1,DU5qi=5 priorityLevel                        10
+
+set GNBDUFunction=1,DU5qiTable=1,DU5qi=6 dscp                                 32
+set GNBDUFunction=1,DU5qiTable=1,DU5qi=6 logicalChannelGroupId                5
+set GNBDUFunction=1,DU5qiTable=1,DU5qi=6 packetDelayBudget                    280
+set GNBDUFunction=1,DU5qiTable=1,DU5qi=6 priorityLevel                        60
+
+set GNBDUFunction=1,DU5qiTable=1,DU5qi=7 dscp                                 40
+set GNBDUFunction=1,DU5qiTable=1,DU5qi=7 logicalChannelGroupId                5
+set GNBDUFunction=1,DU5qiTable=1,DU5qi=7 packetDelayBudget                    280
+set GNBDUFunction=1,DU5qiTable=1,DU5qi=7 priorityLevel                        70
+
+set GNBDUFunction=1,DU5qiTable=1,DU5qi=8 dscp                                 30
+set GNBDUFunction=1,DU5qiTable=1,DU5qi=8 logicalChannelGroupId                5
+set GNBDUFunction=1,DU5qiTable=1,DU5qi=8 packetDelayBudget                    280
+set GNBDUFunction=1,DU5qiTable=1,DU5qi=8 priorityLevel                        80
+
+set GNBDUFunction=1,DU5qiTable=1,DU5qi=9 dscp                                 26
+set GNBDUFunction=1,DU5qiTable=1,DU5qi=9 logicalChannelGroupId                5
+set GNBDUFunction=1,DU5qiTable=1,DU5qi=9 packetDelayBudget                    280
+set GNBDUFunction=1,DU5qiTable=1,DU5qi=9 priorityLevel                        80
+
+
+
+set GNBCUCPFunction=1,CUCP5qiTable=1,CUCP5qi=5qi1 pdcpSnSize                           12
+set GNBCUCPFunction=1,CUCP5qiTable=1,CUCP5qi=5qi1 rlcMode                              1
+set GNBCUCPFunction=1,CUCP5qiTable=1,CUCP5qi=5qi1 tPdcpDiscard                         150
+set GNBCUCPFunction=1,CUCP5qiTable=1,CUCP5qi=5qi1 tReorderingDl                        60
+set GNBCUCPFunction=1,CUCP5qiTable=1,CUCP5qi=5qi1 tReorderingUl                        60
+
+set GNBCUCPFunction=1,CUCP5qiTable=1,CUCP5qi=5qi2 pdcpSnSize                           12
+set GNBCUCPFunction=1,CUCP5qiTable=1,CUCP5qi=5qi2 rlcMode                              1
+set GNBCUCPFunction=1,CUCP5qiTable=1,CUCP5qi=5qi2 tPdcpDiscard                         200
+set GNBCUCPFunction=1,CUCP5qiTable=1,CUCP5qi=5qi2 tReorderingDl                        200
+set GNBCUCPFunction=1,CUCP5qiTable=1,CUCP5qi=5qi2 tReorderingUl                        20
+
+set GNBCUCPFunction=1,CUCP5qiTable=1,CUCP5qi=5qi5 pdcpSnSize                           12
+set GNBCUCPFunction=1,CUCP5qiTable=1,CUCP5qi=5qi5 rlcMode                              0
+set GNBCUCPFunction=1,CUCP5qiTable=1,CUCP5qi=5qi5 tPdcpDiscard                         2147483646
+set GNBCUCPFunction=1,CUCP5qiTable=1,CUCP5qi=5qi5 tReorderingDl                        200
+set GNBCUCPFunction=1,CUCP5qiTable=1,CUCP5qi=5qi5 tReorderingUl                        20
+
+set GNBCUCPFunction=1,CUCP5qiTable=1,CUCP5qi=5qi6 pdcpSnSize                           12
+set GNBCUCPFunction=1,CUCP5qiTable=1,CUCP5qi=5qi6 rlcMode                              0
+set GNBCUCPFunction=1,CUCP5qiTable=1,CUCP5qi=5qi6 tPdcpDiscard                         1500
+set GNBCUCPFunction=1,CUCP5qiTable=1,CUCP5qi=5qi6 tReorderingDl                        200
+set GNBCUCPFunction=1,CUCP5qiTable=1,CUCP5qi=5qi6 tReorderingUl                        200
+
+set GNBCUCPFunction=1,CUCP5qiTable=1,CUCP5qi=5qi7 pdcpSnSize                           12
+set GNBCUCPFunction=1,CUCP5qiTable=1,CUCP5qi=5qi7 rlcMode                              0
+set GNBCUCPFunction=1,CUCP5qiTable=1,CUCP5qi=5qi7 tPdcpDiscard                         1500
+set GNBCUCPFunction=1,CUCP5qiTable=1,CUCP5qi=5qi7 tReorderingDl                        200
+set GNBCUCPFunction=1,CUCP5qiTable=1,CUCP5qi=5qi7 tReorderingUl                        20
+
+set GNBCUCPFunction=1,CUCP5qiTable=1,CUCP5qi=5qi8 pdcpSnSize                           18
+set GNBCUCPFunction=1,CUCP5qiTable=1,CUCP5qi=5qi8 rlcMode                              0
+set GNBCUCPFunction=1,CUCP5qiTable=1,CUCP5qi=5qi8 tPdcpDiscard                         1500
+set GNBCUCPFunction=1,CUCP5qiTable=1,CUCP5qi=5qi8 tReorderingDl                        200
+set GNBCUCPFunction=1,CUCP5qiTable=1,CUCP5qi=5qi8 tReorderingUl                        20
+
+set GNBCUCPFunction=1,CUCP5qiTable=1,CUCP5qi=5qi9 pdcpSnSize                           18
+set GNBCUCPFunction=1,CUCP5qiTable=1,CUCP5qi=5qi9 rlcMode                              0
+set GNBCUCPFunction=1,CUCP5qiTable=1,CUCP5qi=5qi9 tPdcpDiscard                         1500
+set GNBCUCPFunction=1,CUCP5qiTable=1,CUCP5qi=5qi9 tReorderingDl                        200
+set GNBCUCPFunction=1,CUCP5qiTable=1,CUCP5qi=5qi9 tReorderingUl                        20
+
+set . numberOfRBs       273
+
+set BWP=DenseSS_DL_100                                      bwpContext        0
+set BWP=DenseSS_UL_100                                      bwpContext        1
+set BWP=Init_DL_100                                         bwpContext        0
+set BWP=Init_UL_100                                         bwpContext        1
+set BWP=SparseSS_DL_100                                     bwpContext        0
+set BWP=SparseSS_UL_100                                     bwpContext        1
+
+
+set BWP=DenseSS_DL_100                                      isInitialBwp      false
+set BWP=DenseSS_UL_100                                      isInitialBwp      false
+
+set BWP=SparseSS_DL_100                                     isInitialBwp      false
+set BWP=SparseSS_UL_100                                     isInitialBwp      false
+
+
+
+
+set GNBDUFunction=1,BWPSet=100  allBWPRegularRef GNBDUFunction=1,bwp=DenseSS_DL_100 GNBDUFunction=1,bwp=DenseSS_UL_100 GNBDUFunction=1,bwp=SparseSS_DL_100 GNBDUFunction=1,bwp
+=SparseSS_UL_100
+
+set BWPSet=100                                              startBWPDlRef     BWP=DenseSS_DL_100
+set BWPSet=100                                              startBWPUlRef     BWP=DenseSS_UL_100
+
+set BWPSet=100,BWPSetUeCfg=1,BWPSetCfg=0                    bWPDlRef          BWP=DenseSS_DL_100
+set BWPSet=100,BWPSetUeCfg=1,BWPSetCfg=1                    bWPDlRef          BWP=SparseSS_DL_100
+set BWPSet=100,BWPSetUeCfg=1,BWPSetCfg=0                    bWPUlRef          BWP=DenseSS_UL_100
+set BWPSet=100,BWPSetUeCfg=1,BWPSetCfg=1                    bWPUlRef          BWP=SparseSS_UL_100
+
+set BWPSet=100,DynPowerOpt=1                                downDlThreshold   200
+set BWPSet=100,DynPowerOpt=1                                downUlThreshold   200
+set BWPSet=100,DynPowerOpt=1                                upDlThreshold     300
+set BWPSet=100,DynPowerOpt=1                                upUlThreshold     300
+set BWPSet=100,BWPSetUeCfg=1,BWPSetCfg=1                    dynPowerOptRef    BWPSet=100,DynPowerOpt=1
+
+set GNBCUCPFunction=1                                       maxCommonProcTime 30
+set GNBCUCPFunction=1                                       maxNgRetryTime    30
+set GNBCUCPFunction=1                                       nasInactivityTime 10
+set GNBCUCPFunction=1                                       ngcDedProcTime    5
+
+set NRCellCU=.*              transmitSib2      true
+set NRCellCU=.*              transmitSib4      true
+set NRCellCU=.*              transmitSib5      true
+
+
+set NRCellDU=.*        cellBarred        1
+set NRCellDU=.*        cellReservedForOperator 1
+set NRCellDU=.*        siWindowLength    20
+
+
+set NRCellDU=.*        raResponseWindow  20
+
+set . setIdAllocation    1
+
+set GNBCUCPFunction=1                                       xnIpAddrViaNgActive true
+set GNBCUCPFunction=1                                       rrcReestSupportType 2
+
+set GNBCUUPFunction=1                                       altDepHServAdapUPProfEnabled true
+set . rimLocationEnabled true
+
+
+
+set GNBDUFunction=1,UeCC=1,AqmCfg=Default_application_signaling aqmMode        0
+set GNBDUFunction=1,UeCC=1,AqmCfg=Default_conversational_media aqmMode         2
+set GNBDUFunction=1,UeCC=1,AqmCfg=Default_other             aqmMode            1
+set GNBCUUPFunction=1,UeCC=1,AqmCfg=Default_application_signaling aqmMode      0
+set GNBCUUPFunction=1,UeCC=1,AqmCfg=Default_conversational_media aqmMode           2
+set GNBCUUPFunction=1,UeCC=1,AqmCfg=Default_other           aqmMode                1
+
+set GNBDUFunction=1,UeCC=1,AqmCfg=Default_application_signaling estimatedE2ERTT   0
+set GNBDUFunction=1,UeCC=1,AqmCfg=Default_conversational_media estimatedE2ERTT   0
+set GNBDUFunction=1,UeCC=1,AqmCfg=Default_other             estimatedE2ERTT   50
+set GNBCUUPFunction=1,UeCC=1,AqmCfg=Default_application_signaling estimatedE2ERTT   0
+set GNBCUUPFunction=1,UeCC=1,AqmCfg=Default_conversational_media estimatedE2ERTT   0
+set GNBCUUPFunction=1,UeCC=1,AqmCfg=Default_other           estimatedE2ERTT   50
+
+set GNBDUFunction=1,UeCC=1,AqmCfg=Default_application_signaling tDiscardDl        200
+set GNBDUFunction=1,UeCC=1,AqmCfg=Default_conversational_media tDiscardDl        200
+set GNBDUFunction=1,UeCC=1,AqmCfg=Default_other             tDiscardDl        200
+set GNBCUUPFunction=1,UeCC=1,AqmCfg=Default_application_signaling tDiscardDl        200
+set GNBCUUPFunction=1,UeCC=1,AqmCfg=Default_conversational_media tDiscardDl        200
+set GNBCUUPFunction=1,UeCC=1,AqmCfg=Default_other           tDiscardDl        200
+
+set GNBCUUPFunction=1,UeCC=1,AqmCfg=Default_application_signaling tOooUlDelivery    150
+set GNBCUUPFunction=1,UeCC=1,AqmCfg=Default_conversational_media tOooUlDelivery    150
+set GNBCUUPFunction=1,UeCC=1,AqmCfg=Default_other           tOooUlDelivery    150
+
+
+set GNBDUFunction=1                                         altDepHServAdapUPProfEnabled true
+set GNBDUFunction=1,UeCC=1,RadioLinkControl=1,DrbRlc=Default,DrbRlcUeCfg=Base rlcSNLength       12
+set GNBDUFunction=1,UeCC=1,RadioLinkControl=1,DrbRlc=Default,DrbRlcUeCfg=Base tStatusProhibitUl 10
+set GNBDUFunction=1,UeCC=1,RadioLinkControl=1,DrbRlc=Default,DrbRlcUeCfg=Base tPollRetransmitDl 80
+set GNBDUFunction=1,UeCC=1,RadioLinkControl=1,DrbRlc=Default,DrbRlcUeCfg=Base dlMaxRetxThreshold 32
+set GNBDUFunction=1,UeCC=1,RadioLinkControl=1,DrbRlc=Default,DrbRlcUeCfg=Base ulMaxRetxThreshold 32
+set GNBDUFunction=1,UeCC=1,RadioLinkControl=1,DrbRlc=Default,DrbRlcUeCfg=Base tPollRetransmitUl 80
+
+set GtpuSupervision=1,GtpuSupervisionProfile=NG             gtpuEchoEnabled   true
+set GtpuSupervision=1,GtpuSupervisionProfile=XN             gtpuEchoEnabled   true
+set GtpuSupervision=1,GtpuSupervisionProfile=NG             gtpuEchoDscp      32
+set GtpuSupervision=1,GtpuSupervisionProfile=XN             gtpuEchoDscp      32
+
+set GNBDUFunction=1,UeCC=1,RadioLinkControl=1,DrbRlc=Default,DrbRlcUeCfg=Base tReassemblyDl     25
+set GNBDUFunction=1,UeCC=1,RadioLinkControl=1,DrbRlc=Default,DrbRlcUeCfg=Base tReassemblyUl     25
+
+
+set NRCellDU=.*     rimHighIpnThresh  -107
+set NRCellDU=.*     rimPdschSlotBlankDlSsThresh  -107
+set NRCellDU=.*     rimPdschSlotBlankSsThresh  -107
+set NRCellDU=.* rimRS1FarThresh 0
+set NRCellDU=.* rimSlopePwrDiffThresh 2
+set GtpuSupervision=1,GtpuSupervisionProfile=NG             gtpuEchoEnabled   False
+set GtpuSupervision=1,GtpuSupervisionProfile=X2             gtpuEchoEnabled   False
+set PciHandling=1                                           pciConflictHandlingEnabled true
+set PciHandling=1,PciConflictNR=1                           pciConflictDetectionThreshNr 95
+set PciHandling=1,PciConflictNR=1,PciConflictNRUeCfg=Base   pciConflictDetectionNcgiMeas 1
+set PciHandling=1,PciConflictEUtran=1                       pciConflictDetectionThreshLTE 85
+set PciHandling=1,PciConflictEUtran=1,PciConflictEUtranUeCfg=Base pciConflictDetectionEcgiMeas 1
+set PciHandling=1,PciConflictNR=1,PciConflictNRUeCfg=Base   pciConflictMobilityNcgiMeas 1
+set GNBCUCPFunction=1                                       tNgRelocOverall   8
+set NRCellDU=.*     ssbTimeShiftEnabled True
+set GNBDUFunction=1,UeCC=1,UlWfPortSwitch=1,UlWfPortSwitchUeCfg=Base ulWfSwitchFr1Mode 2
+set GNBDUFunction=1,UeCC=1,UlWfPortSwitch=1,UlWfPortSwitchUeCfg=Base ulWfSwitchFr1QualThresh  330
+set GNBDUFunction=1,UeCC=1,UlWfPortSwitch=1,UlWfPortSwitchUeCfg=Base ulWfSwitchFr1QualHyst 30
+set GNBDUFunction=1,UeCC=1,UlWfPortSwitch=1,UlWfPortSwitchUeCfg=Base ulWfSwitchFr1CpRetProhibTimer 1000
+
+set CXC4012580 featurestate 0
+set CXC4012550 featurestate 0
+set CXC4012832 featurestate 1
+set CXC4012772 featurestate 1
+set CXC4012790 featurestate 1
+set CXC4012813 featurestate 1
+set CXC4012634 featurestate 1
+
+
+set GNBDUFunction=1,MassiveMimoSleep=1,MMimoSleepProfile=1 sleepMode 0
+set GNBDUFunction=1,MassiveMimoSleep=1,MMimoSleepProfile=1 switchDownMonitorDurTimer 60
+set GNBDUFunction=1,MassiveMimoSleep=1,MMimoSleepProfile=1 switchDownMonitorDurTimerEco 300
+set GNBDUFunction=1,MassiveMimoSleep=1,MMimoSleepProfile=1 switchDownPrbThreshDl 10
+set GNBDUFunction=1,MassiveMimoSleep=1,MMimoSleepProfile=1 switchDownPrbThreshDlEco 15
+set GNBDUFunction=1,MassiveMimoSleep=1,MMimoSleepProfile=1 switchDownPrbThreshUlEco 10
+set GNBDUFunction=1,MassiveMimoSleep=1,MMimoSleepProfile=1 switchDownRrcConnThresh 10
+set GNBDUFunction=1,MassiveMimoSleep=1,MMimoSleepProfile=1 switchDownRrcConnThreshEco 30
+set GNBDUFunction=1,MassiveMimoSleep=1,MMimoSleepProfile=1 switchUpMonitorDurTimer 30
+set GNBDUFunction=1,MassiveMimoSleep=1,MMimoSleepProfile=1 switchUpMonitorDurTimerEco 120
+set GNBDUFunction=1,MassiveMimoSleep=1,MMimoSleepProfile=1 switchUpPrbThreshDl 20
+set GNBDUFunction=1,MassiveMimoSleep=1,MMimoSleepProfile=1 switchUpPrbThreshDlEco 30
+set GNBDUFunction=1,MassiveMimoSleep=1,MMimoSleepProfile=1 switchUpPrbThreshUlEco 15
+set GNBDUFunction=1,MassiveMimoSleep=1,MMimoSleepProfile=1 switchUpRrcConnThresh 20
+set GNBDUFunction=1,MassiveMimoSleep=1,MMimoSleepProfile=1 switchUpRrcConnThreshEco 50
+
+Set GNBDUFunction=1,MassiveMimoSleep=1,MMimoSleepTimeGroup=1,MMimoSleepTimeWindow dayOfWeek 0
+Set GNBDUFunction=1,MassiveMimoSleep=1,MMimoSleepTimeGroup=1,MMimoSleepTimeWindow mMimoSleepProfileRef MassiveMimoSleep=1,MMimoSleepProfile=1
+Set GNBDUFunction=1,MassiveMimoSleep=1,MMimoSleepTimeGroup=1,MMimoSleepTimeWindow mMimoSleepTimeWindowId 1
+Set GNBDUFunction=1,MassiveMimoSleep=1,MMimoSleepTimeGroup=1,MMimoSleepTimeWindow startTime 20:30
+Set GNBDUFunction=1,MassiveMimoSleep=1,MMimoSleepTimeGroup=1,MMimoSleepTimeWindow stopTime 23:30
+
+confb-
+gs-
+
+
+
+
+confb+
+gs+
+
+
+set UeMC=1,UeMCEUtranFreqRelProfile=L1800,UeMCEUtranFreqRelProfileUeCfg=Base blindRwrAllowed   True
+set UeMC=1,UeMCEUtranFreqRelProfile=L2100,UeMCEUtranFreqRelProfileUeCfg=Base blindRwrAllowed   True
+set UeMC=1,UeMCEUtranFreqRelProfile=L900,UeMCEUtranFreqRelProfileUeCfg=Base blindRwrAllowed   False
+set UeMC=1,UeMCEUtranFreqRelProfile=L2300_20,UeMCEUtranFreqRelProfileUeCfg=Base blindRwrAllowed   false
+set UeMC=1,UeMCEUtranFreqRelProfile=L2300_10,UeMCEUtranFreqRelProfileUeCfg=Base blindRwrAllowed   false
+
+set  EUtranCellFDD=.*,GeranFreqGroupRelation=1 threshXHigh 4
+set EUtranCell.*dd=.*,UeMeasControl=1,ReportConfigB1NR=1 b1ThresholdRsrp -103
+set EUtranCell.*dd=.*,UeMeasControl=1,ReportConfigB1GUtra=1 b1ThresholdRsrp -110
+
+lset  McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=Base$ rsrpCritical threshold=-111
+
+
+set . nrB1MeasAtEndcEnabled true
+set . nrB1MeasEnabled true
+
+
+
+
+set GNBDUFunction=1,UeCC=1,UlWfPortSwitch=1,UlWfPortSwitchUeCfg=Base ulWfPuschStartFr1RsrpThresh -90
+
+set PciHandling=1,PciConflictEUtran=1,PciConflictEUtranUeCfg=Base pciConflictTargetSelectMode 0
+set PciHandling=1,PciConflictNR=1,PciConflictNRUeCfg=Base   pciConflictTargetSelectMode 1
+
+
+
+
+ldeb nrcell
+ldeb nrcell
+ldeb cell
+
+cvms PostU_GPL_final
+
+confb-
+gs-
+
+
+#################NE circle values (NE-NLDIM346-1_kget_mom_021126_1933 kget; RJ-based SA part differs here)#######################
+
+set GNBCUCPFunction=1,CUCP5qiTable=1,CUCP5qi=5qi1 tReorderingDl 40
+set GNBCUCPFunction=1,CUCP5qiTable=1,CUCP5qi=5qi1 tReorderingUl 20
+set GNBCUCPFunction=1,CUCP5qiTable=1,CUCP5qi=5qi2 tReorderingDl 40
+set GNBCUCPFunction=1,CUCP5qiTable=1,CUCP5qi=5qi5 tReorderingUl 200
+set GNBCUCPFunction=1,CUCP5qiTable=1,CUCP5qi=5qi6 tReorderingUl 50
+set GNBCUCPFunction=1,CUCP5qiTable=1,CUCP5qi=5qi7 tReorderingUl 50
+set GNBCUCPFunction=1,CUCP5qiTable=1,CUCP5qi=5qi8 tReorderingUl 50
+set GNBCUCPFunction=1,CUCP5qiTable=1,CUCP5qi=5qi9 tReorderingUl 50
+set GNBCUCPFunction=1,Mcpc=1,McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=VONR rsrpCriticalEnabled true
+set GNBCUCPFunction=1,UeGroupSelection=1,UeMobilityGroupDefinition=5QI9 ueMobilityGroupPriority 9999
+set GNBCUCPFunction=1,UeGroupSelection=1,UeServiceGroupDefinition=5QI9 ueServiceGroupPriority 9999
+set GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L1800,UeMCEUtranFreqRelProfileUeCfg=VoNR blindRwrAllowed false
+set GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L1800,UeMCEUtranFreqRelProfileUeCfg=VoNR connModePrioPCell 5
+set GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L2100,UeMCEUtranFreqRelProfileUeCfg=Base connModePrioPCell 3
+set GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L2100,UeMCEUtranFreqRelProfileUeCfg=VoNR blindRwrAllowed false
+set GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L2100,UeMCEUtranFreqRelProfileUeCfg=VoNR connModePrioPCell 2
+set GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L900,UeMCEUtranFreqRelProfileUeCfg=Base connModePrioPCell 2
+set GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L900,UeMCEUtranFreqRelProfileUeCfg=VoNR connModePrioPCell 4
+set GNBDUFunction=1,DU5qiTable=1,DU5qi=2 priorityLevel 30
+set GNBDUFunction=1,Rrc=1 t311 5000
+set GNBDUFunction=1,Rrc=1 t301 1000
+
 
 #########################################RIM Feature Activation Script_1_Sector###################################################################################
 
 cvms Pre_Rim
 
 get NRCellDU=.*_A userlabel > $Acell
-
 
 
 
@@ -5766,7 +6921,7 @@ set NRCellDU=.*                   rimPdschSlotBlankMode 0
 set CXC4012635                    featureState 1
 set NRCellDU=.*                   raResponseWindow 20
 set GNBDUFunction=1                                         setIdAllocation 1
-set NRCellDU=.*                   rimDetectionEnabled true 
+set NRCellDU=.*                   rimDetectionEnabled true
 confbd-
 gs-
 
@@ -5775,22 +6930,17 @@ gs+
 cr RimRSGlobal=1,RimRSSet=1
 1
 
-
 cr RimRSGlobal=1,RimRSSet=7
 7
-
-
 
 set RimRSGlobal=1,RimRSSet=7                                setType           2
 
 set NRCellDU=$Acell                   rimAggressorRSSetRef RimRSGlobal=1,RimRSSet=7
 
-
 set NRCellDU=$Acell rimVictimRSSetRef RimRSGlobal=1,RimRSSet=1
 
 
 set RimRSGlobal=1,RimRSSet=1                                setId $setID_A
-
 set RimRSGlobal=1,RimRSSet=7                                setId $setID_A
 
 
@@ -5827,39 +6977,70 @@ set NRCellDU=.* rimSlopeDetectPeriod 10
 set NRCellDU=.* rimSlopePwrDiffThresh 3
 set NRCellDU=.*                   rimLocationEnabled true
 set NRCellDU=.*                   rimPdschSlotBlankMode 4
-
-deb nr
-get , rimLocationEnabled
-get , rimPdschSlotBlankMode 4
-
-
 eset1 ^NRCellDU sNSSAIList sd=1,sst=1;sd=2,sst=1;sd=3,sst=1;sd=4,sst=1
 eset1 ^GNBCUUPFunction=1 sNSSAIList sd=1,sst=1;sd=2,sst=1;sd=3,sst=1;sd=4,sst=1
 set NRCellDU=.* nrrrpenabled true
 
-set CXC4012559 featurestate 1
-set CXC4012379 featurestate 1
-set CXC4012475 featurestate 1
-set CXC4012531 featurestate 1
-set CXC4012659 featurestate 1
-set CXC4012729 featurestate 1
+set NRCellDU=.*     rimHighIpnThresh  -107
+set NRCellDU=.*     rimPdschSlotBlankDlSsThresh  -107
+set NRCellDU=.*     rimPdschSlotBlankSsThresh  -107
+set NRCellDU=.* rimRS1FarThresh 0
+set NRCellDU=.* rimSlopePwrDiffThresh 2
 
-get Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFallbackOperation
-get . nrB1MeasEnabled
-get . nrB1MeasAtEndcEnabled
 
-set . nrB1MeasEnabled true
+
+set PciHandling=1                                           pciConflictHandlingEnabled true
+set PciHandling=1,PciConflictNR=1,PciConflictNRUeCfg=Base   pciConflictDetectionNcgiMeas 1
+set PciHandling=1,PciConflictEUtran=1                       pciConflictDetectionThreshLTE 85
+set PciHandling=1,PciConflictEUtran=1,PciConflictEUtranUeCfg=Base pciConflictDetectionEcgiMeas 1
+set PciHandling=1,PciConflictNR=1,PciConflictNRUeCfg=Base   pciConflictMobilityNcgiMeas 1
+set GNBCUCPFunction=1                                       tNgRelocOverall   8
+set NRCellDU=.*     ssbTimeShiftEnabled True
+set GNBDUFunction=1,UeCC=1,UlWfPortSwitch=1,UlWfPortSwitchUeCfg=Base ulWfSwitchFr1Mode 2
+set GNBDUFunction=1,UeCC=1,UlWfPortSwitch=1,UlWfPortSwitchUeCfg=Base ulWfSwitchFr1QualThresh  330
+set GNBDUFunction=1,UeCC=1,UlWfPortSwitch=1,UlWfPortSwitchUeCfg=Base ulWfSwitchFr1QualHyst 30
+set GNBDUFunction=1,UeCC=1,UlWfPortSwitch=1,UlWfPortSwitchUeCfg=Base ulWfSwitchFr1CpRetProhibTimer 1000
+
+deb nr
+
+set Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base      epsFallbackOperation 5
 set . nrB1MeasAtEndcEnabled true
-set Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFallbackOperation 5
+set . nrB1MeasEnabled true
 
-cvms Post_Rim
 
+
+
+
+lset CXC4012559 featurestate 1
+
+
+lset CXC4012379 featurestate 1
+
+
+lset CXC4012475 featurestate 1
+
+
+lset CXC4012531 featurestate 1
+
+
+lset CXC4012659 featurestate 1
+
+
+lset CXC4012729 featurestate 1
+
+lset CXC4012635 featurestate 1
+
+
+
+get , rimLocationEnabled
+get , rimPdschSlotBlankMode 4
 accn =4 restartunit 0 0 0
 accn =du restartunit 0 0 0
 accn =BB-1 restartunit 0 0 0
 confbd-
 gs-
 
+cvms Post_Rim
 
 
 
@@ -5889,7 +7070,7 @@ set NRCellDU=.*                   rimPdschSlotBlankMode 0
 set CXC4012635                    featureState 1
 set NRCellDU=.*                   raResponseWindow 20
 set GNBDUFunction=1                                         setIdAllocation 1
-set NRCellDU=.*                   rimDetectionEnabled true 
+set NRCellDU=.*                   rimDetectionEnabled true
 confbd-
 gs-
 
@@ -5905,13 +7086,11 @@ cr RimRSGlobal=1,RimRSSet=7
 cr RimRSGlobal=1,RimRSSet=8
 8
 
-
 set RimRSGlobal=1,RimRSSet=7                                setType           2
 set RimRSGlobal=1,RimRSSet=8                                setType           2
 
 set NRCellDU=$Acell                   rimAggressorRSSetRef RimRSGlobal=1,RimRSSet=7
 set NRCellDU=$Bcell                   rimAggressorRSSetRef RimRSGlobal=1,RimRSSet=8
-
 
 set NRCellDU=$Acell rimVictimRSSetRef RimRSGlobal=1,RimRSSet=1
 set NRCellDU=$Bcell rimVictimRSSetRef RimRSGlobal=1,RimRSSet=2
@@ -5919,7 +7098,6 @@ set NRCellDU=$Bcell rimVictimRSSetRef RimRSGlobal=1,RimRSSet=2
 
 set RimRSGlobal=1,RimRSSet=1                                setId $setID_A
 set RimRSGlobal=1,RimRSSet=2                                setId $setID_B
-
 set RimRSGlobal=1,RimRSSet=7                                setId $setID_A
 set RimRSGlobal=1,RimRSSet=8                                setId $setID_B
 
@@ -5957,38 +7135,70 @@ set NRCellDU=.* rimSlopeDetectPeriod 10
 set NRCellDU=.* rimSlopePwrDiffThresh 3
 set NRCellDU=.*                   rimLocationEnabled true
 set NRCellDU=.*                   rimPdschSlotBlankMode 4
-
-deb nr
-get , rimLocationEnabled
-get , rimPdschSlotBlankMode 4
-
-
 eset1 ^NRCellDU sNSSAIList sd=1,sst=1;sd=2,sst=1;sd=3,sst=1;sd=4,sst=1
 eset1 ^GNBCUUPFunction=1 sNSSAIList sd=1,sst=1;sd=2,sst=1;sd=3,sst=1;sd=4,sst=1
 set NRCellDU=.* nrrrpenabled true
 
-set CXC4012559 featurestate 1
-set CXC4012379 featurestate 1
-set CXC4012475 featurestate 1
-set CXC4012531 featurestate 1
-set CXC4012659 featurestate 1
-set CXC4012729 featurestate 1
+set NRCellDU=.*     rimHighIpnThresh  -107
+set NRCellDU=.*     rimPdschSlotBlankDlSsThresh  -107
+set NRCellDU=.*     rimPdschSlotBlankSsThresh  -107
+set NRCellDU=.* rimRS1FarThresh 0
+set NRCellDU=.* rimSlopePwrDiffThresh 2
 
-get Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFallbackOperation
-get . nrB1MeasEnabled
-get . nrB1MeasAtEndcEnabled
 
-set . nrB1MeasEnabled true
+
+set PciHandling=1                                           pciConflictHandlingEnabled true
+set PciHandling=1,PciConflictNR=1,PciConflictNRUeCfg=Base   pciConflictDetectionNcgiMeas 1
+set PciHandling=1,PciConflictEUtran=1                       pciConflictDetectionThreshLTE 85
+set PciHandling=1,PciConflictEUtran=1,PciConflictEUtranUeCfg=Base pciConflictDetectionEcgiMeas 1
+set PciHandling=1,PciConflictNR=1,PciConflictNRUeCfg=Base   pciConflictMobilityNcgiMeas 1
+set GNBCUCPFunction=1                                       tNgRelocOverall   8
+set NRCellDU=.*     ssbTimeShiftEnabled True
+set GNBDUFunction=1,UeCC=1,UlWfPortSwitch=1,UlWfPortSwitchUeCfg=Base ulWfSwitchFr1Mode 2
+set GNBDUFunction=1,UeCC=1,UlWfPortSwitch=1,UlWfPortSwitchUeCfg=Base ulWfSwitchFr1QualThresh  330
+set GNBDUFunction=1,UeCC=1,UlWfPortSwitch=1,UlWfPortSwitchUeCfg=Base ulWfSwitchFr1QualHyst 30
+set GNBDUFunction=1,UeCC=1,UlWfPortSwitch=1,UlWfPortSwitchUeCfg=Base ulWfSwitchFr1CpRetProhibTimer 1000
+
+deb nr
+
+set Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base      epsFallbackOperation 5
 set . nrB1MeasAtEndcEnabled true
-set Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFallbackOperation 5
+set . nrB1MeasEnabled true
 
-cvms Post_Rim
 
+
+
+
+lset CXC4012559 featurestate 1
+
+
+lset CXC4012379 featurestate 1
+
+
+lset CXC4012475 featurestate 1
+
+
+lset CXC4012531 featurestate 1
+
+
+lset CXC4012659 featurestate 1
+
+
+lset CXC4012729 featurestate 1
+
+lset CXC4012635 featurestate 1
+
+
+
+get , rimLocationEnabled
+get , rimPdschSlotBlankMode 4
 accn =4 restartunit 0 0 0
 accn =du restartunit 0 0 0
 accn =BB-1 restartunit 0 0 0
 confbd-
 gs-
+
+cvms Post_Rim
 
 
 
@@ -6019,7 +7229,7 @@ set NRCellDU=.*                   rimPdschSlotBlankMode 0
 set CXC4012635                    featureState 1
 set NRCellDU=.*                   raResponseWindow 20
 set GNBDUFunction=1                                         setIdAllocation 1
-set NRCellDU=.*                   rimDetectionEnabled true 
+set NRCellDU=.*                   rimDetectionEnabled true
 confbd-
 gs-
 
@@ -6039,7 +7249,6 @@ cr RimRSGlobal=1,RimRSSet=8
 cr RimRSGlobal=1,RimRSSet=9
 9
 
-
 set RimRSGlobal=1,RimRSSet=7                                setType           2
 set RimRSGlobal=1,RimRSSet=8                                setType           2
 set RimRSGlobal=1,RimRSSet=9                                setType           2
@@ -6047,7 +7256,6 @@ set RimRSGlobal=1,RimRSSet=9                                setType           2
 set NRCellDU=$Acell                   rimAggressorRSSetRef RimRSGlobal=1,RimRSSet=7
 set NRCellDU=$Bcell                   rimAggressorRSSetRef RimRSGlobal=1,RimRSSet=8
 set NRCellDU=$Ccell                   rimAggressorRSSetRef RimRSGlobal=1,RimRSSet=9
-
 
 set NRCellDU=$Acell rimVictimRSSetRef RimRSGlobal=1,RimRSSet=1
 set NRCellDU=$Bcell rimVictimRSSetRef RimRSGlobal=1,RimRSSet=2
@@ -6057,7 +7265,6 @@ set NRCellDU=$Ccell rimVictimRSSetRef RimRSGlobal=1,RimRSSet=3
 set RimRSGlobal=1,RimRSSet=1                                setId $setID_A
 set RimRSGlobal=1,RimRSSet=2                                setId $setID_B
 set RimRSGlobal=1,RimRSSet=3                                setId $setID_C
-
 set RimRSGlobal=1,RimRSSet=7                                setId $setID_A
 set RimRSGlobal=1,RimRSSet=8                                setId $setID_B
 set RimRSGlobal=1,RimRSSet=9                                setId $setID_C
@@ -6096,38 +7303,71 @@ set NRCellDU=.* rimSlopeDetectPeriod 10
 set NRCellDU=.* rimSlopePwrDiffThresh 3
 set NRCellDU=.*                   rimLocationEnabled true
 set NRCellDU=.*                   rimPdschSlotBlankMode 4
-
-deb nr
-get , rimLocationEnabled
-get , rimPdschSlotBlankMode 4
-
-
 eset1 ^NRCellDU sNSSAIList sd=1,sst=1;sd=2,sst=1;sd=3,sst=1;sd=4,sst=1
 eset1 ^GNBCUUPFunction=1 sNSSAIList sd=1,sst=1;sd=2,sst=1;sd=3,sst=1;sd=4,sst=1
 set NRCellDU=.* nrrrpenabled true
 
-set CXC4012559 featurestate 1
-set CXC4012379 featurestate 1
-set CXC4012475 featurestate 1
-set CXC4012531 featurestate 1
-set CXC4012659 featurestate 1
-set CXC4012729 featurestate 1
+set NRCellDU=.*     rimHighIpnThresh  -107
+set NRCellDU=.*     rimPdschSlotBlankDlSsThresh  -107
+set NRCellDU=.*     rimPdschSlotBlankSsThresh  -107
+set NRCellDU=.* rimRS1FarThresh 0
+set NRCellDU=.* rimSlopePwrDiffThresh 2
 
-get Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFallbackOperation
-get . nrB1MeasEnabled
-get . nrB1MeasAtEndcEnabled
 
-set . nrB1MeasEnabled true
+
+set PciHandling=1                                           pciConflictHandlingEnabled true
+set PciHandling=1,PciConflictNR=1,PciConflictNRUeCfg=Base   pciConflictDetectionNcgiMeas 1
+set PciHandling=1,PciConflictEUtran=1                       pciConflictDetectionThreshLTE 85
+set PciHandling=1,PciConflictEUtran=1,PciConflictEUtranUeCfg=Base pciConflictDetectionEcgiMeas 1
+set PciHandling=1,PciConflictNR=1,PciConflictNRUeCfg=Base   pciConflictMobilityNcgiMeas 1
+set GNBCUCPFunction=1                                       tNgRelocOverall   8
+set NRCellDU=.*     ssbTimeShiftEnabled True
+set GNBDUFunction=1,UeCC=1,UlWfPortSwitch=1,UlWfPortSwitchUeCfg=Base ulWfSwitchFr1Mode 2
+set GNBDUFunction=1,UeCC=1,UlWfPortSwitch=1,UlWfPortSwitchUeCfg=Base ulWfSwitchFr1QualThresh  330
+set GNBDUFunction=1,UeCC=1,UlWfPortSwitch=1,UlWfPortSwitchUeCfg=Base ulWfSwitchFr1QualHyst 30
+set GNBDUFunction=1,UeCC=1,UlWfPortSwitch=1,UlWfPortSwitchUeCfg=Base ulWfSwitchFr1CpRetProhibTimer 1000
+
+deb nr
+
+set Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base      epsFallbackOperation 5
 set . nrB1MeasAtEndcEnabled true
-set Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFallbackOperation 5
+set . nrB1MeasEnabled true
 
-cvms Post_Rim
 
+
+
+
+lset CXC4012559 featurestate 1
+
+
+lset CXC4012379 featurestate 1
+
+
+lset CXC4012475 featurestate 1
+
+
+lset CXC4012531 featurestate 1
+
+
+lset CXC4012659 featurestate 1
+
+
+lset CXC4012729 featurestate 1
+
+lset CXC4012635 featurestate 1
+
+
+
+get , rimLocationEnabled
+get , rimPdschSlotBlankMode 4
 accn =4 restartunit 0 0 0
 accn =du restartunit 0 0 0
 accn =BB-1 restartunit 0 0 0
 confbd-
 gs-
+
+cvms Post_Rim
+
 
 
 

@@ -21,6 +21,12 @@ DATA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 TOP_NS = {"enodebfunction": "Lrat", "gnbdufunction": "GNBDU", "gnbcucpfunction": "GNBCUCP", "gnbcuupfunction": "GNBCUUP"}
 SKIP_SYSTEM = re.compile(r"^SystemFunctions=1,(Pm=1,PmGroup|PmEventM=1,EventProducer|PmEventSigM=1,EventProducer|HealthCheckM|SwInventory|HwInventory|SysM=1,Schema|LogM)")
 UNKNOWN = object()
+# moshell variable; a name with hyphens ($UP-Nexthop, RJ 03 GPL) only where such a variable was set - else $i-1 = $i minus 1
+VAR_RX = r"\$\w+(?:-\w+)*(?!\w)"
+# MOs of the commissioning (01 SiteBasic / 02 SiteEquipment, made from the RF data): a reference to one the generated
+# 01/02 lack is still written (KK-style 04 = all of LTE 01/02/03) - e.g. RJ-NLRJNT02-1 Cell_Def SectorCarrier
+# sectorFunctionRef SEF=S1 while the RF Radio_HW named it 31: the whole cell part was left out
+COMMISSIONING_REF = re.compile(r"^(NodeSupport=1,SectorEquipmentFunction=|Equipment=1,)", re.I)
 GNB_NS = {"GNBDU", "GNBCUCP", "GNBCUUP"}
 SYSTEM_IDS = {"1", "Default", "Base"}          # ids the node uses for the MOs it creates itself
 # other MOs the node creates itself below the gNodeB functions (in the KK/AS/NE kgets, made by no script):
@@ -34,6 +40,10 @@ NOT_SYSTEM = {"EUtranFrequency", "EUtranFreqRelation", "TermPointToSGW", "GtpPat
 # attributes the node validates together: written in one RPC (final values) at the last write of any of them
 # (NRCellDU: dlMaxMuMimoLayers > 0 is only accepted with a matching csiRsConfig<n>P - AMOS sets 32P first)
 GROUPED_ATTRS = {"DscpPcpMap": re.compile(r"^pcp\d$"), "NRCellDU": re.compile(r"^(dlMaxMuMimoLayers|csiRsConfig\d+P)$")}
+# other circles also: NRCellDU maxNoOfAdvancedDlMuMimoLayers needs advancedDlSuMimoEnabled true in the same transaction
+# (RJ GPL sets the layers first: "must be 0 if advancedDlSuMimoEnabled is false", RJ-NLRJNT02-1 NR02_017) - KK as it ran
+GROUPED_ATTRS_OTHERS = dict(GROUPED_ATTRS, NRCellDU=re.compile(
+    r"^(dlMaxMuMimoLayers|csiRsConfig\d+P|maxNoOfAdvancedDlMuMimoLayers|advancedDlSuMimoEnabled)$"))
 # MOs whose changes go in an RPC of their own: a FeatureState missing in the node's software, SecurityHandling needs a
 # security-admin role ("User is not Authorized") - either fails alone instead of taking other changes with it
 SOLO_CLASSES = re.compile(r",(featurestate|securityhandling)=|^,gnbcucpfunction=[^,]+,eutranetwork=[^,]+,eutranfrequency=")
@@ -46,7 +56,16 @@ NODE_MADE = re.compile(r"^,gnbcucpfunction=[^,]+,eutranetwork=[^,]+,eutranfreque
 NOT_SOFT = {"BWPSetUeCfg"}
 # MOM per circle: KK runs 25.Q2; AS / NE must work on 25.Q2 and 26.Q2 (user 2026-10-13) -> only what both releases have
 MOM_FILES = {"KK": ("mom_25Q2.json.gz", "preconditions_25Q2.json.gz")}
+# other circles: XMLs for 25.Q2 and 26.Q2 nodes alike (user 2026-11-02) - attributes of both releases; a struct whose
+# members differ (26.Q2 CsiRsConfig16P/32P typeIIR16Enabled, TimeDomainPara ...2) is written once per release in RPCs
+# of its own (..._25Q2 / ..._26Q2): on any node one of them applies, the other fails alone
+RELEASE_MOMS = {"25Q2": "mom_25Q2.json.gz", "26Q2": "mom_26Q2.json.gz"}
 MOM_DEFAULT = ("mom_25Q2_26Q2.json.gz", "preconditions_25Q2_26Q2.json.gz")
+# struct members without a MOM default, as a fresh node holds them (RJ-NLFENC02-1 kget): a whole-struct write without
+# them is rejected (RJ-NLRJNT02-1 LTE03 "Multiplicity violation, attribute name: acBarringPresence,acBarringPrioCsfbSpecAc")
+NODE_STRUCT_DEFAULTS = {"Lrat.AcBarringPresence": {m: ("PRIORITY4",) * 5 for m in (
+    "acBarringPrioCsfbSpecAc", "acBarringPrioMmtelVideoSpecAc", "acBarringPrioMmtelVoiceSpecAc", "acBarringPrioMoDataSpecAc",
+    "acBarringPrioMoSignalingSpecAc")}}
 BRANCH_ORDER = ["Transport", "NodeSupport", "GNBCUUPFunction", "GNBDUFunction", "GNBCUCPFunction", "ENodeBFunction", "SystemFunctions"]
 HELLO = """<?xml version="1.0" encoding="UTF-8"?>
 <hello xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
@@ -256,6 +275,10 @@ def _enum_map(mom, ref):
 def convert(mom, model, key, attr_info, raw, ctx):
     """moshell text value -> canonical python value (str | list | dict | Ref). None = empty (unset)."""
     name, t, flags, default = attr_info
+    if t.endswith("EcimEmpty"):
+        # ECIM empty type (InterfaceIPv4/6 loopback): present = true (<loopback/>, as in the SiteBasic XMLs), false =
+        # left out - RJ NR01 'loopback false' was rejected ("Invalid value false for EcimEmpty attribute loopback")
+        return None if raw.strip().lower() in ("false", "0", "") else ""
     raw = re.sub(r"^\w\[\d+\]\s*=\s*", "", raw.strip())      # moshell array display form: i[2] = 2 1
     if raw == "":
         return None
@@ -296,6 +319,10 @@ def _scalar(mom, model, kind, ref, raw, ctx):
             if "=" in tok and k in low:
                 cur = low[k]
                 out[cur] = tok.split("=", 1)[1]
+            elif re.fullmatch(r"\s*[a-z]\w*=\S*\s*", tok):      # lowerCamel member, not a moRef's Class=id
+                # a member this struct does not have (RJ GPL csiRsConfig4P ...,i11Restriction=,i12Restriction= - 4P
+                # has no i12Restriction): left out, not glued to the value before ("Failed to add attribute")
+                cur = None
             elif cur:
                 out[cur] += "," + tok
         res = OrderedDict()
@@ -449,10 +476,11 @@ class Replay:
         def rep(m):
             v = self.vars.get(m.group(0))
             return m.group(0) if v is None or v is UNKNOWN else str(v)
-        return re.sub(r"\$\w+(?!\w)", rep, s)
+        return re.sub(VAR_RX, lambda m: rep(m) if m.group(0) in self.vars else re.sub(r"\$\w+", rep, m.group(0), count=1), s)
 
     def unknown_in(self, s):
-        return any(self.vars.get(v) is UNKNOWN for v in re.findall(r"\$\w+(?!\w)", s))
+        return any(self.vars.get(v) is UNKNOWN or self.vars.get(re.match(r"\$\w+", v).group(0)) is UNKNOWN and v not in self.vars
+                   for v in re.findall(VAR_RX, s))
 
     def left(self, script, ln, s, why):
         self.leftover.append((script, ln, s.strip(), why))
@@ -468,6 +496,11 @@ class Replay:
         if "readOnly" in flags:
             self.notes.append((script, ln, s, f"{name} is read-only - ignored"))
             return True
+        if "key" in flags and not self.only_changes:
+            # RJ/AS GPL 'set ENodeBFunction=1,SecurityHandling=1 securityHandlingId 1': written as a 2nd id element
+            # ("Multiplicity violation, attribute name: securityHandlingId") - the id is the MO's own
+            self.notes.append((script, ln, s, f"{name} is the MO key - ignored"))
+            return True
         if "restricted" in flags and not creating:
             self.left(script, ln, s, f"{name} is restricted (only settable when the MO is created) - AMOS set fails too")
             return True
@@ -480,6 +513,8 @@ class Replay:
         elif isinstance(v, list) and v and all(isinstance(x, dict) for x in v):
             v = self.whole_struct_list(mo, info, v)
         bad = self.bad_ref(v)
+        while bad and self.soft_ref_target(bad, mo["ldn"], script, ln, s):
+            bad = self.bad_ref(v)
         if bad:
             self.notes.append((script, ln, s, f"reference target {bad} does not exist at this point - fails in AMOS too"))
             return "badref"
@@ -548,6 +583,8 @@ class Replay:
                 out[m] = cur[m]
             elif md is not None and not mseq:
                 out[m] = _scalar(self.mom, self.m, mk, mr, md, mo["ldn"])
+            elif m in NODE_STRUCT_DEFAULTS.get(_kind(info[1])[2], {}):
+                out[m] = list(NODE_STRUCT_DEFAULTS[_kind(info[1])[2]][m])
             elif not mseq and mk in ("string", "derivedRef"):
                 out[m] = ""
         out.update((m, x) for m, x in v.items() if m not in out)
@@ -575,6 +612,67 @@ class Replay:
             return False
         return not any(("mandatory" in fl or "restricted" in fl) and "key" not in fl for t, fl, d in self.mom.attrs[key].values())
 
+    def duplicate_nexthop(self, k):
+        """RJ GPL makes Dst=Twamp,NextHop=7 and Dst=TWAMP,NextHop=1 (same Dst here, ids match case-insensitively) with
+        the same gateway: "Attribute address of NextHop MO must be unique under same Dst MO" (RJ-NLRJNT02-1)"""
+        if not re.search(r",nexthop=[^,]+$", k):
+            return False
+        addr = self.canon(self.m.mos[k]["attrs"].get("address"))
+        parent = k.rsplit(",", 1)[0]
+        return addr is not None and any(
+            c != k and c.rsplit(",", 1)[0] == parent and re.search(r",nexthop=[^,]+$", c)
+            and self.canon(mo["attrs"].get("address")) == addr for c, mo in self.m.mos.items())
+
+    def duplicate_dst(self, k):
+        """AS LKUDR2 01 TN: a Dst whose prefix another Dst of the table already has - "All Dst MOs under
+        RouteTableIPv4Static MO must have unique dst attributes" failed the whole LTE01_001 RPC (SctpEndpoint=1 with it)"""
+        if not re.search(r",routetableipv[46]static=[^,]+,dst=[^,]+$", k):
+            return False
+        dst = self.m.mos[k]["attrs"].get("dst")
+        parent = k.rsplit(",", 1)[0]
+        return dst is not None and any(
+            c != k and c.rsplit(",", 1)[0] == parent and re.search(r",dst=[^,]+$", c) and mo["attrs"].get("dst") == dst
+            for c, mo in self.m.mos.items())
+
+    def duplicate_mme(self, k):
+        """AS GPL makes TermPointToMme=MME_JHRT with the IPs of the 01 TN MME_JRT: "Attributes ipAddress1[10.50.47.171]
+        and ipAddress1[10.50.47.171] are equal" failed the whole LTE03 RPC (all EUtranFrequencies with it, AS LKUDR2)"""
+        if not re.search(r",termpointtomme=[^,]+$", k):
+            return False
+        ips = lambda mo: {self.canon(mo["attrs"].get(a)) for a in ("ipAddress1", "ipAddress2", "ipv6Address1", "ipv6Address2")} \
+            - {None, "", "0.0.0.0", "::"}
+        own = ips(self.m.mos[k])
+        parent = k.rsplit(",", 1)[0]
+        return bool(own) and any(c != k and c.rsplit(",", 1)[0] == parent and re.search(r",termpointtomme=[^,]+$", c)
+                                 and own & ips(mo) for c, mo in self.m.mos.items())
+
+    def soft_ref_target(self, raw, ctx, script, ln, s):
+        """A reference to an MO the node makes itself (soft(): id 1/Default/Base, nothing mandatory) that the scripts
+        only create later (AS/NE/RJ NR01 NRCellCU intraFreqMCCellProfileRef IntraFreqMC=1,IntraFreqMCCellProfile=Default,
+        made by NR02): soft-created (merge) here, which works whether or not the node already has it; the later crn
+        becomes sets. Without it the NRCellCU create was dropped with all its children."""
+        r = re.sub(r"(?i)^(?:.*?,)?ManagedElement=[^,]*,?", "", raw.strip())
+        if not r:
+            return False
+        ldn = self.full_ldn(r)
+        if ldn.split(",")[0].lower() not in self.m.mos and ctx:
+            # short ref whose first MO is missing too (Mcfb=1,...): under the referring MO's function
+            ldn = self.full_ldn(f"{ctx.split(',')[0]},{r}")
+        parts = ldn.split(",")
+        if parts[-1].partition("=")[2] != "Default":     # profile=Default = made by the node (in the kgets, no script
+            return False                                  # creates CaCellProfile/McfbCellProfile=Default); =1 is not
+        chain = [",".join(parts[:n]) for n in range(1, len(parts) + 1) if ",".join(parts[:n]).lower() not in self.m.mos]
+        # missing ancestors too (Mcfb=1 of Mcfb=1,McfbCellProfile=Default), each one an MO the node makes itself
+        if not chain or "," not in chain[0] or not all(self.mom.class_key(x) and self.soft(x) for x in chain):
+            return False
+        for x in chain:
+            if x.lower() in self.m.mos:         # node-made child of the MO just added (Mcfb=1 -> McfbCellProfile=Default)
+                continue
+            self.m.add(x, "script", created=True)["soft"] = True
+            self.created_done(x.lower())
+        self.notes.append((script, ln, s, f"reference target {ldn} made by the node / later by the scripts - merge-created first"))
+        return True
+
     def bad_ref(self, v):
         """first moRef in a value whose target MO does not exist in the model now"""
         vals = v if isinstance(v, list) else [v]
@@ -583,7 +681,7 @@ class Replay:
                 r = self.bad_ref(list(x.values()))
                 if r:
                     return r
-            elif isinstance(x, Ref) and x.raw.strip() and self.m.resolve(x.raw, x.ctx) is None:
+            elif isinstance(x, Ref) and x.raw.strip() and self.m.resolve(x.raw, x.ctx) is None                     and not COMMISSIONING_REF.match(re.sub(r"(?i)^(?:.*?,)?ManagedElement=[^,]*,?", "", x.raw.strip())):
                 return x.raw
         return None
 
@@ -763,7 +861,7 @@ class Replay:
             if w in ("scw", "acc", "cvms", "cvcu") or w.startswith("/cm/") or w.startswith("!"):
                 self.left(script, ln, s, {"scw": "hidden parameter (scw)", "cvms": "CV backup", "acc": "MO action", "cvcu": "CV/UP check"}.get(w, "system command"))
                 continue
-            mg = re.match(r"^l?get\s+(.+?)\s*>\s*(\$\w+)\s*$", s, re.I)
+            mg = re.match(r"^l?get\s+(.+?)\s*>\s*(\$[\w-]+)\s*$", s, re.I)
             if mg and not self.unknown_in(mg.group(1)):
                 s = "get " + self.subst(mg.group(1)) + " > " + mg.group(2)
             elif self.unknown_in(s):
@@ -816,6 +914,18 @@ class Replay:
                         break
                     if not r:
                         self.notes.append((script, aln, f"crn {ldn}: {a} {v}", "attribute not in MOM - ignored"))
+                if not failed and self.duplicate_nexthop(ldn.lower()):
+                    self.notes.append((script, ln, f"crn {ldn}", "NextHop with the address of another NextHop of this Dst - "
+                                       "the node rejects it, skipped"))
+                    failed = True
+                if not failed and self.duplicate_dst(ldn.lower()):
+                    self.notes.append((script, ln, f"crn {ldn}", "Dst with the dst of another Dst of this route table - "
+                                       "the node rejects it, skipped"))
+                    failed = True
+                if not failed and self.duplicate_mme(ldn.lower()):
+                    self.notes.append((script, ln, f"crn {ldn}", "TermPointToMme with the IP of another TermPointToMme - "
+                                       "the node rejects it, skipped"))
+                    failed = True
                 if failed:                      # moshell crn fails as a whole -> MO not created
                     self.undo_create(ldn.lower())
                 else:
@@ -885,7 +995,7 @@ class Replay:
             if m:
                 self.nr = len(self.m.match(m.group(2)))
                 continue
-            m = re.match(r"^l?get\s+(\S+)\s+(\S+)(?:\s+(\S+))?\s*(?:>\s*(\$\w+))?\s*$", s, re.I)
+            m = re.match(r"^l?get\s+(\S+)\s+(\S+)(?:\s+(\S+))?\s*(?:>\s*(\$[\w-]+))?\s*$", s, re.I)
             if m:
                 keys = self.m.match(m.group(1))
                 arx = re.compile(m.group(2), re.I)
@@ -939,6 +1049,8 @@ def _render(model, node, mo, name, v):
         return f"<{name}>{inner}</{name}>"
     if isinstance(v, Ref):
         r = model.resolve(v.raw, v.ctx)
+        if r is None and COMMISSIONING_REF.match(re.sub(r"(?i)^(?:.*?,)?ManagedElement=[^,]*,?", "", v.raw.strip())):
+            r = re.sub(r"(?i)^(?:.*?,)?ManagedElement=[^,]*,?", "", v.raw.strip())
         text = f"ManagedElement={node},{r}" if r is not None else v.raw
         return f"<{name}>{escape(text)}</{name}>"
     return f"<{name}>{escape(str(v))}</{name}>"
@@ -978,8 +1090,10 @@ def emit(model, node, events, deleted_existing, pull_back=None):
             if "administrativeState" not in mos[k]["set"]:
                 mos[k]["set"].append("administrativeState")
 
+    grouped = GROUPED_ATTRS if getattr(model, "circle", "KK") == "KK" else GROUPED_ATTRS_OTHERS
+
     def group_rx(k, a):
-        rx = GROUPED_ATTRS.get(mos[k]["ldn"].rsplit(",", 1)[-1].split("=")[0]) if k in mos and a else None
+        rx = grouped.get(mos[k]["ldn"].rsplit(",", 1)[-1].split("=")[0]) if k in mos and a else None
         return rx if rx and rx.match(a) else None
 
     last_cr, last_set = {}, {}
@@ -1039,13 +1153,22 @@ def emit(model, node, events, deleted_existing, pull_back=None):
     # a soft create without attributes has nothing to write (the MO appears with the edits of itself/its children,
     # or the node has it already) - unless an RPC refers to it before it appears that way: then it is written (merge)
     # where AMOS creates it (McfbCellProfile=1 / DynPowerOpt=1 were referenced before they existed on a fresh node)
+    # The same for a soft-created ancestor of a referenced MO (RJ NR01 NRCellCU caCellProfileRef
+    # CarrierAggregation=1,CaCellProfile=Default: CarrierAggregation=1 crn'd by NR01, its Default profiles node-made)
     items = build(set())
     needed = set()
-    for k in {k for k, mo in mos.items() if mo.get("created") and mo.get("soft") and not mo.get("create_attrs")} & referenced:
-        first_ref = next((i for i, it in enumerate(items) if k in written_refs(it)), None)
-        first_app = next((i for i, it in enumerate(items) if it[1] == k or it[1].startswith(k + ",")), None)
-        if first_ref is not None and (first_app is None or first_ref < first_app):
-            needed.add(k)
+    softs = {k for k, mo in mos.items() if mo.get("created") and mo.get("soft") and not mo.get("create_attrs")}
+    for t in referenced:
+        parts = t.split(",")
+        for k in (",".join(parts[:n]) for n in range(1, len(parts) + 1)):
+            # ancestors only of a node-made target (written by no RPC, it exists once its parent does)
+            if k not in softs or k in needed or (k != t and mos.get(t, {}).get("origin") != "system"):
+                continue
+            first_ref = next((i for i, it in enumerate(items) if t in written_refs(it)), None)
+            # an ancestor: only its own items count - soft creates below it may still move to the end of the step
+            first_app = next((i for i, it in enumerate(items) if it[1] == k or (k == t and it[1].startswith(k + ","))), None)
+            if first_ref is not None and (first_app is None or first_ref < first_app):
+                needed.add(k)
     if needed:
         items = build(needed)
 
@@ -1060,11 +1183,12 @@ def emit(model, node, events, deleted_existing, pull_back=None):
         return any(x in mos and (mos[x]["origin"] == "system" or mos[x].get("soft")) for x in ch[new[0] + 1:]) if new else False
 
     ordered, later, cur = [], [], None
+    kept = referenced | needed
     for it in items:
         if it[2] != cur:
             ordered, later, cur = ordered + later, [], it[2]
-        # soft create = merge, an edit too - unless other MOs refer to it
-        edit = it[0] == "set" or (it[0] == "cr" and mos[it[1]].get("soft") and it[1] not in referenced)
+        # soft create = merge, an edit too - unless other MOs refer to it (or to an MO below it)
+        edit = it[0] == "set" or (it[0] == "cr" and mos[it[1]].get("soft") and it[1] not in kept)
         (later if edit and settling(it[1], it[2]) else ordered).append(it)
     items = ordered + later
 
@@ -1109,12 +1233,20 @@ def emit(model, node, events, deleted_existing, pull_back=None):
             out.update(mo.get("create_attrs", {}))
         for a in g["attrs"][k]:
             out[a] = mo["attrs"][a]
+        for a in g.get("without", {}).get(k, ()):
+            out.pop(a, None)
+        if g.get("variant"):
+            out = OrderedDict((a, _release_struct(model, mo, a, v, g["variant"])) for a, v in out.items())
         return out
+
+    if getattr(model, "circle", "KK") != "KK":
+        groups = _release_variants(groups, mos, model)
+        groups = _spread_settling(groups, mos, model, chain, values)
 
     # self-check: references must point to MOs existing before the scripts or created in an earlier/same RPC
     rpc_of = {}
     for n, g in enumerate(groups):
-        for k in g.get("created", ()):
+        for k in () if g.get("merge_only") else g.get("created", ()):
             rpc_of[k] = n
     order_problems = []
 
@@ -1138,7 +1270,8 @@ def emit(model, node, events, deleted_existing, pull_back=None):
         mo = mos[k]
         cls, _, idv = mo["ldn"].split(",")[-1].partition("=")
         idtag = cls[0].lower() + cls[1:] + "Id"
-        op = ' xc:operation="create"' if k in g["created"] and not mo.get("soft") and not NODE_MADE.search("," + k) else ""     # explicit on every created MO (1 per crn/cr)
+        op = ' xc:operation="create"' if k in g["created"] and not mo.get("soft") and not NODE_MADE.search("," + k) \
+            and not g.get("merge_only") else ""     # explicit on every created MO (1 per crn/cr)
         out = [f"<{cls}{op}>", f"<{idtag}>{escape(idv)}</{idtag}>"]
         if k in g["attrs"]:
             out += [_render(model, node, mo, a, v) for a, v in values(g, k).items()]
@@ -1184,8 +1317,154 @@ def emit(model, node, events, deleted_existing, pull_back=None):
         name = mos[g["top"]]["ldn"].split("=")[0] if g["top"] else "ManagedElement"
         if g["solo"]:
             name = mos[g["keys"][0]]["ldn"].rsplit(",", 1)[-1].replace("=", "_")
+        if g.get("variant"):
+            name = f"{mos[g['top']]['ldn'].split('=')[0]}_{g['variant']}"
+        if g.get("merge_only"):
+            count[step] -= 1
+            rpcs.append(rpc(f"{_step_id(step)}_{count[step]:03d}_{name}_retry", body, root))
+            continue
         rpcs.append(rpc(f"{_step_id(step)}_{count[step]:03d}_{name}", body, root))
     return HELLO + "".join(rpcs) + CLOSE, order_problems
+
+
+_RELEASE_CACHE = {}
+
+
+def _release_extra(model, struct):
+    """{release: {member: default}} for a struct whose members in that release are not all in the model's MOM"""
+    if struct not in _RELEASE_CACHE:
+        out = {}
+        for rel, f in RELEASE_MOMS.items():
+            if ("mom", rel) not in _RELEASE_CACHE:
+                _RELEASE_CACHE[("mom", rel)] = Mom(_load(f))
+            m = _RELEASE_CACHE[("mom", rel)]
+            members = m.attrs.get(struct)
+            if members is None:
+                continue
+            extra = {a: x[2] for a, x in members.items() if a not in model.mom.attrs.get(struct, {})}
+            if extra:
+                out[rel] = extra
+        _RELEASE_CACHE[struct] = out
+    return _RELEASE_CACHE[struct]
+
+
+def _variant_struct(model, mo, a):
+    info = model.mom.attr(mo["key"], a) if mo.get("key") else None
+    if not info:
+        return None
+    seq, kind, ref = _kind(info[1])
+    return ref if kind == "structRef" and _release_extra(model, ref) else None
+
+
+def _release_struct(model, mo, a, v, rel):
+    """the struct value with the members of release rel (its extra members at their MOM default)"""
+    ref = _variant_struct(model, mo, a)
+    extra = _release_extra(model, ref).get(rel, {}) if ref else {}
+    if not extra:
+        return v
+    mom = _RELEASE_CACHE[("mom", rel)]
+
+    def one(x):
+        if not isinstance(x, dict):
+            return x
+        y = OrderedDict(x)
+        for m, d in extra.items():
+            if m not in y and d is not None:
+                mt = mom.attrs[ref][m][0]
+                y[m] = _scalar(mom, model, _kind(mt)[1], _kind(mt)[2], d, mo["ldn"])
+        return OrderedDict((m, y[m]) for m in mom.attrs[ref] if m in y)
+    return [one(x) for x in v] if isinstance(v, list) else one(v)
+
+
+def _release_variants(groups, mos, model):
+    """struct attributes whose members differ by release leave their RPC: one RPC per release right after it"""
+    out = []
+    for g in groups:
+        out.append(g)
+        if "del" in g:
+            continue
+        found = []
+        for k in g["keys"]:
+            mo = mos[k]
+            names = list(g["attrs"][k]) + (list((mo.get("create_attrs") or {})) if k in g["created"] else [])
+            for a in names:
+                if _variant_struct(model, mo, a) and mo["attrs"].get(a) is not None:
+                    found.append((k, a))
+        if not found:
+            continue
+        for k, a in found:
+            g.setdefault("without", {}).setdefault(k, set()).add(a)
+        for rel in RELEASE_MOMS:
+            for k, a in found:
+                out.append({"step": g["step"], "top": g["top"], "created": set(), "attrs": OrderedDict([(k, [a])]),
+                            "keys": [k], "solo": False, "unl": False, "variant": rel})
+    return out
+
+
+SETTLE_GAP = 40    # RPCs between a create and the first change of the MOs the node makes below it (RJ-NLRJNT02-1:
+                  # 2-3 and 12 were not enough - NR01_005/007 still "Data has been changed in another transaction";
+                  # AMOS reached MassiveMimoSleep=1 2 s after the GNBDUFunction create and the node had made it)
+
+
+def _file_family(step):
+    """steps written to the same XML file (04 5G = NR 01-03, 05 SA = 04-06, 06 = RIM/VoNR, 04 LTE = LTE..)"""
+    return "LTE" if step.startswith("LTE") else "RIM" if ("RIM" in step or "VONR" in step) else "A" if step in ("01", "02", "03") else "B"
+
+
+def _spread_settling(groups, mos, model, chain, values):
+    """The node makes some MOs itself right after their parent is created (GNBDUFunction -> MassiveMimoSleep=1,
+    GNBCUCPFunction -> CarrierAggregation=1, IntraFreqMCCellProfile=1 -> UeCfg=Base); an RPC changing them right
+    after that create fails "Data has been changed in another transaction" (RJ-NLRJNT02-1 NR01_005/007/021).
+    NETCONF has no wait, so FeatureState RPCs of the same file (each alone, touching nothing else) are pulled forward
+    in front of it until SETTLE_GAP RPCs lie in between. Moving the RPC itself down is not safe: later RPCs refer to MOs
+    it creates implicitly (GNBDUFunction endpointResourceRef -> EndpointResource=1). Not for KK (its order ran on the
+    nodes as it is)."""
+    def node_made(x):
+        return x in mos and (mos[x]["origin"] == "system" or mos[x].get("soft"))
+
+    def made_in(groups):
+        return {k: n for n, g in enumerate(groups) if "del" not in g for k in g["created"]}
+
+    j, moved = 0, set()
+    while j < len(groups):
+        g = groups[j]
+        if "del" in g or g.get("unl") or id(g) in moved:
+            j += 1
+            continue
+        made = made_in(groups)
+        parents = [made[y] for k in g["keys"] for ch in [chain(k)] for n, x in enumerate(ch)
+                   if node_made(x) and (x not in g["created"] or mos[x].get("soft"))
+                   for y in ch[:n] if y in made and made[y] < j]
+        if not parents or j - max(parents) > SETTLE_GAP:
+            j += 1
+            continue
+        # the race was only seen below the gNodeB functions created in NR01 (MassiveMimoSleep=1, CarrierAggregation=1)
+        if any(re.match(r"gnb(du|cucp|cuup)function=", y) for k in g["keys"] for ch in [chain(k)] for n, x in enumerate(ch)
+               if node_made(x) and (x not in g["created"] or mos[x].get("soft")) for y in ch[:n] if y in made and made[y] < j):
+            g["retry"] = True
+        # fill the gap with FeatureState RPCs of the same file pulled forward (each alone, touching nothing else)
+        fam, need = _file_family(g["step"]), SETTLE_GAP - (j - max(parents) - 1)
+        pull = [q for q in range(j + 1, len(groups)) if "del" not in groups[q] and groups[q].get("solo")
+                and _file_family(groups[q]["step"]) == fam and id(groups[q]) not in moved
+                and all(",featurestate=" in "," + k for k in groups[q]["keys"])][:need]
+        if pull:
+            taken = [groups[q] for q in pull]
+            for q in reversed(pull):            # pop all first: an insert in front would shift the later indices
+                groups.pop(q)
+            for h in reversed(taken):
+                moved.add(id(h))
+                groups.insert(j, h)
+            continue            # g is now further down: check it again
+        j += 1
+    # RJ-NLRJNT02-1 26.Q2: 40 FeatureState RPCs were still not enough (NR01_005 MassiveMimoSleep=1, NR01_007
+    # CarrierAggregation=1 -> no NRCellCU). The race only fails while the node's own transaction is open, so each such
+    # RPC is followed by a copy written as merge only (_retry): a no-op when the first went through, else it applies it.
+    out = []
+    for g in groups:
+        out.append(g)
+        if g.get("retry"):
+            out.append(dict(g, retry=False, merge_only=True))
+    return out
 
 
 # ---------------------------------------------------------------------------------------------------- API
@@ -1248,8 +1527,69 @@ def _node_rules(model, rp):
         rp.left("XML", 0, f"{mo['ldn']} srsHoppingBandwidth HALF", f"the node rejects HALF with {', '.join(why)} - "
                 "AMOS set fails too, left out")
 
+    # NRCellDU rimPdschSlotBlankMode AUTO_RS1 / AUTO_RS1_PC is rejected with rimLocationEnabled false (RJ RIM script on
+    # AIR 3268 B42: "If ...::rimLocationEnabled is false, rimPdschSlotBlankMode cannot be AUTO_RS1 (4) or AUTO_RS1_PC (5)",
+    # RJ-NLRJNT02-1 kget keeps DISABLED): the cell keeps the value it had before
+    for k, mo in model.mos.items():
+        if not (mo["ldn"].rsplit(",", 1)[-1].startswith("NRCellDU=") and "rimPdschSlotBlankMode" in mo["set"]
+                and mo["attrs"].get("rimPdschSlotBlankMode") in ("AUTO_RS1", "AUTO_RS1_PC")):
+            continue
+        loc = str(mo["attrs"].get("rimLocationEnabled", (model.mom.attr(mo["key"], "rimLocationEnabled") or (None,) * 4)[3]))
+        if loc.lower() != "false":
+            continue
+        prev = mo.get("prev", {}).get("rimPdschSlotBlankMode")
+        if prev is None or prev in ("AUTO_RS1", "AUTO_RS1_PC"):
+            mo["attrs"].pop("rimPdschSlotBlankMode")
+            mo["set"].remove("rimPdschSlotBlankMode")
+        else:
+            mo["attrs"]["rimPdschSlotBlankMode"] = prev
+        rp.left("XML", 0, f"{mo['ldn']} rimPdschSlotBlankMode", "AUTO_RS1 is rejected with rimLocationEnabled false - "
+                "AMOS set fails too, left out")
+
     # 'set . egressQosMarking' also hits the loopback interfaces (Node_Internal_F1 NR_CUCP/NR_DU): the node rejects it
     # there and the whole RPC with the real interfaces/ports would fail
+    # cellReselectionPriority must be unique among the frequency relations of a cell (all RATs). RJ NR03 creates
+    # GUtranFreqRelation=627936 with the default 2 while EUtranFreqRelation=3601 has 2 (AMOS moves those to 4 for the
+    # create and back after, the XML only writes final values) - "must be unique among all RATs" took the whole RPC
+    # (endcAllowed, X2 ENDC refs) down on RJ-NLRJNT02-1. Such a relation is created with its own final priority.
+    for k, mo in model.mos.items():
+        cls = mo["ldn"].rsplit(",", 1)[-1].split("=")[0]
+        if not (mo.get("created") and re.search(r"Freq(Group)?Relation$", cls) and "," in k
+                and re.search(r",eutrancell[ft]dd=[^,]+$", k.rsplit(",", 1)[0])):
+            continue
+        ca = mo.get("create_attrs")
+        if ca is None or "cellReselectionPriority" in ca or "cellReselectionPriority" not in mo["attrs"]:
+            continue
+        default = (model.mom.attr(mo["key"], "cellReselectionPriority") or (None,) * 4)[3]
+        parent = k.rsplit(",", 1)[0]
+        others = {str(m2["attrs"].get("cellReselectionPriority")) for c, m2 in model.mos.items()
+                  if c != k and c.rsplit(",", 1)[0] == parent and re.search(r"freq(group)?relation=[^,]+$", c)}
+        final = mo["attrs"]["cellReselectionPriority"]
+        if str(default) in others and str(final) not in others:
+            ca["cellReselectionPriority"] = final
+            rp.left("XML", 0, f"{mo['ldn']} cellReselectionPriority", f"created with its final value {final} - the default "
+                    f"{default} is taken by another frequency relation of the cell (node rejects duplicates)")
+
+    # 'set RfPort= vswrSupervisionActive' also hits the RET port RfPort=R: "Attribute vswrSupervisionActive not suported
+    # for RET port" (RJ-NLRJNT02-1 LTE03) took the whole Equipment RPC with it
+    for k, mo in model.mos.items():
+        for a in ("vswrSupervisionActive", "vswrSupervisionSensitivity"):
+            if k.endswith(",rfport=r") and a in mo["set"] and not mo.get("created"):
+                mo["set"].remove(a)
+                mo["attrs"].pop(a, None)
+                rp.left("XML", 0, f"{mo['ldn']} {a}", "VSWR supervision is not supported on the RET port - AMOS set fails too, left out")
+
+    # 'set Router=.*,InterfaceIPv4= ingressQosMarking QosProfiles=1,DscpPcpMap=1' (RJ/AS/NE GPL): "DscpPcpMap is not a
+    # valid type for attribute ingressQosMarking" (RJ-NLRJNT02-1) - took the whole Transport RPC with it
+    for k, mo in model.mos.items():
+        v = mo["attrs"].get("ingressQosMarking")
+        if "ingressQosMarking" in mo["set"] and ",dscppcpmap=" in "," + (target(v) or ""):
+            mo["set"].remove("ingressQosMarking")
+            mo["attrs"].pop("ingressQosMarking")
+            (mo.get("create_attrs") or {}).pop("ingressQosMarking", None)
+            rp.left("XML", 0, f"{mo['ldn']} ingressQosMarking", "a DscpPcpMap is not a valid ingressQosMarking - AMOS set "
+                    "fails too, left out")
+
     for k, mo in model.mos.items():
         if "loopback" in mo["attrs"] and "egressQosMarking" in mo["set"]:
             mo["set"].remove("egressQosMarking")
