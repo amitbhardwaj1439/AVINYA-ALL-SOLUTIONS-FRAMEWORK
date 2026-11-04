@@ -3643,6 +3643,8 @@ endfunc
 
 Relation_121L2_18L                
 
+set EUtranCell.DD=.*,GUtranFreqRelation=629952 cellReselectionPriority 5
+
 """
 
 
@@ -4448,7 +4450,7 @@ set EUtranCellFDD=.*,EUtranFreqRelation=39150 endcAwareIdleModePriority 3
 set EUtranCellFDD=.*,EUtranFreqRelation=39348 endcAwareIdleModePriority 3
 set EUtranCellFDD=.*,EUtranFreqRelation=1301 endcAwareIdleModePriority 7
 
-set EUtranCellFDD=.*,GUtranFreqRelation=629952 cellReselectionPriority 2
+set EUtranCellFDD=.*,GUtranFreqRelation=629952 cellReselectionPriority 5
 set EUtranCellFDD=.*,GUtranFreqRelation=629952 qRxLevMin         -124
 
 #####TDD###
@@ -4464,7 +4466,7 @@ set EUtranCellTDD=.*,EUtranFreqRelation=39150 endcAwareIdleModePriority 3
 set EUtranCellTDD=.*,EUtranFreqRelation=39348 endcAwareIdleModePriority 3
 set EUtranCellTDD=.*,EUtranFreqRelation=1301 endcAwareIdleModePriority 7
 
-set EUtranCellTDD=.*,GUtranFreqRelation=629952 cellReselectionPriority 2
+set EUtranCellTDD=.*,GUtranFreqRelation=629952 cellReselectionPriority 5
 set EUtranCellTDD=.*,GUtranFreqRelation=629952 qRxLevMin         -124
 
 
