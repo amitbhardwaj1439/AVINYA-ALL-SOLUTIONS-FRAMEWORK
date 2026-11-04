@@ -2275,6 +2275,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
             
             rru_type = {
                 "2219": RRU_2219_B0_B1_B3_2X2,
+                "RUS12": RRU_2219_B0_B1_B3_2X2,      # RUS12 B1 = same as 2219 B1 (user 2026-11-02)
                 "2271": RRUS_2271_B1_2X2,
                 "2279": RRU_2279_B1_B3_2X2,
                 "4412": RRU_4412_4418_4427_4428_4471_4X4,
@@ -2289,7 +2290,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
             site_equipment_text = ""
             for idx, row in site_specific_rru_df.iterrows():
                 for rru, rru_template in rru_type.items():
-                    if rru in str(row["Radio_Type"]):
+                    if rru in str(row["Radio_Type"]).replace(" ", "").upper():
                         site_equipment_text += rru_template.format(
                             eNodeBName=row["eNodeBName"],
                             Radio_UnitId=row["Radio_UnitId"],
@@ -2511,6 +2512,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
             
             rru_type = {
                 "2219": RRU_2219_B0_B1_B3_2X2,
+                "RUS12": RRU_2219_B0_B1_B3_2X2,      # RUS12 B1 = same as 2219 B1 (user 2026-11-02)
                 "2271": RRUS_2271_B1_2X2,
                 "2279": RRU_2279_B1_B3_2X2,
                 "4412": RRU_4412_4418_4427_4428_4471_4X4,
@@ -2524,7 +2526,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
             site_equipment_text = ""
             for idx, row in site_specific_rru_df.iterrows():
                 for rru, rru_template in rru_type.items():
-                    if rru in str(row["Radio_Type"]):
+                    if rru in str(row["Radio_Type"]).replace(" ", "").upper():
                         site_equipment_text += rru_template.format(
                             eNodeBName=row["eNodeBName"],
                             Radio_UnitId=row["Radio_UnitId"],
@@ -2814,6 +2816,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                     
             rru_type = {
                 "2219": RRU_2219_B0_B1_B3_2X2,
+                "RUS12": RRU_2219_B0_B1_B3_2X2,      # RUS12 B1 = same as 2219 B1 (user 2026-11-02)
                 "2271": RRUS_2271_B1_2X2,
                 "2279": RRU_2279_B1_B3_2X2,
                 "4412": RRU_4412_4418_4427_4428_4471_4X4,
@@ -2830,7 +2833,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
             for idx, row in site_specific_rru_df.iterrows():
                 print(row['Radio_Type'])
                 for rru, rru_template in rru_type.items():
-                    if rru in str(row["Radio_Type"]):
+                    if rru in str(row["Radio_Type"]).replace(" ", "").upper():
                         print(rru)
                         site_equipment_text += rru_template.format(
                             eNodeBName=row["eNodeBName"],
@@ -3453,6 +3456,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                     
             rru_type = {
                 "2219": RRU_2219_B0_B1_B3_2X2,
+                "RUS12": RRU_2219_B0_B1_B3_2X2,      # RUS12 B1 = same as 2219 B1 (user 2026-11-02)
                 "2271": RRUS_2271_B1_2X2,
                 "2279": RRU_2279_B1_B3_2X2,
                 "4412": RRU_4412_4418_4427_4428_4471_4X4,
@@ -3469,7 +3473,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
             for idx, row in site_specific_rru_df.iterrows():
                 print(row['Radio_Type'])
                 for rru, rru_template in rru_type.items():
-                    if rru in str(row["Radio_Type"]):
+                    if rru in str(row["Radio_Type"]).replace(" ", "").upper():
                         print(rru)
                         site_equipment_text += rru_template.format(
                             eNodeBName=row["eNodeBName"],
@@ -3777,6 +3781,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
             rru_type = {
                 "2219": RRU_2219_B0_B1_B3_2X2,
+                "RUS12": RRU_2219_B0_B1_B3_2X2,      # RUS12 B1 = same as 2219 B1 (user 2026-11-02)
                 "2271": RRUS_2271_B1_2X2,
                 "2279": RRU_2279_B1_B3_2X2,
                 "4412": RRU_4412_4418_4427_4428_4471_4X4,
@@ -3802,7 +3807,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
             for idx, row in site_specific_rru_df.iterrows():
                 for rru, rru_template in rru_type.items():
-                    if rru in str(row["Radio_Type"]):
+                    if rru in str(row["Radio_Type"]).replace(" ", "").upper():
                         site_equipment_text += rru_template.format(
                             eNodeBName=row["eNodeBName"],
                             Radio_UnitId=row["Radio_UnitId"],
@@ -4101,6 +4106,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
             rru_type = {
                 "2219": RRU_2219_B0_B1_B3_2X2,
+                "RUS12": RRU_2219_B0_B1_B3_2X2,      # RUS12 B1 = same as 2219 B1 (user 2026-11-02)
                 "2271": RRUS_2271_B1_2X2,
                 "2279": RRU_2279_B1_B3_2X2,
                 "4412": RRU_4412_4418_4427_4428_4471_4X4,
@@ -4126,7 +4132,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
             for idx, row in site_specific_rru_df.iterrows():
                 for rru, rru_template in rru_type.items():
-                    if rru in str(row["Radio_Type"]):
+                    if rru in str(row["Radio_Type"]).replace(" ", "").upper():
                         site_equipment_text += rru_template.format(
                             eNodeBName=row["eNodeBName"],
                             Radio_UnitId=row["Radio_UnitId"],
@@ -4438,6 +4444,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
             rru_type = {
                 "2219": RRU_2219_B0_B1_B3_2X2,
+                "RUS12": RRU_2219_B0_B1_B3_2X2,      # RUS12 B1 = same as 2219 B1 (user 2026-11-02)
                 "2271": RRUS_2271_B1_2X2,
                 "2279": RRU_2279_B1_B3_2X2,
                 "4412": RRU_4412_4418_4427_4428_4471_4X4,
@@ -4463,7 +4470,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
             for idx, row in site_specific_rru_df.iterrows():
                 for rru, rru_template in rru_type.items():
-                    if rru in str(row["Radio_Type"]):
+                    if rru in str(row["Radio_Type"]).replace(" ", "").upper():
                         site_equipment_text += rru_template.format(
                             eNodeBName=row["eNodeBName"],
                             Radio_UnitId=row["Radio_UnitId"],
@@ -4797,6 +4804,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
             rru_type = {
                 "2219": RRU_2219_B0_B1_B3_2X2,
+                "RUS12": RRU_2219_B0_B1_B3_2X2,      # RUS12 B1 = same as 2219 B1 (user 2026-11-02)
                 "2271": RRUS_2271_B1_2X2,
                 "2279": RRU_2279_B1_B3_2X2,
                 "4412": RRU_4412_4418_4427_4428_4471_4X4,
@@ -4822,7 +4830,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
             for idx, row in site_specific_rru_df.iterrows():
                 for rru, rru_template in rru_type.items():
-                    if rru in str(row["Radio_Type"]):
+                    if rru in str(row["Radio_Type"]).replace(" ", "").upper():
                         site_equipment_text += rru_template.format(
                             eNodeBName=row["eNodeBName"],
                             Radio_UnitId=row["Radio_UnitId"],
@@ -5156,6 +5164,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
             rru_type = {
                 "2219": RRU_2219_B0_B1_B3_2X2,
+                "RUS12": RRU_2219_B0_B1_B3_2X2,      # RUS12 B1 = same as 2219 B1 (user 2026-11-02)
                 "2271": RRUS_2271_B1_2X2,
                 "2279": RRU_2279_B1_B3_2X2,
                 "4412": RRU_4412_4418_4427_4428_4471_4X4,
@@ -5181,7 +5190,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
             for idx, row in site_specific_rru_df.iterrows():
                 for rru, rru_template in rru_type.items():
-                    if rru in str(row["Radio_Type"]):
+                    if rru in str(row["Radio_Type"]).replace(" ", "").upper():
                         site_equipment_text += rru_template.format(
                             eNodeBName=row["eNodeBName"],
                             Radio_UnitId=row["Radio_UnitId"],
@@ -5476,6 +5485,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
             rru_type = {
                 "2219": RRU_2219_B0_B1_B3_2X2,
+                "RUS12": RRU_2219_B0_B1_B3_2X2,      # RUS12 B1 = same as 2219 B1 (user 2026-11-02)
                 "2271": RRUS_2271_B1_2X2,
                 "2279": RRU_2279_B1_B3_2X2,
                 "4412": RRU_4412_4418_4427_4428_4471_4X4,
@@ -5501,7 +5511,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
             for idx, row in site_specific_rru_df.iterrows():
                 for rru, rru_template in rru_type.items():
-                    if rru in str(row["Radio_Type"]):
+                    if rru in str(row["Radio_Type"]).replace(" ", "").upper():
                         site_equipment_text += rru_template.format(
                             eNodeBName=row["eNodeBName"],
                             Radio_UnitId=row["Radio_UnitId"],
@@ -5814,6 +5824,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                     
             rru_type = {
                 "2219": RRU_2219_B0_B1_B3_2X2,
+                "RUS12": RRU_2219_B0_B1_B3_2X2,      # RUS12 B1 = same as 2219 B1 (user 2026-11-02)
                 "2271": RRUS_2271_B1_2X2,
                 "2279": RRU_2279_B1_B3_2X2,
                 "4412": RRU_4412_4418_4427_4428_4471_4X4,
@@ -5830,7 +5841,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
             for idx, row in site_specific_rru_df.iterrows():
                 print(row['Radio_Type'])
                 for rru, rru_template in rru_type.items():
-                    if rru in str(row["Radio_Type"]):
+                    if rru in str(row["Radio_Type"]).replace(" ", "").upper():
                         print(rru)
                         site_equipment_text += rru_template.format(
                             eNodeBName=row["eNodeBName"],
@@ -6134,6 +6145,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
             rru_type = {
                 "2219": RRU_2219_B0_B1_B3_2X2,
+                "RUS12": RRU_2219_B0_B1_B3_2X2,      # RUS12 B1 = same as 2219 B1 (user 2026-11-02)
                 "2271": RRUS_2271_B1_2X2,
                 "2279": RRU_2279_B1_B3_2X2,
                 "4412": RRU_4412_4418_4427_4428_4471_4X4,
@@ -6159,7 +6171,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
             for idx, row in site_specific_rru_df.iterrows():
                 for rru, rru_template in rru_type.items():
-                    if rru in str(row["Radio_Type"]):
+                    if rru in str(row["Radio_Type"]).replace(" ", "").upper():
                         site_equipment_text += rru_template.format(
                             eNodeBName=row["eNodeBName"],
                             Radio_UnitId=row["Radio_UnitId"],
