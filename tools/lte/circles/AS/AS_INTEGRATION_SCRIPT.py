@@ -2978,12 +2978,6 @@ userLabel Traffic
 end
 
 
-crn Transport=1,Router=LTEUP,TwampResponder=2
-ipAddress Router=LTEUP,InterfaceIPv4={tnPortId}_UP,AddressIPv4={tnPortId}_UP
-udpPort 4001
-userLabel
-end
-
 crn Transport=1,Router=LTEUP,TwampResponder=3
 ipAddress Router=LTEUP,InterfaceIPv4={tnPortId}_UP,AddressIPv4={tnPortId}_UP
 udpPort 4002
