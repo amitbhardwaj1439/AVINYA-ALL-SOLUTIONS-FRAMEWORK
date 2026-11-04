@@ -857,13 +857,20 @@ def kk_cascaded_radio_rpcs(node, amos):
     frus = re.findall(r"^set Equipment=1,FieldReplaceableUnit=(\S+?)\$? isSharedWithExternalMe true", amos, re.M)
     ngs = (f"<Transport>\n<transportId>1</transportId>\n<Synchronization>\n<synchronizationId>1</synchronizationId>\n"
            f"<RadioEquipmentClock>\n<radioEquipmentClockId>1</radioEquipmentClockId>\n<NodeGroupSyncMember xc:operation=\"create\">\n"
-           f"<nodeGroupSyncMemberId>1</nodeGroupSyncMemberId>\n<syncNodePriority>{priority}</syncNodePriority>\n{refs}"
+           f"<nodeGroupSyncMemberId>1</nodeGroupSyncMemberId>\n<syncNodePriority>{priority}</syncNodePriority>\n"
+           f"<administrativeState>LOCKED</administrativeState>\n{refs}"
            f"</NodeGroupSyncMember>\n</RadioEquipmentClock>\n</Synchronization>\n</Transport>\n")
     shared = "<Equipment>\n<equipmentId>1</equipmentId>\n" + "".join(
         f"<FieldReplaceableUnit>\n<fieldReplaceableUnitId>{f}</fieldReplaceableUnitId>\n<isSharedWithExternalMe>true</isSharedWithExternalMe>\n"
         f"</FieldReplaceableUnit>\n" for f in frus) + "</Equipment>\n"
+    unlock = ("<Transport>\n<transportId>1</transportId>\n<Synchronization>\n<synchronizationId>1</synchronizationId>\n"
+              "<RadioEquipmentClock>\n<radioEquipmentClockId>1</radioEquipmentClockId>\n<NodeGroupSyncMember>\n"
+              "<nodeGroupSyncMemberId>1</nodeGroupSyncMemberId>\n<administrativeState>UNLOCKED</administrativeState>\n"
+              "</NodeGroupSyncMember>\n</RadioEquipmentClock>\n</Synchronization>\n</Transport>\n")
+    # created LOCKED, unlocked after the shared RRUs (both nodes, user 2026-11-04) - as the engine does for AS / RJ
     return (KK_LTE_CONFIG_XML_RPC.format(mid="NodeGroupSyncMember_create", node=node, body=ngs)
-            + (KK_LTE_CONFIG_XML_RPC.format(mid="FieldReplaceableUnit_shared_para", node=node, body=shared) if frus else ""))
+            + (KK_LTE_CONFIG_XML_RPC.format(mid="FieldReplaceableUnit_shared_para", node=node, body=shared) if frus else "")
+            + KK_LTE_CONFIG_XML_RPC.format(mid="NodeGroupSyncMember_unlock_para", node=node, body=unlock))
 
 
 def write_kk_lte_config_xml(lte_dir, node, enb_id, node_cells_df, current_time, phy_siteid_userlabel, fru_id="BB-1",
@@ -1539,7 +1546,7 @@ def cascaded_radio_amos(site_basic_df, radio_hw_df, lte_df, nr_cell_df, se_text_
         lines = [f"####### Cascaded radio ({', '.join(peers)}): NodeGroupSyncMember "
                  f"({'parent, RRU DATA_1' if parent else '2nd node, RRU DATA_2'}) + isSharedWithExternalMe #######",
                  "crn Transport=1,Synchronization=1,RadioEquipmentClock=1,NodeGroupSyncMember=1",
-                 f"syncNodePriority {priority}"]
+                 f"syncNodePriority {priority}", "administrativeState 1"]      # UNLOCKED on both nodes (user 2026-11-04)
         if parent:
             bb = str(_xml_value(fru_of.get(node, "1"))).strip()
             ports = [str(r.RiPort_BB).strip() for r in rows.itertuples() if r.port == "DATA_1"]
