@@ -85,6 +85,7 @@ from tools.lte.universal_SCRIPTS.UNIVERSAL_SCRIPTS import (
     SiteEquipment_6630,
     SiteEquipment_6631,
     SiteEquipment_6651,
+    SiteEquipment_6655,
     SiteEquipment_6648,
     SiteEquipment_R503,
     ABIS_Site_Basic_script,
@@ -2089,6 +2090,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
         # # -----------------------------------------------------------------------------------------------------------------------------------------------#
         radio_templates = {
             "2219": RRU_2219_B0_B1_B3_2X2,
+            "RRUS 02 B0": RRU_2219_B0_B1_B3_2X2,      # RRUS 02 B0A = same as 2219 B0A (user 2026-11-05)
             "2271": RRUS_2271_B1_2X2,
             "2279": RRU_2279_B1_B3_2X2,
             "4412": RRU_4412_4418_4427_4428_4471_4X4,
@@ -2386,6 +2388,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 "2219": RRU_2219_B0_B1_B3_2X2,
                 "RUS12": RRU_2219_B0_B1_B3_2X2,      # RUS12 B1 = same as 2219 B1 (user 2026-11-02)
                 "2271B0": RRU_2219_B0_B1_B3_2X2,      # RRU 2271 B0C = same as 2219 B0 (user 2026-11-04)
+                "RRUS02B0": RRU_2219_B0_B1_B3_2X2,      # RRUS 02 B0A = same as 2219 B0A (user 2026-11-05)
                 "2271": RRUS_2271_B1_2X2,
                 "2279": RRU_2279_B1_B3_2X2,
                 "4412": RRU_4412_4418_4427_4428_4471_4X4,
@@ -2624,6 +2627,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 "2219": RRU_2219_B0_B1_B3_2X2,
                 "RUS12": RRU_2219_B0_B1_B3_2X2,      # RUS12 B1 = same as 2219 B1 (user 2026-11-02)
                 "2271B0": RRU_2219_B0_B1_B3_2X2,      # RRU 2271 B0C = same as 2219 B0 (user 2026-11-04)
+                "RRUS02B0": RRU_2219_B0_B1_B3_2X2,      # RRUS 02 B0A = same as 2219 B0A (user 2026-11-05)
                 "2271": RRUS_2271_B1_2X2,
                 "2279": RRU_2279_B1_B3_2X2,
                 "4412": RRU_4412_4418_4427_4428_4471_4X4,
@@ -2906,6 +2910,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 "6630": SiteEquipment_6630,
                 "6631": SiteEquipment_6631,
                 "6651": SiteEquipment_6651,
+                "6655": SiteEquipment_6655,
                 "6303": SiteEquipment_6303,
                 "6353": SiteEquipment_6353,
                 "6339": SiteEquipment_6339,
@@ -2929,6 +2934,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 "2219": RRU_2219_B0_B1_B3_2X2,
                 "RUS12": RRU_2219_B0_B1_B3_2X2,      # RUS12 B1 = same as 2219 B1 (user 2026-11-02)
                 "2271B0": RRU_2219_B0_B1_B3_2X2,      # RRU 2271 B0C = same as 2219 B0 (user 2026-11-04)
+                "RRUS02B0": RRU_2219_B0_B1_B3_2X2,      # RRUS 02 B0A = same as 2219 B0A (user 2026-11-05)
                 "2271": RRUS_2271_B1_2X2,
                 "2279": RRU_2279_B1_B3_2X2,
                 "4412": RRU_4412_4418_4427_4428_4471_4X4,
@@ -3222,7 +3228,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 "6630": SiteEquipment_6630,
                 "6631": SiteEquipment_6631,
                 "6651": SiteEquipment_6651,
-                "6655": SiteEquipment_6651,      # 6655 = same as 6651 (user 2026-11-02)
+                "6655": SiteEquipment_6655,
                 "6303": SiteEquipment_6303,
                 "6353": SiteEquipment_6353,
                 "6339": SiteEquipment_6339,
@@ -3245,6 +3251,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
             rru_type = {
                 "2219": RRU_2219_B0_B1_B3_2X2,
                 "2271B0": RRU_2219_B0_B1_B3_2X2,      # RRU 2271 B0C = same as 2219 B0 (user 2026-11-04)
+                "RRUS02B0": RRU_2219_B0_B1_B3_2X2,      # RRUS 02 B0A = same as 2219 B0A (user 2026-11-05)
                 "2271": RRUS_2271_B1_2X2,
                 "2279": RRU_2279_B1_B3_2X2,
                 "4412": RRU_4412_4418_4427_4428_4471_4X4,
@@ -3549,6 +3556,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 "6630": SiteEquipment_6630,
                 "6631": SiteEquipment_6631,
                 "6651": SiteEquipment_6651,
+                "6655": SiteEquipment_6655,
                 "6303": SiteEquipment_6303,
                 "6353": SiteEquipment_6353,
                 "6339": SiteEquipment_6339,
@@ -3572,6 +3580,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 "2219": RRU_2219_B0_B1_B3_2X2,
                 "RUS12": RRU_2219_B0_B1_B3_2X2,      # RUS12 B1 = same as 2219 B1 (user 2026-11-02)
                 "2271B0": RRU_2219_B0_B1_B3_2X2,      # RRU 2271 B0C = same as 2219 B0 (user 2026-11-04)
+                "RRUS02B0": RRU_2219_B0_B1_B3_2X2,      # RRUS 02 B0A = same as 2219 B0A (user 2026-11-05)
                 "2271": RRUS_2271_B1_2X2,
                 "2279": RRU_2279_B1_B3_2X2,
                 "4412": RRU_4412_4418_4427_4428_4471_4X4,
@@ -3887,6 +3896,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 "6630": SiteEquipment_6630,
                 "6631": SiteEquipment_6631,
                 "6651": SiteEquipment_6651,
+                "6655": SiteEquipment_6655,
                 "6303": SiteEquipment_6303,
                 "6353": SiteEquipment_6353,
                 "6339": SiteEquipment_6339,
@@ -3899,6 +3909,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 "2219": RRU_2219_B0_B1_B3_2X2,
                 "RUS12": RRU_2219_B0_B1_B3_2X2,      # RUS12 B1 = same as 2219 B1 (user 2026-11-02)
                 "2271B0": RRU_2219_B0_B1_B3_2X2,      # RRU 2271 B0C = same as 2219 B0 (user 2026-11-04)
+                "RRUS02B0": RRU_2219_B0_B1_B3_2X2,      # RRUS 02 B0A = same as 2219 B0A (user 2026-11-05)
                 "2271": RRUS_2271_B1_2X2,
                 "2279": RRU_2279_B1_B3_2X2,
                 "4412": RRU_4412_4418_4427_4428_4471_4X4,
@@ -4214,6 +4225,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 "6630": SiteEquipment_6630,
                 "6631": SiteEquipment_6631,
                 "6651": SiteEquipment_6651,
+                "6655": SiteEquipment_6655,
                 "6303": SiteEquipment_6303,
                 "6353": SiteEquipment_6353,
                 "6339": SiteEquipment_6339,
@@ -4226,6 +4238,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 "2219": RRU_2219_B0_B1_B3_2X2,
                 "RUS12": RRU_2219_B0_B1_B3_2X2,      # RUS12 B1 = same as 2219 B1 (user 2026-11-02)
                 "2271B0": RRU_2219_B0_B1_B3_2X2,      # RRU 2271 B0C = same as 2219 B0 (user 2026-11-04)
+                "RRUS02B0": RRU_2219_B0_B1_B3_2X2,      # RRUS 02 B0A = same as 2219 B0A (user 2026-11-05)
                 "2271": RRUS_2271_B1_2X2,
                 "2279": RRU_2279_B1_B3_2X2,
                 "4412": RRU_4412_4418_4427_4428_4471_4X4,
@@ -4553,6 +4566,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 "6630": SiteEquipment_6630,
                 "6631": SiteEquipment_6631,
                 "6651": SiteEquipment_6651,
+                "6655": SiteEquipment_6655,
                 "6303": SiteEquipment_6303,
                 "6353": SiteEquipment_6353,
                 "6339": SiteEquipment_6339,
@@ -4565,6 +4579,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 "2219": RRU_2219_B0_B1_B3_2X2,
                 "RUS12": RRU_2219_B0_B1_B3_2X2,      # RUS12 B1 = same as 2219 B1 (user 2026-11-02)
                 "2271B0": RRU_2219_B0_B1_B3_2X2,      # RRU 2271 B0C = same as 2219 B0 (user 2026-11-04)
+                "RRUS02B0": RRU_2219_B0_B1_B3_2X2,      # RRUS 02 B0A = same as 2219 B0A (user 2026-11-05)
                 "2271": RRUS_2271_B1_2X2,
                 "2279": RRU_2279_B1_B3_2X2,
                 "4412": RRU_4412_4418_4427_4428_4471_4X4,
@@ -4914,6 +4929,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 "6630": SiteEquipment_6630,
                 "6631": SiteEquipment_6631,
                 "6651": SiteEquipment_6651,
+                "6655": SiteEquipment_6655,
                 "6303": SiteEquipment_6303,
                 "6353": SiteEquipment_6353,
                 "6339": SiteEquipment_6339,
@@ -4926,6 +4942,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 "2219": RRU_2219_B0_B1_B3_2X2,
                 "RUS12": RRU_2219_B0_B1_B3_2X2,      # RUS12 B1 = same as 2219 B1 (user 2026-11-02)
                 "2271B0": RRU_2219_B0_B1_B3_2X2,      # RRU 2271 B0C = same as 2219 B0 (user 2026-11-04)
+                "RRUS02B0": RRU_2219_B0_B1_B3_2X2,      # RRUS 02 B0A = same as 2219 B0A (user 2026-11-05)
                 "2271": RRUS_2271_B1_2X2,
                 "2279": RRU_2279_B1_B3_2X2,
                 "4412": RRU_4412_4418_4427_4428_4471_4X4,
@@ -5275,6 +5292,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 "6630": SiteEquipment_6630,
                 "6631": SiteEquipment_6631,
                 "6651": SiteEquipment_6651,
+                "6655": SiteEquipment_6655,
                 "6303": SiteEquipment_6303,
                 "6353": SiteEquipment_6353,
                 "6339": SiteEquipment_6339,
@@ -5287,6 +5305,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 "2219": RRU_2219_B0_B1_B3_2X2,
                 "RUS12": RRU_2219_B0_B1_B3_2X2,      # RUS12 B1 = same as 2219 B1 (user 2026-11-02)
                 "2271B0": RRU_2219_B0_B1_B3_2X2,      # RRU 2271 B0C = same as 2219 B0 (user 2026-11-04)
+                "RRUS02B0": RRU_2219_B0_B1_B3_2X2,      # RRUS 02 B0A = same as 2219 B0A (user 2026-11-05)
                 "2271": RRUS_2271_B1_2X2,
                 "2279": RRU_2279_B1_B3_2X2,
                 "4412": RRU_4412_4418_4427_4428_4471_4X4,
@@ -5597,6 +5616,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 "6630": SiteEquipment_6630,
                 "6631": SiteEquipment_6631,
                 "6651": SiteEquipment_6651,
+                "6655": SiteEquipment_6655,
                 "6303": SiteEquipment_6303,
                 "6353": SiteEquipment_6353,
                 "6339": SiteEquipment_6339,
@@ -5609,6 +5629,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 "2219": RRU_2219_B0_B1_B3_2X2,
                 "RUS12": RRU_2219_B0_B1_B3_2X2,      # RUS12 B1 = same as 2219 B1 (user 2026-11-02)
                 "2271B0": RRU_2219_B0_B1_B3_2X2,      # RRU 2271 B0C = same as 2219 B0 (user 2026-11-04)
+                "RRUS02B0": RRU_2219_B0_B1_B3_2X2,      # RRUS 02 B0A = same as 2219 B0A (user 2026-11-05)
                 "2271": RRUS_2271_B1_2X2,
                 "2279": RRU_2279_B1_B3_2X2,
                 "4412": RRU_4412_4418_4427_4428_4471_4X4,
@@ -5926,6 +5947,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 "6630": SiteEquipment_6630,
                 "6631": SiteEquipment_6631,
                 "6651": SiteEquipment_6651,
+                "6655": SiteEquipment_6655,
                 "6303": SiteEquipment_6303,
                 "6353": SiteEquipment_6353,
                 "6339": SiteEquipment_6339,
@@ -5949,6 +5971,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 "2219": RRU_2219_B0_B1_B3_2X2,
                 "RUS12": RRU_2219_B0_B1_B3_2X2,      # RUS12 B1 = same as 2219 B1 (user 2026-11-02)
                 "2271B0": RRU_2219_B0_B1_B3_2X2,      # RRU 2271 B0C = same as 2219 B0 (user 2026-11-04)
+                "RRUS02B0": RRU_2219_B0_B1_B3_2X2,      # RRUS 02 B0A = same as 2219 B0A (user 2026-11-05)
                 "2271": RRUS_2271_B1_2X2,
                 "2279": RRU_2279_B1_B3_2X2,
                 "4412": RRU_4412_4418_4427_4428_4471_4X4,
@@ -6259,6 +6282,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 "6630": SiteEquipment_6630,
                 "6631": SiteEquipment_6631,
                 "6651": SiteEquipment_6651,
+                "6655": SiteEquipment_6655,
                 "6303": SiteEquipment_6303,
                 "6353": SiteEquipment_6353,
                 "6339": SiteEquipment_6339,
@@ -6271,6 +6295,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 "2219": RRU_2219_B0_B1_B3_2X2,
                 "RUS12": RRU_2219_B0_B1_B3_2X2,      # RUS12 B1 = same as 2219 B1 (user 2026-11-02)
                 "2271B0": RRU_2219_B0_B1_B3_2X2,      # RRU 2271 B0C = same as 2219 B0 (user 2026-11-04)
+                "RRUS02B0": RRU_2219_B0_B1_B3_2X2,      # RRUS 02 B0A = same as 2219 B0A (user 2026-11-05)
                 "2271": RRUS_2271_B1_2X2,
                 "2279": RRU_2279_B1_B3_2X2,
                 "4412": RRU_4412_4418_4427_4428_4471_4X4,
