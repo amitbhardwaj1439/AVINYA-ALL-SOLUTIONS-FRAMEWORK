@@ -93,6 +93,12 @@ def _load(name):
     return _cache[name]
 
 
+# 'cr' prompts of classes with nothing mandatory but one of these attributes required by the node: moshell asks for them in
+# this order (AS / NE NR 01 'cr Router=LTEUP,InterfaceIPv6=NR' + 'VlanPort=TN_F_UP' + 'false'); a loopback answer 'false' = not set.
+# Without them the create had no encapsulation: 'One of the attributes encapsulation and loopback must be set' (AS-NLBSBRI3-1)
+CR_PROMPTS_ONE_OF = {"InterfaceIPv4": ["encapsulation", "loopback"], "InterfaceIPv6": ["encapsulation", "loopback"]}
+
+
 class Mom:
     def __init__(self, data):
         self.attrs = data["attrs"]                      # "Ns.Class" -> {attr: [type, flags, default]}
@@ -139,6 +145,8 @@ class Mom:
             f = set(fl.split(",")) if fl else set()
             if ("mandatory" in f or "restricted" in f) and "key" not in f and "readOnly" not in f:
                 out.append(a)
+        if not out:     # 'one of' attributes moshell still asks for (nothing mandatory in the MOM)
+            out = [a for a in CR_PROMPTS_ONE_OF.get(key.split(".")[-1], []) if a in self.attrs.get(key, {})]
         return out
 
 
@@ -512,6 +520,13 @@ class Replay:
             v = self.whole_struct(mo, info, v)
         elif isinstance(v, list) and v and all(isinstance(x, dict) for x in v):
             v = self.whole_struct_list(mo, info, v)
+            missing = self.struct_list_missing_ref(info, v)
+            if missing:
+                # empty list on the node + entry without its moRef member (AS / NE / RJ / KK NR GPL 'set ReportConfigA1A2Endc=1
+                # qciA1A2ThrOffsetsEndc a1a2ThrRsrqQciOffsetEndc=0' - no qciProfileRef): the node rejects the whole RPC
+                # ('Multiplicity violation ... qciProfileRef', AS-NLBSBRI3-1 NR02); AMOS fails alone, live list stays empty
+                self.left(script, ln, s, f"{name}: new entry without its {missing} - fails in AMOS too, left out")
+                return True
         bad = self.bad_ref(v)
         while bad and self.soft_ref_target(bad, mo["ldn"], script, ln, s):
             bad = self.bad_ref(v)
@@ -601,6 +616,14 @@ class Replay:
         if len(v) == 1:
             return [self.whole_struct(mo, info, v[0], c) for c in cur]
         return [self.whole_struct(mo, info, x, cur[i] if i < len(cur) else {}) for i, x in enumerate(v)]
+
+    def struct_list_missing_ref(self, info, v):
+        """the moRef member (e.g. qciProfileRef) an entry of the struct list v lacks, else None"""
+        members = self.mom.attrs.get(_kind(info[1])[2], {})
+        for m, (mt, mf, md) in members.items():
+            if _kind(mt)[1] == "moRef" and any(not x.get(m) for x in v):
+                return m
+        return None
 
     def soft(self, ldn):
         """MO the node may already have created itself (system id 1/Default/Base, nothing mandatory or restricted,
@@ -951,7 +974,9 @@ class Replay:
                     continue
                 mo = self.m.add(ldn, "script", created=True)
                 mo["soft"] = self.soft(ldn)
-                if any(self.set_attr(ldn.lower(), a, v, script, ln, s, creating=True) == "badref" for a, v in zip(self.mom.prompts(mo["key"]), args)):
+                answers = [(a, v) for a, v in zip(self.mom.prompts(mo["key"]), args)
+                           if not (a == "loopback" and v.strip().lower() in ("false", "0", ""))]      # loopback false = not set
+                if any(self.set_attr(ldn.lower(), a, v, script, ln, s, creating=True) == "badref" for a, v in answers):
                     self.undo_create(ldn.lower())
                 else:
                     self.created_done(ldn.lower())

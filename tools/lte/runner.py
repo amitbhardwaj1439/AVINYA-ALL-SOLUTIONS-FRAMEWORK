@@ -85,6 +85,7 @@ from tools.lte.universal_SCRIPTS.UNIVERSAL_SCRIPTS import (
     SiteEquipment_6630,
     SiteEquipment_6631,
     SiteEquipment_6651,
+    SiteEquipment_6655,
     SiteEquipment_6648,
     SiteEquipment_R503,
     ABIS_Site_Basic_script,
@@ -846,8 +847,35 @@ def kk_sector_carrier_rf_branches(node, node_cells_df, sef_branches):
                                         body=f"<ENodeBFunction>\n<eNodeBFunctionId>1</eNodeBFunctionId>\n{body}</ENodeBFunction>\n") if body else ""
 
 
+def kk_cascaded_radio_rpcs(node, amos):
+    """KK 04 LTE_Config RPCs of cascaded_radio_amos (KK builds 04 from templates, LTE 01 is not replayed into it):
+    NodeGroupSyncMember=1 create + isSharedWithExternalMe true on the shared RRUs - same XML as the engine makes for AS / RJ"""
+    if not amos:
+        return ""
+    priority = re.search(r"^syncNodePriority (\d+)", amos, re.M).group(1)
+    cand = re.search(r"^syncRiPortCandidate (.+)$", amos, re.M)
+    refs = "".join(f"<syncRiPortCandidate>ManagedElement={node},{r}</syncRiPortCandidate>\n" for r in cand.group(1).split()) if cand else ""
+    frus = re.findall(r"^set Equipment=1,FieldReplaceableUnit=(\S+?)\$? isSharedWithExternalMe true", amos, re.M)
+    ngs = (f"<Transport>\n<transportId>1</transportId>\n<Synchronization>\n<synchronizationId>1</synchronizationId>\n"
+           f"<RadioEquipmentClock>\n<radioEquipmentClockId>1</radioEquipmentClockId>\n<NodeGroupSyncMember xc:operation=\"create\">\n"
+           f"<nodeGroupSyncMemberId>1</nodeGroupSyncMemberId>\n<syncNodePriority>{priority}</syncNodePriority>\n"
+           f"<administrativeState>LOCKED</administrativeState>\n{refs}"
+           f"</NodeGroupSyncMember>\n</RadioEquipmentClock>\n</Synchronization>\n</Transport>\n")
+    shared = "<Equipment>\n<equipmentId>1</equipmentId>\n" + "".join(
+        f"<FieldReplaceableUnit>\n<fieldReplaceableUnitId>{f}</fieldReplaceableUnitId>\n<isSharedWithExternalMe>true</isSharedWithExternalMe>\n"
+        f"</FieldReplaceableUnit>\n" for f in frus) + "</Equipment>\n"
+    unlock = ("<Transport>\n<transportId>1</transportId>\n<Synchronization>\n<synchronizationId>1</synchronizationId>\n"
+              "<RadioEquipmentClock>\n<radioEquipmentClockId>1</radioEquipmentClockId>\n<NodeGroupSyncMember>\n"
+              "<nodeGroupSyncMemberId>1</nodeGroupSyncMemberId>\n<administrativeState>UNLOCKED</administrativeState>\n"
+              "</NodeGroupSyncMember>\n</RadioEquipmentClock>\n</Synchronization>\n</Transport>\n")
+    # created LOCKED, unlocked after the shared RRUs (both nodes, user 2026-11-04) - as the engine does for AS / RJ
+    return (KK_LTE_CONFIG_XML_RPC.format(mid="NodeGroupSyncMember_create", node=node, body=ngs)
+            + (KK_LTE_CONFIG_XML_RPC.format(mid="FieldReplaceableUnit_shared_para", node=node, body=shared) if frus else "")
+            + KK_LTE_CONFIG_XML_RPC.format(mid="NodeGroupSyncMember_unlock_para", node=node, body=unlock))
+
+
 def write_kk_lte_config_xml(lte_dir, node, enb_id, node_cells_df, current_time, phy_siteid_userlabel, fru_id="BB-1",
-                            has_nr=True, site_row=None, commissioning_dir=None):
+                            has_nr=True, site_row=None, commissioning_dir=None, cascade_amos=""):
     # Paging: the node rejects maxNoOfPagingRecords above 7 while a cell is narrower than 10 MHz (L900 5 MHz)
     bandwidths = pd.to_numeric(node_cells_df.get("dlChannelBandwidth", pd.Series(dtype=float)), errors="coerce").dropna()
     paging_records = 7 if not bandwidths.empty and bandwidths.min() < 10000 else 16
@@ -895,6 +923,7 @@ def write_kk_lte_config_xml(lte_dir, node, enb_id, node_cells_df, current_time, 
         parts.append(KK_LTE_CONFIG_XML_ANCHOR_4G_ONLY.format(node=node))
     parts.append(KK_LTE_CONFIG_XML_EXTERNAL_ALARM.format(node=node, fru=fru_id))
     parts.extend(kk_lte_config_xml_gsm(node, site_row, node_cells_df, sef_branches))     # 2G+4G BBU only
+    parts.append(kk_cascaded_radio_rpcs(node, cascade_amos))      # cascaded radio (RRU on two BBUs of the site)
     parts.append(KK_LTE_CONFIG_XML_CLOSE)
     xml_text = "".join(parts)
     if kk_site_basic_has_dns_client(commissioning_dir):     # SiteBasic made it: only set dscp (merge), keep its servers
@@ -1469,6 +1498,83 @@ def circle_commissioning_bridges(base_path_url, site_basic_df, radio_hw_df=None)
             f.write("\n" + CIRCLE_BRIDGE_FEATURE_AMOS + "\n")
 
 
+def _radio_kind(radio_type):
+    """Radio_Type without spaces / case ('RRU 2219 B3' -> 'RRU2219B3'), as the SiteEquipment rru_type match"""
+    return str(radio_type).replace(" ", "").upper()
+
+
+def cascaded_radio_amos(site_basic_df, radio_hw_df, lte_df, nr_cell_df, se_text_of=lambda node: ""):
+    """Cascaded radios: the same RRU (Radio_Type) on two BBUs of one site, one node on the RRU's DATA_1 and the other on
+    its DATA_2 (AS BSBRI3: RRU 2219 B3 on AS-NLBSBRI3-1 DATA_1 + LBSRI3 DATA_2; RJ RNJT02: 6626 B1+B3 on LR1J02 DATA_1 +
+    RJ-NLRJNT02-1 DATA_2). Both nodes get NodeGroupSyncMember=1 and isSharedWithExternalMe true on those RRUs (user
+    2026-11-04, as the RNJT02 kgets):
+    - DATA_1 node (parent): syncNodePriority 1 on a TDD / FDD+TDD / FDD+5G node, 3 on an FDD only node;
+      syncRiPortCandidate = its baseband RiPorts (RiPort_BB) to the shared RRUs (LR1J02: FieldReplaceableUnit=4,RiPort=A)
+    - DATA_2 node: syncNodePriority 1
+    ("RRU-3$": AMOS set matches the MO name as a pattern, RRU-3 alone also hits RRU-31..33)
+    Returns {node: AMOS}; se_text_of(node) = the node's 02 SiteEquipment (RRU FieldReplaceableUnit id as made there)"""
+    need = {"eNodeBName", "Radio_Type", "RiPort_Radio", "RiPort_BB", "Radio_UnitId"}
+    if radio_hw_df is None or radio_hw_df.empty or not need <= set(radio_hw_df.columns):
+        return {}
+    site_of = dict(zip(site_basic_df["eNodeBName"].astype(str), site_basic_df["Site Name"].astype(str))) \
+        if "Site Name" in site_basic_df else {}
+    hw = radio_hw_df.copy()
+    hw["node"] = hw["eNodeBName"].astype(str).str.strip()
+    hw["site"] = hw["node"].map(site_of).fillna("")
+    hw["kind"] = hw["Radio_Type"].map(_radio_kind)
+    hw["port"] = hw["RiPort_Radio"].astype(str).str.replace(" ", "").str.upper()
+    hw = hw[hw["port"].isin(["DATA_1", "DATA_2"])]
+    other = {"DATA_1": "DATA_2", "DATA_2": "DATA_1"}
+    shared = hw[[((hw["site"] == r.site) & (hw["kind"] == r.kind) & (hw["node"] != r.node) & (hw["port"] == other[r.port])).any()
+                 for r in hw.itertuples()]]
+    fru_of = dict(zip(site_basic_df["eNodeBName"].astype(str).str.strip(), site_basic_df["fieldReplaceableUnitId"]))
+    out = {}
+    for node, rows in shared.groupby("node", sort=False):
+        parent = (rows["port"] == "DATA_1").any()
+        cells = lte_df[lte_df["eNodeBName"].astype(str).str.strip() == node]["eUtranCellFDDId"].astype(str) \
+            if lte_df is not None and "eUtranCellFDDId" in lte_df else []
+        tdd = any(re.search(r"_T\d_", c) for c in cells)
+        nr = nr_cell_df is not None and not nr_cell_df.empty and "gNodeBName" in nr_cell_df \
+            and (nr_cell_df["gNodeBName"].astype(str).str.strip() == node).any()
+        priority = (1 if (tdd or nr) else 3) if parent else 1
+        se = se_text_of(node)
+        frus = []
+        for r in rows.itertuples():
+            uid = str(_xml_value(r.Radio_UnitId)).strip()
+            fru = f"RRU-{uid}" if f"<fieldReplaceableUnitId>RRU-{uid}</fieldReplaceableUnitId>" in se or uid.isdigit() else uid
+            frus.append(fru)
+        peers = sorted(set(shared[(shared["site"] == rows["site"].iloc[0]) & (shared["node"] != node)]["node"]))
+        lines = [f"####### Cascaded radio ({', '.join(peers)}): NodeGroupSyncMember "
+                 f"({'parent, RRU DATA_1' if parent else '2nd node, RRU DATA_2'}) + isSharedWithExternalMe #######",
+                 "crn Transport=1,Synchronization=1,RadioEquipmentClock=1,NodeGroupSyncMember=1",
+                 f"syncNodePriority {priority}", "administrativeState 1"]      # UNLOCKED on both nodes (user 2026-11-04)
+        if parent:
+            bb = str(_xml_value(fru_of.get(node, "1"))).strip()
+            ports = [str(r.RiPort_BB).strip() for r in rows.itertuples() if r.port == "DATA_1"]
+            lines.append("syncRiPortCandidate " + " ".join(f"Equipment=1,FieldReplaceableUnit={bb},RiPort={rp}"
+                                                          for rp in dict.fromkeys(ports)))
+        lines += ["end", ""] + [f"set Equipment=1,FieldReplaceableUnit={f}$ isSharedWithExternalMe true" for f in dict.fromkeys(frus)]
+        out[node] = "\n".join(lines) + "\n"
+    return out
+
+
+def cascaded_radio_sync(base_path_url, site_basic_df, radio_hw_df, lte_df, nr_cell_df):
+    """cascaded_radio_amos at the end of each such node's LTE 01 TN_RN_GPS_MME (once)"""
+    def se_text(node):
+        path = _newest(create_script_paths(base_path_url, node)["commissioning"], "02_", "SiteEquipment")
+        return open(path, encoding="utf-8", errors="replace").read() if path else ""
+
+    for node, amos in cascaded_radio_amos(site_basic_df, radio_hw_df, lte_df, nr_cell_df, se_text).items():
+        lte01 = _newest(create_script_paths(base_path_url, node)["lte"], "01_")
+        if not lte01:
+            continue
+        with open(lte01, encoding="utf-8", errors="replace") as f:
+            if "####### Cascaded radio (" in f.read():      # the templates set an existing NodeGroupSyncMember=1 themselves
+                continue
+        with open(lte01, "a", encoding="utf-8") as f:
+            f.write("\n" + amos)
+
+
 RIM_SECTION_HEADERS = {
     1: "RIM Feature Activation Script_1_Sector",
     2: "RIM Feature Activation Script_2_Sectors",
@@ -1984,6 +2090,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
         # # -----------------------------------------------------------------------------------------------------------------------------------------------#
         radio_templates = {
             "2219": RRU_2219_B0_B1_B3_2X2,
+            "RRUS 02 B0": RRU_2219_B0_B1_B3_2X2,      # RRUS 02 B0A = same as 2219 B0A (user 2026-11-05)
             "2271": RRUS_2271_B1_2X2,
             "2279": RRU_2279_B1_B3_2X2,
             "4412": RRU_4412_4418_4427_4428_4471_4X4,
@@ -2066,13 +2173,17 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 )
 
         ################################ LTE Config XML (TN_RN_GPS_MME + cell creation; needs 02 SiteEquipment for the RfBranch refs) ################################
+        kk_cascade = cascaded_radio_amos(site_basic_df, rru_hw_df, lte_df, nr_cell_df, lambda n: open(
+            _newest(create_script_paths(base_path_url, n)["commissioning"], "02_", "SiteEquipment") or os.devnull,
+            encoding="utf-8", errors="replace").read()) if XML_TESTING else {}
         for _, site_row in (site_basic_df.iterrows() if XML_TESTING else []):
             node = site_row["eNodeBName"]
             fru = str(site_row.get("fieldReplaceableUnitId", "")).strip()
             has_nr = not nr_cell_df.empty and node in set(nr_cell_df["gNodeBName"])
             write_kk_lte_config_xml(create_script_paths(base_path_url, node)["lte"], node, site_row["eNBId"], lte_df[lte_df["eNodeBName"] == node], lte_config_time,
                                     site_row["Phy SiteID/Userlabel"], fru if fru and fru.lower() != "nan" else "BB-1", has_nr,
-                                    site_row, create_script_paths(base_path_url, node)["commissioning"])
+                                    site_row, create_script_paths(base_path_url, node)["commissioning"],
+                                    kk_cascade.get(str(node).strip(), ""))
 
         ####################################### 5G Config XML (NR 01..06 as one NETCONF XML, needs commissioning + 04 LTE_Config) #######################################
         for node in (kk_nr_nodes if XML_TESTING else []):
@@ -2275,6 +2386,9 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
             
             rru_type = {
                 "2219": RRU_2219_B0_B1_B3_2X2,
+                "RUS12": RRU_2219_B0_B1_B3_2X2,      # RUS12 B1 = same as 2219 B1 (user 2026-11-02)
+                "2271B0": RRU_2219_B0_B1_B3_2X2,      # RRU 2271 B0C = same as 2219 B0 (user 2026-11-04)
+                "RRUS02B0": RRU_2219_B0_B1_B3_2X2,      # RRUS 02 B0A = same as 2219 B0A (user 2026-11-05)
                 "2271": RRUS_2271_B1_2X2,
                 "2279": RRU_2279_B1_B3_2X2,
                 "4412": RRU_4412_4418_4427_4428_4471_4X4,
@@ -2289,7 +2403,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
             site_equipment_text = ""
             for idx, row in site_specific_rru_df.iterrows():
                 for rru, rru_template in rru_type.items():
-                    if rru in str(row["Radio_Type"]):
+                    if rru in str(row["Radio_Type"]).replace(" ", "").upper():
                         site_equipment_text += rru_template.format(
                             eNodeBName=row["eNodeBName"],
                             Radio_UnitId=row["Radio_UnitId"],
@@ -2511,6 +2625,9 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
             
             rru_type = {
                 "2219": RRU_2219_B0_B1_B3_2X2,
+                "RUS12": RRU_2219_B0_B1_B3_2X2,      # RUS12 B1 = same as 2219 B1 (user 2026-11-02)
+                "2271B0": RRU_2219_B0_B1_B3_2X2,      # RRU 2271 B0C = same as 2219 B0 (user 2026-11-04)
+                "RRUS02B0": RRU_2219_B0_B1_B3_2X2,      # RRUS 02 B0A = same as 2219 B0A (user 2026-11-05)
                 "2271": RRUS_2271_B1_2X2,
                 "2279": RRU_2279_B1_B3_2X2,
                 "4412": RRU_4412_4418_4427_4428_4471_4X4,
@@ -2524,7 +2641,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
             site_equipment_text = ""
             for idx, row in site_specific_rru_df.iterrows():
                 for rru, rru_template in rru_type.items():
-                    if rru in str(row["Radio_Type"]):
+                    if rru in str(row["Radio_Type"]).replace(" ", "").upper():
                         site_equipment_text += rru_template.format(
                             eNodeBName=row["eNodeBName"],
                             Radio_UnitId=row["Radio_UnitId"],
@@ -2793,6 +2910,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 "6630": SiteEquipment_6630,
                 "6631": SiteEquipment_6631,
                 "6651": SiteEquipment_6651,
+                "6655": SiteEquipment_6655,
                 "6303": SiteEquipment_6303,
                 "6353": SiteEquipment_6353,
                 "6339": SiteEquipment_6339,
@@ -2814,6 +2932,9 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                     
             rru_type = {
                 "2219": RRU_2219_B0_B1_B3_2X2,
+                "RUS12": RRU_2219_B0_B1_B3_2X2,      # RUS12 B1 = same as 2219 B1 (user 2026-11-02)
+                "2271B0": RRU_2219_B0_B1_B3_2X2,      # RRU 2271 B0C = same as 2219 B0 (user 2026-11-04)
+                "RRUS02B0": RRU_2219_B0_B1_B3_2X2,      # RRUS 02 B0A = same as 2219 B0A (user 2026-11-05)
                 "2271": RRUS_2271_B1_2X2,
                 "2279": RRU_2279_B1_B3_2X2,
                 "4412": RRU_4412_4418_4427_4428_4471_4X4,
@@ -2830,7 +2951,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
             for idx, row in site_specific_rru_df.iterrows():
                 print(row['Radio_Type'])
                 for rru, rru_template in rru_type.items():
-                    if rru in str(row["Radio_Type"]):
+                    if rru in str(row["Radio_Type"]).replace(" ", "").upper():
                         print(rru)
                         site_equipment_text += rru_template.format(
                             eNodeBName=row["eNodeBName"],
@@ -3107,7 +3228,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 "6630": SiteEquipment_6630,
                 "6631": SiteEquipment_6631,
                 "6651": SiteEquipment_6651,
-                "6655": SiteEquipment_6651,      # 6655 = same as 6651 (user 2026-11-02)
+                "6655": SiteEquipment_6655,
                 "6303": SiteEquipment_6303,
                 "6353": SiteEquipment_6353,
                 "6339": SiteEquipment_6339,
@@ -3129,6 +3250,8 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
             rru_type = {
                 "2219": RRU_2219_B0_B1_B3_2X2,
+                "2271B0": RRU_2219_B0_B1_B3_2X2,      # RRU 2271 B0C = same as 2219 B0 (user 2026-11-04)
+                "RRUS02B0": RRU_2219_B0_B1_B3_2X2,      # RRUS 02 B0A = same as 2219 B0A (user 2026-11-05)
                 "2271": RRUS_2271_B1_2X2,
                 "2279": RRU_2279_B1_B3_2X2,
                 "4412": RRU_4412_4418_4427_4428_4471_4X4,
@@ -3175,6 +3298,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                     )
                 )
         circle_commissioning_bridges(base_path_url, site_basic_df, rru_hw_df)      # Bridge / PIU (as KK)
+        cascaded_radio_sync(base_path_url, site_basic_df, rru_hw_df, lte_df, nr_cell_df)
         if XML_TESTING:     # 04 LTE_Config + 04/05/06 5G NETCONF XMLs (testing)
             write_circle_config_xmls(base_path_url, site_basic_df["eNodeBName"].unique(), current_time, "RJ", site_basic_df, lte_df,
                                      rru_hw_df)
@@ -3432,6 +3556,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 "6630": SiteEquipment_6630,
                 "6631": SiteEquipment_6631,
                 "6651": SiteEquipment_6651,
+                "6655": SiteEquipment_6655,
                 "6303": SiteEquipment_6303,
                 "6353": SiteEquipment_6353,
                 "6339": SiteEquipment_6339,
@@ -3453,6 +3578,9 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                     
             rru_type = {
                 "2219": RRU_2219_B0_B1_B3_2X2,
+                "RUS12": RRU_2219_B0_B1_B3_2X2,      # RUS12 B1 = same as 2219 B1 (user 2026-11-02)
+                "2271B0": RRU_2219_B0_B1_B3_2X2,      # RRU 2271 B0C = same as 2219 B0 (user 2026-11-04)
+                "RRUS02B0": RRU_2219_B0_B1_B3_2X2,      # RRUS 02 B0A = same as 2219 B0A (user 2026-11-05)
                 "2271": RRUS_2271_B1_2X2,
                 "2279": RRU_2279_B1_B3_2X2,
                 "4412": RRU_4412_4418_4427_4428_4471_4X4,
@@ -3469,7 +3597,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
             for idx, row in site_specific_rru_df.iterrows():
                 print(row['Radio_Type'])
                 for rru, rru_template in rru_type.items():
-                    if rru in str(row["Radio_Type"]):
+                    if rru in str(row["Radio_Type"]).replace(" ", "").upper():
                         print(rru)
                         site_equipment_text += rru_template.format(
                             eNodeBName=row["eNodeBName"],
@@ -3498,6 +3626,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                     )
                 )
         circle_commissioning_bridges(base_path_url, site_basic_df)      # Bridge / PIU (as KK)
+        cascaded_radio_sync(base_path_url, site_basic_df, rru_hw_df, lte_df, nr_cell_df)
         if XML_TESTING:     # 04 LTE_Config + 04/05/06 5G NETCONF XMLs (testing)
             write_circle_config_xmls(base_path_url, site_basic_df["eNodeBName"].unique(), current_time, "NE", site_basic_df, lte_df)
     # ---------------------------------------------------------------- NE Circle-specific Script Generation ---------------------------------------------------------------------
@@ -3767,6 +3896,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 "6630": SiteEquipment_6630,
                 "6631": SiteEquipment_6631,
                 "6651": SiteEquipment_6651,
+                "6655": SiteEquipment_6655,
                 "6303": SiteEquipment_6303,
                 "6353": SiteEquipment_6353,
                 "6339": SiteEquipment_6339,
@@ -3777,6 +3907,9 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
             rru_type = {
                 "2219": RRU_2219_B0_B1_B3_2X2,
+                "RUS12": RRU_2219_B0_B1_B3_2X2,      # RUS12 B1 = same as 2219 B1 (user 2026-11-02)
+                "2271B0": RRU_2219_B0_B1_B3_2X2,      # RRU 2271 B0C = same as 2219 B0 (user 2026-11-04)
+                "RRUS02B0": RRU_2219_B0_B1_B3_2X2,      # RRUS 02 B0A = same as 2219 B0A (user 2026-11-05)
                 "2271": RRUS_2271_B1_2X2,
                 "2279": RRU_2279_B1_B3_2X2,
                 "4412": RRU_4412_4418_4427_4428_4471_4X4,
@@ -3802,7 +3935,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
             for idx, row in site_specific_rru_df.iterrows():
                 for rru, rru_template in rru_type.items():
-                    if rru in str(row["Radio_Type"]):
+                    if rru in str(row["Radio_Type"]).replace(" ", "").upper():
                         site_equipment_text += rru_template.format(
                             eNodeBName=row["eNodeBName"],
                             Radio_UnitId=row["Radio_UnitId"],
@@ -3822,6 +3955,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
             with open(site_equipment_script_path, "a", encoding="utf-8") as file:
                 file.write(rbs_summary_script(circle).format(siteEquipmentFilePath=siteEquipmentFilePath,siteBasicFilePath=siteBasicFilePath))
         circle_commissioning_bridges(base_path_url, site_basic_df)      # Bridge / PIU (as KK)
+        cascaded_radio_sync(base_path_url, site_basic_df, rru_hw_df, lte_df, nr_cell_df)
         if XML_TESTING:     # 04 LTE_Config + 04/05/06 5G NETCONF XMLs (testing)
             write_circle_config_xmls(base_path_url, site_basic_df["eNodeBName"].unique(), current_time, "AS", site_basic_df, lte_df)
     # ---------------------------------------------------------------- AS Circle-specific Script Generation ----------------------------------------------------------------
@@ -4091,6 +4225,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 "6630": SiteEquipment_6630,
                 "6631": SiteEquipment_6631,
                 "6651": SiteEquipment_6651,
+                "6655": SiteEquipment_6655,
                 "6303": SiteEquipment_6303,
                 "6353": SiteEquipment_6353,
                 "6339": SiteEquipment_6339,
@@ -4101,6 +4236,9 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
             rru_type = {
                 "2219": RRU_2219_B0_B1_B3_2X2,
+                "RUS12": RRU_2219_B0_B1_B3_2X2,      # RUS12 B1 = same as 2219 B1 (user 2026-11-02)
+                "2271B0": RRU_2219_B0_B1_B3_2X2,      # RRU 2271 B0C = same as 2219 B0 (user 2026-11-04)
+                "RRUS02B0": RRU_2219_B0_B1_B3_2X2,      # RRUS 02 B0A = same as 2219 B0A (user 2026-11-05)
                 "2271": RRUS_2271_B1_2X2,
                 "2279": RRU_2279_B1_B3_2X2,
                 "4412": RRU_4412_4418_4427_4428_4471_4X4,
@@ -4126,7 +4264,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
             for idx, row in site_specific_rru_df.iterrows():
                 for rru, rru_template in rru_type.items():
-                    if rru in str(row["Radio_Type"]):
+                    if rru in str(row["Radio_Type"]).replace(" ", "").upper():
                         site_equipment_text += rru_template.format(
                             eNodeBName=row["eNodeBName"],
                             Radio_UnitId=row["Radio_UnitId"],
@@ -4428,6 +4566,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 "6630": SiteEquipment_6630,
                 "6631": SiteEquipment_6631,
                 "6651": SiteEquipment_6651,
+                "6655": SiteEquipment_6655,
                 "6303": SiteEquipment_6303,
                 "6353": SiteEquipment_6353,
                 "6339": SiteEquipment_6339,
@@ -4438,6 +4577,9 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
             rru_type = {
                 "2219": RRU_2219_B0_B1_B3_2X2,
+                "RUS12": RRU_2219_B0_B1_B3_2X2,      # RUS12 B1 = same as 2219 B1 (user 2026-11-02)
+                "2271B0": RRU_2219_B0_B1_B3_2X2,      # RRU 2271 B0C = same as 2219 B0 (user 2026-11-04)
+                "RRUS02B0": RRU_2219_B0_B1_B3_2X2,      # RRUS 02 B0A = same as 2219 B0A (user 2026-11-05)
                 "2271": RRUS_2271_B1_2X2,
                 "2279": RRU_2279_B1_B3_2X2,
                 "4412": RRU_4412_4418_4427_4428_4471_4X4,
@@ -4463,7 +4605,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
             for idx, row in site_specific_rru_df.iterrows():
                 for rru, rru_template in rru_type.items():
-                    if rru in str(row["Radio_Type"]):
+                    if rru in str(row["Radio_Type"]).replace(" ", "").upper():
                         site_equipment_text += rru_template.format(
                             eNodeBName=row["eNodeBName"],
                             Radio_UnitId=row["Radio_UnitId"],
@@ -4787,6 +4929,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 "6630": SiteEquipment_6630,
                 "6631": SiteEquipment_6631,
                 "6651": SiteEquipment_6651,
+                "6655": SiteEquipment_6655,
                 "6303": SiteEquipment_6303,
                 "6353": SiteEquipment_6353,
                 "6339": SiteEquipment_6339,
@@ -4797,6 +4940,9 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
             rru_type = {
                 "2219": RRU_2219_B0_B1_B3_2X2,
+                "RUS12": RRU_2219_B0_B1_B3_2X2,      # RUS12 B1 = same as 2219 B1 (user 2026-11-02)
+                "2271B0": RRU_2219_B0_B1_B3_2X2,      # RRU 2271 B0C = same as 2219 B0 (user 2026-11-04)
+                "RRUS02B0": RRU_2219_B0_B1_B3_2X2,      # RRUS 02 B0A = same as 2219 B0A (user 2026-11-05)
                 "2271": RRUS_2271_B1_2X2,
                 "2279": RRU_2279_B1_B3_2X2,
                 "4412": RRU_4412_4418_4427_4428_4471_4X4,
@@ -4822,7 +4968,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
             for idx, row in site_specific_rru_df.iterrows():
                 for rru, rru_template in rru_type.items():
-                    if rru in str(row["Radio_Type"]):
+                    if rru in str(row["Radio_Type"]).replace(" ", "").upper():
                         site_equipment_text += rru_template.format(
                             eNodeBName=row["eNodeBName"],
                             Radio_UnitId=row["Radio_UnitId"],
@@ -5146,6 +5292,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 "6630": SiteEquipment_6630,
                 "6631": SiteEquipment_6631,
                 "6651": SiteEquipment_6651,
+                "6655": SiteEquipment_6655,
                 "6303": SiteEquipment_6303,
                 "6353": SiteEquipment_6353,
                 "6339": SiteEquipment_6339,
@@ -5156,6 +5303,9 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
             rru_type = {
                 "2219": RRU_2219_B0_B1_B3_2X2,
+                "RUS12": RRU_2219_B0_B1_B3_2X2,      # RUS12 B1 = same as 2219 B1 (user 2026-11-02)
+                "2271B0": RRU_2219_B0_B1_B3_2X2,      # RRU 2271 B0C = same as 2219 B0 (user 2026-11-04)
+                "RRUS02B0": RRU_2219_B0_B1_B3_2X2,      # RRUS 02 B0A = same as 2219 B0A (user 2026-11-05)
                 "2271": RRUS_2271_B1_2X2,
                 "2279": RRU_2279_B1_B3_2X2,
                 "4412": RRU_4412_4418_4427_4428_4471_4X4,
@@ -5181,7 +5331,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
             for idx, row in site_specific_rru_df.iterrows():
                 for rru, rru_template in rru_type.items():
-                    if rru in str(row["Radio_Type"]):
+                    if rru in str(row["Radio_Type"]).replace(" ", "").upper():
                         site_equipment_text += rru_template.format(
                             eNodeBName=row["eNodeBName"],
                             Radio_UnitId=row["Radio_UnitId"],
@@ -5466,6 +5616,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 "6630": SiteEquipment_6630,
                 "6631": SiteEquipment_6631,
                 "6651": SiteEquipment_6651,
+                "6655": SiteEquipment_6655,
                 "6303": SiteEquipment_6303,
                 "6353": SiteEquipment_6353,
                 "6339": SiteEquipment_6339,
@@ -5476,6 +5627,9 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
             rru_type = {
                 "2219": RRU_2219_B0_B1_B3_2X2,
+                "RUS12": RRU_2219_B0_B1_B3_2X2,      # RUS12 B1 = same as 2219 B1 (user 2026-11-02)
+                "2271B0": RRU_2219_B0_B1_B3_2X2,      # RRU 2271 B0C = same as 2219 B0 (user 2026-11-04)
+                "RRUS02B0": RRU_2219_B0_B1_B3_2X2,      # RRUS 02 B0A = same as 2219 B0A (user 2026-11-05)
                 "2271": RRUS_2271_B1_2X2,
                 "2279": RRU_2279_B1_B3_2X2,
                 "4412": RRU_4412_4418_4427_4428_4471_4X4,
@@ -5501,7 +5655,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
             for idx, row in site_specific_rru_df.iterrows():
                 for rru, rru_template in rru_type.items():
-                    if rru in str(row["Radio_Type"]):
+                    if rru in str(row["Radio_Type"]).replace(" ", "").upper():
                         site_equipment_text += rru_template.format(
                             eNodeBName=row["eNodeBName"],
                             Radio_UnitId=row["Radio_UnitId"],
@@ -5793,6 +5947,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 "6630": SiteEquipment_6630,
                 "6631": SiteEquipment_6631,
                 "6651": SiteEquipment_6651,
+                "6655": SiteEquipment_6655,
                 "6303": SiteEquipment_6303,
                 "6353": SiteEquipment_6353,
                 "6339": SiteEquipment_6339,
@@ -5814,6 +5969,9 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                     
             rru_type = {
                 "2219": RRU_2219_B0_B1_B3_2X2,
+                "RUS12": RRU_2219_B0_B1_B3_2X2,      # RUS12 B1 = same as 2219 B1 (user 2026-11-02)
+                "2271B0": RRU_2219_B0_B1_B3_2X2,      # RRU 2271 B0C = same as 2219 B0 (user 2026-11-04)
+                "RRUS02B0": RRU_2219_B0_B1_B3_2X2,      # RRUS 02 B0A = same as 2219 B0A (user 2026-11-05)
                 "2271": RRUS_2271_B1_2X2,
                 "2279": RRU_2279_B1_B3_2X2,
                 "4412": RRU_4412_4418_4427_4428_4471_4X4,
@@ -5830,7 +5988,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
             for idx, row in site_specific_rru_df.iterrows():
                 print(row['Radio_Type'])
                 for rru, rru_template in rru_type.items():
-                    if rru in str(row["Radio_Type"]):
+                    if rru in str(row["Radio_Type"]).replace(" ", "").upper():
                         print(rru)
                         site_equipment_text += rru_template.format(
                             eNodeBName=row["eNodeBName"],
@@ -6124,6 +6282,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 "6630": SiteEquipment_6630,
                 "6631": SiteEquipment_6631,
                 "6651": SiteEquipment_6651,
+                "6655": SiteEquipment_6655,
                 "6303": SiteEquipment_6303,
                 "6353": SiteEquipment_6353,
                 "6339": SiteEquipment_6339,
@@ -6134,6 +6293,9 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
             rru_type = {
                 "2219": RRU_2219_B0_B1_B3_2X2,
+                "RUS12": RRU_2219_B0_B1_B3_2X2,      # RUS12 B1 = same as 2219 B1 (user 2026-11-02)
+                "2271B0": RRU_2219_B0_B1_B3_2X2,      # RRU 2271 B0C = same as 2219 B0 (user 2026-11-04)
+                "RRUS02B0": RRU_2219_B0_B1_B3_2X2,      # RRUS 02 B0A = same as 2219 B0A (user 2026-11-05)
                 "2271": RRUS_2271_B1_2X2,
                 "2279": RRU_2279_B1_B3_2X2,
                 "4412": RRU_4412_4418_4427_4428_4471_4X4,
@@ -6159,7 +6321,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
             for idx, row in site_specific_rru_df.iterrows():
                 for rru, rru_template in rru_type.items():
-                    if rru in str(row["Radio_Type"]):
+                    if rru in str(row["Radio_Type"]).replace(" ", "").upper():
                         site_equipment_text += rru_template.format(
                             eNodeBName=row["eNodeBName"],
                             Radio_UnitId=row["Radio_UnitId"],
@@ -6181,6 +6343,8 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
     # ---------------------------------------------------------------- JK Circle-specific Script Generation ----------------------------------------------------------------
 
     #####################################################################################################################################################
+    # cascaded radios (one RRU on two BBUs of the site): NodeGroupSyncMember + isSharedWithExternalMe in LTE 01
+    cascaded_radio_sync(base_path_url, site_basic_df, rru_hw_df, lte_df, nr_cell_df)
     # Add CIRCLES specific script generation logic here if needed
     ########################################################## MAKING THE ZIP FILE #############################################################
     folder_path = os.path.join(MEDIA_ROOT, "LTE_INTEGRATION_CONFIG_FILES")

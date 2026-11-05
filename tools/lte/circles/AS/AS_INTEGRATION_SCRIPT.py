@@ -743,10 +743,10 @@ set ,UtranFreqRelation=10* cellReselectionPriority 0
 set GeranFreqGroupRelation= cellReselectionPriority 1                                                                                                                                                                                                                                                                               
 set EUtranFreqRelation=3663 cellReselectionPriority 2                                                                                                                                                                                                                                                                               
 set EUtranFreqRelation=1511 cellReselectionPriority 4                                                                                                                                                                                                                                                                               
-set EUtranFreqRelation=39294 cellReselectionPriority 5                                                                                                                                                                                                                                                                              
+set EUtranFreqRelation=39294 cellReselectionPriority 6                                                                                                                                                                                                                                                                              
 set EUtranFreqRelation=39150 cellReselectionPriority 6                                                                                                                                                                                                                                                                              
 set EUtranFreqRelation=39348 cellReselectionPriority 6                                                                                                                                                                                                                                                                              
-set ,UtranFreqRelation=10* cellReselectionPriority 3                                                                                                                                                                                                                                                                                
+set ,UtranFreqRelation=10* cellReselectionPriority 0                                                                                                                                                                                                                                                                                
    
 
 cr ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=265                                                                                                                                                                                                                                                                             
@@ -870,7 +870,7 @@ for $mo in $Tab[$i]
  if $nr_of_mos = 0                                                                                                                                                                                                                                                                                                                  
   cr ENodeBFunction=1,$mordn,EUtranFreqRelation=39294                                                                                                                                                                                                                                                                               
   ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=39294                                                                                                                                                                                                                                                                             
-  5                                                                                                                                                                                                                                                                                                                                 
+  6                                                                                                                                                                                                                                                                                                                                 
  fi                                                                                                                                                                                                                                                                                                                                 
 done                                                                                                                                                                                                                                                                                                                                
 endfunc                                                                                                                                                                                                                                                                                                                             
@@ -906,7 +906,7 @@ for $mo in $Tab[$i]
  if $nr_of_mos = 0                                                                                                                                                                                                                                                                                                                  
   cr ENodeBFunction=1,$mordn,UtranFreqRelation=10657                                                                                                                                                                                                                                                                                
   ENodeBFunction=1,UtraNetwork=1,UtranFrequency=10657                                                                                                                                                                                                                                                                               
-  3                                                                                                                                                                                                                                                                                                                                 
+  0                                                                                                                                                                                                                                                                                                                                 
  fi                                                                                                                                                                                                                                                                                                                                 
 done                                                                                                                                                                                                                                                                                                                                
 endfunc                                                                                                                                                                                                                                                                                                                             
@@ -2309,6 +2309,7 @@ set EUtranCellTDD=AS_E_T1_.*,EUtranFreqRelation=265 endcHoFreqPriority 6
 set EUtranCellTDD=AS_E_T1_.*,EUtranFreqRelation=1526 endcHoFreqPriority 7
 set EUtranCellTDD=AS_E_T1_.*,EUtranFreqRelation=3663 endcHoFreqPriority -1
 
+set EUtranCell.*=.*,UtranFreqRelation=10657 cellReselectionPriority 0
 set EUtranCellFDD=AS_E_F1_.*,EUtranFreqRelation=265 cellreselectionpriority 3
 set EUtranCellFDD=AS_E_F1_.*,EUtranFreqRelation=1526 cellreselectionpriority 4
 set EUtranCellFDD=AS_E_F1_.*,EUtranFreqRelation=3663 cellreselectionpriority 2
@@ -2977,12 +2978,6 @@ userLabel Traffic
 end
 
 
-crn Transport=1,Router=LTEUP,TwampResponder=2
-ipAddress Router=LTEUP,InterfaceIPv4={tnPortId}_UP,AddressIPv4={tnPortId}_UP
-udpPort 4001
-userLabel
-end
-
 crn Transport=1,Router=LTEUP,TwampResponder=3
 ipAddress Router=LTEUP,InterfaceIPv4={tnPortId}_UP,AddressIPv4={tnPortId}_UP
 udpPort 4002
@@ -3641,6 +3636,8 @@ done
 endfunc                                                                                                                                                           
 
 Relation_121L2_18L                
+
+set EUtranCell.DD=.*,GUtranFreqRelation=629952 cellReselectionPriority 5
 
 """
 
@@ -4447,7 +4444,7 @@ set EUtranCellFDD=.*,EUtranFreqRelation=39150 endcAwareIdleModePriority 3
 set EUtranCellFDD=.*,EUtranFreqRelation=39348 endcAwareIdleModePriority 3
 set EUtranCellFDD=.*,EUtranFreqRelation=1301 endcAwareIdleModePriority 7
 
-set EUtranCellFDD=.*,GUtranFreqRelation=629952 cellReselectionPriority 2
+set EUtranCellFDD=.*,GUtranFreqRelation=629952 cellReselectionPriority 5
 set EUtranCellFDD=.*,GUtranFreqRelation=629952 qRxLevMin         -124
 
 #####TDD###
@@ -4463,7 +4460,7 @@ set EUtranCellTDD=.*,EUtranFreqRelation=39150 endcAwareIdleModePriority 3
 set EUtranCellTDD=.*,EUtranFreqRelation=39348 endcAwareIdleModePriority 3
 set EUtranCellTDD=.*,EUtranFreqRelation=1301 endcAwareIdleModePriority 7
 
-set EUtranCellTDD=.*,GUtranFreqRelation=629952 cellReselectionPriority 2
+set EUtranCellTDD=.*,GUtranFreqRelation=629952 cellReselectionPriority 5
 set EUtranCellTDD=.*,GUtranFreqRelation=629952 qRxLevMin         -124
 
 
