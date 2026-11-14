@@ -1212,9 +1212,8 @@ rdel =10807
 rdel =10782
 rdel =539
 
-###########
+# frequencies + frequency relations (own and all technologies): in the 02 Cell_Def script
 unset all
-
 $Par[1] = L2100
 $Par[2] = TDD20
 $Par[3] = L1800
@@ -1222,7 +1221,6 @@ $Par[4] = L900
 $Par[5] = TDD10
 $Par[6] = TDD30
 $Par[7] = TDD40
-
 mr L2100
 mr TDD20
 mr L1800
@@ -1230,7 +1228,6 @@ mr L900
 mr TDD10
 mr TDD30
 mr TDD40
-
 ma L2100 EUtranCellFDD earfcn 515
 ma TDD20 EUtranCellTDD earfcn 39150
 ma L1800 EUtranCellFDD earfcn 1576
@@ -1238,178 +1235,6 @@ ma L900 EUtranCellFDD earfcn 3601
 ma TDD10 EUtranCellTDD earfcn 39151
 ma TDD30 EUtranCellTDD earfcn 39348
 ma TDD40 EUtranCellTDD earfcn 39349
-
-############################ FREQ Creation###########
-
-cr ENodeBFunction=1,GeraNetwork=1
-
-cr ENodeBFunction=1,GeraNetwork=1,GeranFreqGroup=1
-1 #frequencyGroupId
-
-cr ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=39150
-39150
-0
-cr ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=3601
-3601
-0
-cr ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=1576
-1576
-0
-cr ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=515
-515
-0
-cr ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=39151
-39151
-0
-
-cr ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=39348
-39348
-0
-
-cr ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=39349
-39349
-0
-
-func Gran_rahul
-cr ENodeBFunction=1,GeraNetwork=1,GeranFrequency=$t
-$t
-0
-set ENodeBFunction=1,GeraNetwork=1,GeranFrequency=$t geranFreqGroupRef ENodeBFunction=1,GeraNetwork=1,GeranFreqGroup=1
-endfunc
-
-for $t = 1 to 6
-Gran_rahul
-done
-
-
-crn ENodeBFunction=1,GeraNetwork=1,GeranFrequency=30
-arfcnValueGeranDl 30
-bandIndicator 0
-geranFreqGroupRef ENodeBFunction=1,GeraNetwork=1,GeranFreqGroup=1
-userLabel
-end
-
-
-lt all
-
-################## Frequency Relation##########
-
-func Gran_Rel
-for $mo in $Par[$i]
- $mordn = rdn($mo)
- pr $mordn,GeranFreqGroupRelation=1
- if $nr_of_mos = 0
-  cr ENodeBFunction=1,$mordn,GeranFreqGroupRelation=1
-  ENodeBFunction=1,GeraNetwork=1,GeranFreqGroup=1
-  1
- fi 
-done
-endfunc
-
-func EURel_39150
-for $mo in $Par[$i]
- $mordn = rdn($mo)
- pr $mordn,EUtranFreqRelation=39150
- if $nr_of_mos = 0
-  cr ENodeBFunction=1,$mordn,EUtranFreqRelation=39150 
-  ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=39150
-  7
- fi 
-done
-endfunc
-
-func EURel_39151
-for $mo in $Par[$i]
- $mordn = rdn($mo)
- pr $mordn,EUtranFreqRelation=39151
- if $nr_of_mos = 0
-  cr ENodeBFunction=1,$mordn,EUtranFreqRelation=39151
-  ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=39151
-  6
- fi 
-done
-endfunc
-
-func EURel_39348
-for $mo in $Par[$i]
- $mordn = rdn($mo)
- pr $mordn,EUtranFreqRelation=39348
- if $nr_of_mos = 0
-  cr ENodeBFunction=1,$mordn,EUtranFreqRelation=39348
-  ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=39348
-  7
- fi 
-done
-endfunc
-
-func EURel_39349
-for $mo in $Par[$i]
- $mordn = rdn($mo)
- pr $mordn,EUtranFreqRelation=39349
- if $nr_of_mos = 0
-  cr ENodeBFunction=1,$mordn,EUtranFreqRelation=39349
-  ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=39349
-  6
- fi 
-done
-endfunc
-
-func EURel_515
-for $mo in $Par[$i]
- $mordn = rdn($mo)
- pr $mordn,EUtranFreqRelation=515
- if $nr_of_mos = 0
-  cr ENodeBFunction=1,$mordn,EUtranFreqRelation=515 
-  ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=515
-  5
- fi 
-done
-endfunc
-
-func EURel_1576
-for $mo in $Par[$i]
- $mordn = rdn($mo)
- pr $mordn,EUtranFreqRelation=1576
- if $nr_of_mos = 0
-  cr ENodeBFunction=1,$mordn,EUtranFreqRelation=1576
-  ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=1576
-  4
- fi 
-done
-endfunc
-
-func EURel_3601
-for $mo in $Par[$i]
- $mordn = rdn($mo)
- pr $mordn,EUtranFreqRelation=3601
- if $nr_of_mos = 0
-  cr ENodeBFunction=1,$mordn,EUtranFreqRelation=3601
-  ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=3601
-  3
- fi 
-done
-endfunc
-
- 
-for $i = 1 to 7
-EURel_39150
-EURel_39151
-EURel_39348
-EURel_39349
-EURel_515
-EURel_1576
-EURel_3601
-Gran_Rel
-done
-
-
-
-crn ENodeBFunction=1,GeraNetwork=1,GeranFrequency=30
-arfcnValueGeranDl 30
-bandIndicator 0
-geranFreqGroupRef ENodeBFunction=1,GeraNetwork=1,GeranFreqGroup=1
-userLabel
-end
 
 
 ######################
@@ -4416,20 +4241,14 @@ get GNBCUUPFunction=1  gNBId$ > $gnbid
 get Router=LTEUP,InterfaceIPv6=NR,AddressIPv6=NR ^address$ > $reqip                                                                                             
 
 
-crn ENodeBFunction=1,GUtraNetwork=1                                                                                                                               
-userLabel                                                                                                                                                         
-end                                                                                                                                                               
+pr ENodeBFunction=1,GUtraNetwork=1$
+if $nr_of_mos = 0
+crn ENodeBFunction=1,GUtraNetwork=1
+userLabel
+end
+fi
 
 
-crn ENodeBFunction=1,GUtraNetwork=1,GUtranSyncSignalFrequency=627936-30                                                                                                                                                                
-arfcn 627936                                                                                                                                                                                                                           
-band 78                                                                                                                                                                                                                                
-smtcDuration 1                                                                                                                                                                                                                         
-smtcOffset 0                                                                                                                                                                                                                           
-smtcPeriodicity 20                                                                                                                                                                                                                     
-smtcScs 30                                                                                                                                                                                                                             
-userLabel                                                                                                                                                                                                                              
-end                                                                                                                                                                                                                                    
 
 
 crn ENodeBFunction=1,GUtraNetwork=1,ExternalGNodeBFunction=40470-$gnbid                                                                                           
@@ -4470,14 +4289,6 @@ set CWA_CRP_2 cellReselectionPriority 4
 
 ma L21_12_21 ^EUtranCell.DD                                                                                                                                       
 
-for $mo in L21_12_21                                                                                                                                              
-$mordn = rdn($mo)                                                                                                                                                 
-pr ENodeBFunction=1,$mordn,GUtranFreqRelation=627936                                                                                                              
-if $nr_of_mos = 0                                                                                                                                                 
-cr ENodeBFunction=1,$mordn,GUtranFreqRelation=627936                                                                                                              
-GUtraNetwork=1,GUtranSyncSignalFrequency=627936-30                                                                                                       
-fi                                                                                                                                                                
-done                                                                                                                                                              
 
 
 func Relation_121L21                                                                                                                                              
@@ -4505,8 +4316,9 @@ endfunc
 
 Relation_121L2_18L        
 
-
 set EUtranCell.DD=.*,GUtranFreqRelation=627936 cellReselectionPriority 5
+
+
 set CWA_CRP_2 cellReselectionPriority 2
 
 set ENodeBFunction=1$  endcAllowed  true                                                                                                                 
@@ -6755,14 +6567,14 @@ set NRCellCU=.*  mcfbCellProfileRef Mcfb=1,McfbCellProfile=1
 set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFallbackOperationEm 1
 set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFbTargetSearchTimer 500
 set  Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFbAtSessionSetup 1
-set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFallbackOperation 1
+set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFallbackOperation 3
 set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base rejectVoiceIncHoAtEpsFb false
 set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base triggerQuantity 0
 set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base rsrpCriticalCoverage threshold=-109,hysteresis=10,timeToTrigger=160
 set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base rsrpCellCandidate threshold=-104,hysteresis=10,timeToTrigger=40
 set  Mcfb=1  voiceEpsFbPossible true
 
-set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=.*,McfbCellProfileUeCfg=Base epsFallbackOperation 1
+set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=.*,McfbCellProfileUeCfg=Base epsFallbackOperation 3
 
 cr GNBCUCPFunction=1,UeGroupSelection=1
 
@@ -7152,7 +6964,7 @@ set NRCellCU=.*  mcfbCellProfileRef Mcfb=1,McfbCellProfile=1
 set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFallbackOperationEm 1
 set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFbTargetSearchTimer 500
 set  Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base      epsFbAtSessionSetup 1
-set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFallbackOperation 1
+set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFallbackOperation 3
 set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base rejectVoiceIncHoAtEpsFb false
 set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base triggerQuantity 0
 set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base rsrpCriticalCoverage threshold=-109,hysteresis=10,timeToTrigger=160
@@ -7641,7 +7453,7 @@ lset CXC4012659 featurestate 1
 lset CXC4012729 featurestate 1
 lset CXC4012635 featurestate 1
 
-set Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base      epsFallbackOperation 5
+set Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base      epsFallbackOperation 3
 set . nrB1MeasAtEndcEnabled true
 set . nrB1MeasEnabled true
 
@@ -7651,7 +7463,7 @@ set DESManagementFunction=1 desSwitch         true
 
 
 
-lset Mcfb=1,McfbCellProfile=.*,McfbCellProfileUeCfg=Base$ epsFallbackOperation 5
+lset Mcfb=1,McfbCellProfile=.*,McfbCellProfileUeCfg=Base$ epsFallbackOperation 3
 lset  UeMeasControl=1,ReportConfigB1NR=1$ b1ThresholdRsrp -103
 lset  GUtranFreqRelation= threshXHigh 8
 set FeatureState=CXC4012580  featureState 0
@@ -7831,8 +7643,8 @@ set . prefUeResourceAllocDlTypeFr1 2
 set . dedicatedSib1AtHo true
 set Mcpc=1,McpcPCellProfile=MidBand,McpcPCellProfileUeCfg=VONR rsrpCandidateB2 threshold1=-99
 set GNBCUCPFunction=1,Mcfb=1 voiceEpsFbPossible                   true
-set Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base      epsFallbackOperation 5
-set Mcfb=1,McfbCellProfile=Default,McfbCellProfileUeCfg=Base epsFallbackOperation 5
+set Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base      epsFallbackOperation 3
+set Mcfb=1,McfbCellProfile=Default,McfbCellProfileUeCfg=Base epsFallbackOperation 3
 set Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base      rsrpCellCandidate threshold=-113
 set Mcfb=1,McfbCellProfile=Default,McfbCellProfileUeCfg=Base rsrpCellCandidate threshold=-113
 
@@ -9388,7 +9200,7 @@ set GNBDUFunction=1,UeCC=1,UlWfPortSwitch=1,UlWfPortSwitchUeCfg=Base ulWfSwitchF
 
 deb nr
 
-set Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base      epsFallbackOperation 5
+set Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base      epsFallbackOperation 3
 set . nrB1MeasAtEndcEnabled true
 set . nrB1MeasEnabled true
 
@@ -9546,7 +9358,7 @@ set GNBDUFunction=1,UeCC=1,UlWfPortSwitch=1,UlWfPortSwitchUeCfg=Base ulWfSwitchF
 
 deb nr
 
-set Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base      epsFallbackOperation 5
+set Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base      epsFallbackOperation 3
 set . nrB1MeasAtEndcEnabled true
 set . nrB1MeasEnabled true
 
@@ -9714,7 +9526,7 @@ set GNBDUFunction=1,UeCC=1,UlWfPortSwitch=1,UlWfPortSwitchUeCfg=Base ulWfSwitchF
 
 deb nr
 
-set Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base      epsFallbackOperation 5
+set Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base      epsFallbackOperation 3
 set . nrB1MeasAtEndcEnabled true
 set . nrB1MeasEnabled true
 
@@ -9759,7 +9571,8 @@ cvms Post_Rim
 """
 
 
-# RJ LTE GPL overwrite (user 2026-11-03: sgpl + sgpl-2, run after the integration on every RJ node) - XML only: 04 LTE_Config step after LTE 03
+# RJ LTE GPL overwrite (user 2026-11-03: sgpl + sgpl-2, run after the integration on every RJ node): 04 LTE_Config step
+# after LTE 03; AMOS: at the end of LTE 03 (user 2026-11-12)
 RJ_LTE_GPL_OVERWRITE = """#################sgpl#######################
 
 confb+
@@ -10528,4 +10341,245 @@ set GNBDUFunction=1,MassiveMimoSleep=1,MMimoSleepProfile=1 switchUpRrcConnThresh
 set GNBDUFunction=1,MassiveMimoSleep=1,MMimoSleepProfile=1 switchUpRrcConnThreshEco 50
 
 Set GNBDUFunction=1,MassiveMimoSleep=1,MMimoSleepTimeGroup=1,MMimoSleepTimeWindow dayOfWeek 0
+"""
+
+
+# 02 Cell_Def script (user 2026-11-13): the cells' frequency + frequency relation definition (own and all
+# technologies, from the 03 GPL) and the SSB frequency relation (GUtranSyncSignalFrequency / GUtranFreqRelation, from
+# the NR 03 Termpoint, which keeps the ENDC anchor of a 4G+5G site)
+RJ_LTE_FREQ_RELATION_AMOS = """
+####################### Frequency + frequency relation definition (own and all technologies; was in the 03 GPL) #######################
+
+###########
+unset all
+
+$Par[1] = L2100
+$Par[2] = TDD20
+$Par[3] = L1800
+$Par[4] = L900
+$Par[5] = TDD10
+$Par[6] = TDD30
+$Par[7] = TDD40
+
+mr L2100
+mr TDD20
+mr L1800
+mr L900
+mr TDD10
+mr TDD30
+mr TDD40
+
+ma L2100 EUtranCellFDD earfcn 515
+ma TDD20 EUtranCellTDD earfcn 39150
+ma L1800 EUtranCellFDD earfcn 1576
+ma L900 EUtranCellFDD earfcn 3601
+ma TDD10 EUtranCellTDD earfcn 39151
+ma TDD30 EUtranCellTDD earfcn 39348
+ma TDD40 EUtranCellTDD earfcn 39349
+
+############################ FREQ Creation###########
+
+cr ENodeBFunction=1,GeraNetwork=1
+
+cr ENodeBFunction=1,GeraNetwork=1,GeranFreqGroup=1
+1 #frequencyGroupId
+
+cr ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=39150
+39150
+0
+cr ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=3601
+3601
+0
+cr ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=1576
+1576
+0
+cr ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=515
+515
+0
+cr ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=39151
+39151
+0
+
+cr ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=39348
+39348
+0
+
+cr ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=39349
+39349
+0
+
+func Gran_rahul
+cr ENodeBFunction=1,GeraNetwork=1,GeranFrequency=$t
+$t
+0
+set ENodeBFunction=1,GeraNetwork=1,GeranFrequency=$t geranFreqGroupRef ENodeBFunction=1,GeraNetwork=1,GeranFreqGroup=1
+endfunc
+
+for $t = 1 to 6
+Gran_rahul
+done
+
+
+crn ENodeBFunction=1,GeraNetwork=1,GeranFrequency=30
+arfcnValueGeranDl 30
+bandIndicator 0
+geranFreqGroupRef ENodeBFunction=1,GeraNetwork=1,GeranFreqGroup=1
+userLabel
+end
+
+
+lt all
+
+################## Frequency Relation##########
+
+func Gran_Rel
+for $mo in $Par[$i]
+ $mordn = rdn($mo)
+ pr $mordn,GeranFreqGroupRelation=1
+ if $nr_of_mos = 0
+  cr ENodeBFunction=1,$mordn,GeranFreqGroupRelation=1
+  ENodeBFunction=1,GeraNetwork=1,GeranFreqGroup=1
+  1
+ fi 
+done
+endfunc
+
+func EURel_39150
+for $mo in $Par[$i]
+ $mordn = rdn($mo)
+ pr $mordn,EUtranFreqRelation=39150
+ if $nr_of_mos = 0
+  cr ENodeBFunction=1,$mordn,EUtranFreqRelation=39150 
+  ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=39150
+  7
+ fi 
+done
+endfunc
+
+func EURel_39151
+for $mo in $Par[$i]
+ $mordn = rdn($mo)
+ pr $mordn,EUtranFreqRelation=39151
+ if $nr_of_mos = 0
+  cr ENodeBFunction=1,$mordn,EUtranFreqRelation=39151
+  ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=39151
+  6
+ fi 
+done
+endfunc
+
+func EURel_39348
+for $mo in $Par[$i]
+ $mordn = rdn($mo)
+ pr $mordn,EUtranFreqRelation=39348
+ if $nr_of_mos = 0
+  cr ENodeBFunction=1,$mordn,EUtranFreqRelation=39348
+  ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=39348
+  7
+ fi 
+done
+endfunc
+
+func EURel_39349
+for $mo in $Par[$i]
+ $mordn = rdn($mo)
+ pr $mordn,EUtranFreqRelation=39349
+ if $nr_of_mos = 0
+  cr ENodeBFunction=1,$mordn,EUtranFreqRelation=39349
+  ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=39349
+  6
+ fi 
+done
+endfunc
+
+func EURel_515
+for $mo in $Par[$i]
+ $mordn = rdn($mo)
+ pr $mordn,EUtranFreqRelation=515
+ if $nr_of_mos = 0
+  cr ENodeBFunction=1,$mordn,EUtranFreqRelation=515 
+  ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=515
+  5
+ fi 
+done
+endfunc
+
+func EURel_1576
+for $mo in $Par[$i]
+ $mordn = rdn($mo)
+ pr $mordn,EUtranFreqRelation=1576
+ if $nr_of_mos = 0
+  cr ENodeBFunction=1,$mordn,EUtranFreqRelation=1576
+  ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=1576
+  4
+ fi 
+done
+endfunc
+
+func EURel_3601
+for $mo in $Par[$i]
+ $mordn = rdn($mo)
+ pr $mordn,EUtranFreqRelation=3601
+ if $nr_of_mos = 0
+  cr ENodeBFunction=1,$mordn,EUtranFreqRelation=3601
+  ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=3601
+  3
+ fi 
+done
+endfunc
+
+ 
+for $i = 1 to 7
+EURel_39150
+EURel_39151
+EURel_39348
+EURel_39349
+EURel_515
+EURel_1576
+EURel_3601
+Gran_Rel
+done
+
+
+
+crn ENodeBFunction=1,GeraNetwork=1,GeranFrequency=30
+arfcnValueGeranDl 30
+bandIndicator 0
+geranFreqGroupRef ENodeBFunction=1,GeraNetwork=1,GeranFreqGroup=1
+userLabel
+end
+"""
+
+RJ_SSB_FREQ_RELATION_AMOS = """
+############################################ GUtranSyncSignalFrequency, GUtranFreqRelation ############################################
+
+pr ENodeBFunction=1,GUtraNetwork=1$
+if $nr_of_mos = 0
+crn ENodeBFunction=1,GUtraNetwork=1
+userLabel
+end
+fi
+
+crn ENodeBFunction=1,GUtraNetwork=1,GUtranSyncSignalFrequency=627936-30                                                                                                                                                                
+arfcn 627936                                                                                                                                                                                                                           
+band 78                                                                                                                                                                                                                                
+smtcDuration 1                                                                                                                                                                                                                         
+smtcOffset 0                                                                                                                                                                                                                           
+smtcPeriodicity 20                                                                                                                                                                                                                     
+smtcScs 30                                                                                                                                                                                                                             
+userLabel                                                                                                                                                                                                                              
+end                                                                                                                                                                                                                                    
+
+mr L21_12_21
+ma L21_12_21 ^EUtranCell.DD
+for $mo in L21_12_21                                                                                                                                              
+$mordn = rdn($mo)                                                                                                                                                 
+pr ENodeBFunction=1,$mordn,GUtranFreqRelation=627936                                                                                                              
+if $nr_of_mos = 0                                                                                                                                                 
+cr ENodeBFunction=1,$mordn,GUtranFreqRelation=627936                                                                                                              
+GUtraNetwork=1,GUtranSyncSignalFrequency=627936-30                                                                                                       
+fi                                                                                                                                                                
+done                                                                                                                                                              
+
+set EUtranCell.DD=.*,GUtranFreqRelation=627936 cellReselectionPriority 5
 """

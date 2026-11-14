@@ -183,218 +183,17 @@ cvms Pre_GPL_LTE_L18L21_$date
 ########Frequency Creation##########
 
 bl EUtranCellFDD
-
-wait 2
-
-del ENodeBFunction=1,GeraNetwork=1,GeranFrequency=
-wait 2
-cr ENodeBFunction=1,GeraNetwork=1
-
-cr ENodeBFunction=1,GeraNetwork=1,GeranFreqGroup=1
-1 #frequencyGroupId
-
-func Gran_freq
-cr ENodeBFunction=1,GeraNetwork=1,GeranFrequency=$t
-$t
-0
-set ENodeBFunction=1,GeraNetwork=1,GeranFrequency=$t geranFreqGroupRef ENodeBFunction=1,GeraNetwork=1,GeranFreqGroup=1
-endfunc 
-
-for $t = 50 to 59
-Gran_freq
-done 
-
-for $t = 26 to 26
-Gran_freq
-done
-
-for $t = 60 to 69
-Gran_freq
-done   
-
-lt all
-
-wait 3
-
-cr ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=39125
-39125
-0
-cr ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=39275
-39275
-0
-cr ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=1301
-1301
-0
-cr ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=3672
-3672
-0
-cr ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=240
-240
-0
-cr ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=39150
-39150
-0
-
-cr ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=39300
-39300
-0
-
-cr ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=39126
-39126
-0
-cr ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=39276
-39276
-0
-
-##########GERANFREQ##################
-
+# frequencies + frequency relations (own and all technologies): in the 02 Cell_Def script
 unset all
-
 $Par[1] = L1800
 $Par[2] = L2100
 $Par[3] = L900
-			   
-
 mr L1800
 mr L2100
 mr L900
-
 ma L1800 EUtranCellFDD earfcn 1301
 ma L2100 EUtranCellFDD earfcn 240
 ma L2100 EUtranCellFDD earfcn 3672								 
-
-func Gran_Rel
-for $mo in $Par[$i]
- $mordn = rdn($mo)
- pr $mordn,GeranFreqGroupRelation=1
- if $nr_of_mos = 0
-  cr ENodeBFunction=1,$mordn,GeranFreqGroupRelation=1
-  ENodeBFunction=1,GeraNetwork=1,GeranFreqGroup=1
-  1
- fi 
-done
-endfunc
-
-func EURel_39125
-for $mo in $Par[$i]
- $mordn = rdn($mo)
- pr $mordn,EUtranFreqRelation=39125
- if $nr_of_mos = 0
-  cr ENodeBFunction=1,$mordn,EUtranFreqRelation=39125 
-  ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=39125
-  6
- fi 
-done
-endfunc
-
-func EURel_39275
-for $mo in $Par[$i]
- $mordn = rdn($mo)
- pr $mordn,EUtranFreqRelation=39275
- if $nr_of_mos = 0
-  cr ENodeBFunction=1,$mordn,EUtranFreqRelation=39275
-  ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=39275
-  6
- fi 
-done
-endfunc
-
-func EURel_240
-for $mo in $Par[$i]
- $mordn = rdn($mo)
- pr $mordn,EUtranFreqRelation=240$
- if $nr_of_mos = 0
-  cr ENodeBFunction=1,$mordn,EUtranFreqRelation=240
-  ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=240
-  4
- fi 
-done
-endfunc
-
-func EURel_1301
-for $mo in $Par[$i]
- $mordn = rdn($mo)
- pr $mordn,EUtranFreqRelation=1301
- if $nr_of_mos = 0
-  cr ENodeBFunction=1,$mordn,EUtranFreqRelation=1301 
-  ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=1301
-  5
- fi 
-done
-endfunc
-
-func EURel_3672
-for $mo in $Par[$i]
- $mordn = rdn($mo)
- pr $mordn,EUtranFreqRelation=3672
- if $nr_of_mos = 0
-  cr ENodeBFunction=1,$mordn,EUtranFreqRelation=3672 
-  ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=3672
-  3
- fi 
-done
-endfunc
-
-func EURel_39150
-for $mo in $Par[$i]
- $mordn = rdn($mo)
- pr $mordn,EUtranFreqRelation=39150
- if $nr_of_mos = 0
-  cr ENodeBFunction=1,$mordn,EUtranFreqRelation=39150 
-  ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=39150
-  6
- fi 
-done
-endfunc
-
-func EURel_39300
-for $mo in $Par[$i]
- $mordn = rdn($mo)
- pr $mordn,EUtranFreqRelation=39300
- if $nr_of_mos = 0
-  cr ENodeBFunction=1,$mordn,EUtranFreqRelation=39300 
-  ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=39300
-  6
- fi 
-done
-endfunc
-
-func EURel_39126
-for $mo in $Par[$i]
- $mordn = rdn($mo)
- pr $mordn,EUtranFreqRelation=39126
- if $nr_of_mos = 0
-  cr ENodeBFunction=1,$mordn,EUtranFreqRelation=39126 
-  ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=39126
-  6
- fi 
-done
-endfunc
-
-func EURel_39276
-for $mo in $Par[$i]
- $mordn = rdn($mo)
- pr $mordn,EUtranFreqRelation=39276
- if $nr_of_mos = 0
-  cr ENodeBFunction=1,$mordn,EUtranFreqRelation=39276
-  ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=39276
-  6
- fi 
-done
-endfunc
- 
-for $i = 1 to 3
-EURel_39125
-EURel_39275
-EURel_1301
-EURel_240
-EURel_39150
-EURel_39300
-EURel_3672
-EURel_39126
-EURel_39276
-Gran_Rel
-done
 
 
 
@@ -1429,6 +1228,11 @@ set . ulPhyProcResTradingEnabled 1
 set EUtranCellFDD=KK_E_F3_.* noOfPucchFormat1PrbPairsPerFrameConf 4
 set EUtranCellFDD=KK_E_F1_.* noOfPucchFormat1PrbPairsPerFrameConf 2																   
 set EUtranCellFDD=.* noOfPucchFormat2PrbPairsPerFrameConf 1
+set EUtranCellFDD=KK_E_F8_.* noOfPucchFormat1PrbPairsPerFrameConf 2
+set EUtranCellTDD=.* noOfPucchFormat1PrbPairsPerFrameConf 10
+set EUtranCellTDD=.* noOfPucchFormat2PrbPairsPerFrameConf 4
+set EUtranCellTDD=.* noOfPucchCqiUsers 620
+set EUtranCellTDD=.* noOfPucchSrUsers 710
 
 
 ## Correction
@@ -5851,9 +5655,12 @@ get GNBDUFunction=1 gNBId$ > $gnbid
 
 gs+
 
+pr ENodeBFunction=1,GUtraNetwork=1$
+if $nr_of_mos = 0
 crn ENodeBFunction=1,GUtraNetwork=1
 userLabel
 end
+fi
 
 crn ENodeBFunction=1,GUtraNetwork=1,ExternalGNodeBFunction=40445-$gnbid
 dirDataPathAvail true
@@ -5895,42 +5702,6 @@ deb TermPointToGNB
 
 gs-
  
-
-############################################GUtranSyncSignalFrequency,GUtranFreqRelation##################################################
-
-
-lt all
-
-
-crn GUtraNetwork=1,GUtranSyncSignalFrequency=627936-30
-arfcn 627936
-smtcScs 30
-end
-
-mr L21_12_21 ^EUtranCell.DD
-
-ma L21_12_21 ^EUtranCell.DD
-for $mo in L21_12_21
-$mordn = rdn($mo)
-pr ENodeBFunction=1,$mordn,GUtranFreqRelation=627936
-if $nr_of_mos = 0
-cr ENodeBFunction=1,$mordn,GUtranFreqRelation=627936
-GUtraNetwork=1,GUtranSyncSignalFrequency=627936-30
-fi
-done
-
-
-lt all
-get lgutran res
-
-confbd+
-
-set GUtranFreqRelation=627936    endcB1MeasPriority 7
-set EUtranCell.DD=.*,GUtranFreqRelation=627936 b1ThrRsrpFreqOffset 0  
-set EUtranCell.DD=.*,GUtranFreqRelation=627936 b1ThrRsrqFreqOffset 0
-set EUtranCell.DD=.*,GUtranFreqRelation=627936 qOffsetFreq 0
-
-confbd-
 
 cvms post_Relation_$date
 
@@ -7211,14 +6982,14 @@ set NRCellCU=.*  mcfbCellProfileRef Mcfb=1,McfbCellProfile=1
 set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFallbackOperationEm 1
 set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFbTargetSearchTimer 500
 set  Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFbAtSessionSetup 1
-set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFallbackOperation 1                 
+set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFallbackOperation 3                 
 set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base rejectVoiceIncHoAtEpsFb false
 set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base triggerQuantity 0
 set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base rsrpCriticalCoverage threshold=-109,hysteresis=10,timeToTrigger=160 
 set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base rsrpCellCandidate threshold=-104,hysteresis=10,timeToTrigger=40
 set  Mcfb=1  voiceEpsFbPossible true
 
-set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=.*,McfbCellProfileUeCfg=Base epsFallbackOperation 1                 
+set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=.*,McfbCellProfileUeCfg=Base epsFallbackOperation 3                 
 
 cr GNBCUCPFunction=1,UeGroupSelection=1
 
@@ -7607,7 +7378,7 @@ set NRCellCU=.*  mcfbCellProfileRef Mcfb=1,McfbCellProfile=1
 set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFallbackOperationEm 1
 set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFbTargetSearchTimer 500
 set  Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base      epsFbAtSessionSetup 1
-set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFallbackOperation 1               
+set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFallbackOperation 3               
 set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base rejectVoiceIncHoAtEpsFb false
 set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base triggerQuantity 0
 set  GNBCUCPFunction=1,Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base rsrpCriticalCoverage threshold=-109,hysteresis=10,timeToTrigger=160 
@@ -7946,7 +7717,7 @@ get . nrB1MeasAtEndcEnabled
 
 set . nrB1MeasEnabled true
 set . nrB1MeasAtEndcEnabled true
-set Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFallbackOperation 5
+set Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFallbackOperation 3
 
 cvms Post_Rim
 
@@ -8076,7 +7847,7 @@ get . nrB1MeasAtEndcEnabled
 
 set . nrB1MeasEnabled true
 set . nrB1MeasAtEndcEnabled true
-set Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFallbackOperation 5
+set Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFallbackOperation 3
 
 cvms Post_Rim
 
@@ -8215,7 +7986,7 @@ get . nrB1MeasAtEndcEnabled
 
 set . nrB1MeasEnabled true
 set . nrB1MeasAtEndcEnabled true
-set Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFallbackOperation 5
+set Mcfb=1,McfbCellProfile=1,McfbCellProfileUeCfg=Base epsFallbackOperation 3
 
 cvms Post_Rim
 
@@ -18816,7 +18587,6 @@ ueGroupList 1
 userLabel
 end
 set GNBDUFunction=1,UeCC=1,PuschRep=Default,PuschRepUeCfg=VoNR ueGroupList 1
-set GNBDUFunction=1,UeCC=1,PuschRep=Default,PuschRepUeCfg=VoNR prefUeGroupList 1
 
 ## UeMCEUtranFreqRelProfile (KK) - connModeAllowedPCell / connModePrioPCell (IRAT Priority for VONR) / blindRwrAllowed
 cr GNBCUCPFunction=1,UeMC=1,UeMCEUtranFreqRelProfile=L1800
@@ -18976,4 +18746,322 @@ KK_LTE_CONFIG_XML_RPC = """<rpc message-id="{mid}" xmlns="urn:ietf:params:xml:ns
 </edit-config>
 </rpc>
 ]]>]]>
+"""
+
+
+# 01 TN_RN_GPS_MME: external alarms (AlarmPort, port / alarmSlogan / perceivedSeverity 2 CRITICAL, 3 MAJOR, 4 MINOR),
+# values from KK-NLBGR583-1 (as KK_LTE_CONFIG_XML_EXTERNAL_ALARM of 04 LTE_Config)
+KK_EXTERNAL_ALARMS = [(1, "Mains Fail", 4), (2, "Site on Battery", 3), (3, "Low Battery Voltage", 3), (4, "Fire and Smoke", 2),
+                      (5, "DOOR OPEN", 4), (6, "TCU or MCU or IP-55 FAN Fault", 3), (7, "DG on Load", 2),
+                      (8, "DG FAILED TO START", 4)]
+
+# 03 GPL of a 4G only site (not in NR-CELL): ENDC anchor
+KK_ANCHOR_4G_ONLY_AMOS = """
+####################### 4G only site: ENDC anchor (NR 03 Termpoint without ExternalGNodeBFunction / TermPointToGNB - no gNBId; as 04 LTE_Config) #######################
+
+lt all
+gs+
+
+pr ENodeBFunction=1,GUtraNetwork=1$
+if $nr_of_mos = 0
+crn ENodeBFunction=1,GUtraNetwork=1
+userLabel
+end
+fi
+
+crn Transport=1,SctpEndpoint=X2_ENDC
+dtls
+dtlsNodeCredential
+dtlsSctpSecurityMode 0
+dtlsTrustCategory
+localIpAddress Transport=1,Router=LTE_NR,InterfaceIPv6=NR,AddressIPv6=X2_ENDC
+portNumber 36422
+sctpProfile Transport=1,SctpProfile=1
+userLabel
+end
+confbd+
+set ENodeBFunction=1     upEndcX2IpAddressRef Transport=1,Router=LTE_NR,InterfaceIPv6=NR,AddressIPv6=X2_ENDC
+set ENodeBFunction=1     sctpEndcX2Ref Transport=1,SctpEndpoint=X2_ENDC
+confbd-
+
+gs-
+
+confbd+
+# 5G sites get these from 06 SA_AMF_RIM_CONFIG
+set EUtranCell.DD=.*,GUtranFreqRelation=627936 connectedModeMobilityPrio 7
+set EUtranCell.DD=.*,GUtranFreqRelation=627936 cellReselectionPriority 7
+set EUtranCell.DD=.*,GUtranFreqRelation=627936 qRxLevMin -110
+set EUtranCell.DD=.*,GUtranFreqRelation=627936 threshXHigh 4
+set EUtranCell.DD=.*,GUtranFreqRelation=627936 pMaxNR 33
+set EUtranCell.DD=.*,GUtranFreqRelation=627936 anrMeasOn true
+
+confbd-
+"""
+
+
+# 02 Cell_Def script (user 2026-11-13): the cells' frequency + frequency relation definition (own and all
+# technologies, from the 03 GPL) and the SSB frequency relation (GUtranSyncSignalFrequency / GUtranFreqRelation, from
+# the NR 03 Termpoint, which keeps the ENDC anchor of a 4G+5G site)
+KK_LTE_FREQ_RELATION_AMOS = """
+####################### Frequency + frequency relation definition (own and all technologies; was in the 03 GPL) #######################
+
+wait 2
+
+del ENodeBFunction=1,GeraNetwork=1,GeranFrequency=
+wait 2
+cr ENodeBFunction=1,GeraNetwork=1
+
+cr ENodeBFunction=1,GeraNetwork=1,GeranFreqGroup=1
+1 #frequencyGroupId
+
+func Gran_freq
+cr ENodeBFunction=1,GeraNetwork=1,GeranFrequency=$t
+$t
+0
+set ENodeBFunction=1,GeraNetwork=1,GeranFrequency=$t geranFreqGroupRef ENodeBFunction=1,GeraNetwork=1,GeranFreqGroup=1
+endfunc 
+
+for $t = 50 to 59
+Gran_freq
+done 
+
+for $t = 26 to 26
+Gran_freq
+done
+
+for $t = 60 to 69
+Gran_freq
+done   
+
+lt all
+
+wait 3
+
+cr ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=39125
+39125
+0
+cr ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=39275
+39275
+0
+cr ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=1301
+1301
+0
+cr ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=3672
+3672
+0
+cr ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=240
+240
+0
+cr ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=39150
+39150
+0
+
+cr ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=39300
+39300
+0
+
+cr ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=39126
+39126
+0
+cr ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=39276
+39276
+0
+
+##########GERANFREQ##################
+
+unset all
+
+$Par[1] = L1800
+$Par[2] = L2100
+$Par[3] = L900
+			   
+
+mr L1800
+mr L2100
+mr L900
+
+ma L1800 EUtranCellFDD earfcn 1301
+ma L2100 EUtranCellFDD earfcn 240
+ma L2100 EUtranCellFDD earfcn 3672								 
+
+func Gran_Rel
+for $mo in $Par[$i]
+ $mordn = rdn($mo)
+ pr $mordn,GeranFreqGroupRelation=1
+ if $nr_of_mos = 0
+  cr ENodeBFunction=1,$mordn,GeranFreqGroupRelation=1
+  ENodeBFunction=1,GeraNetwork=1,GeranFreqGroup=1
+  1
+ fi 
+done
+endfunc
+
+func EURel_39125
+for $mo in $Par[$i]
+ $mordn = rdn($mo)
+ pr $mordn,EUtranFreqRelation=39125
+ if $nr_of_mos = 0
+  cr ENodeBFunction=1,$mordn,EUtranFreqRelation=39125 
+  ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=39125
+  6
+ fi 
+done
+endfunc
+
+func EURel_39275
+for $mo in $Par[$i]
+ $mordn = rdn($mo)
+ pr $mordn,EUtranFreqRelation=39275
+ if $nr_of_mos = 0
+  cr ENodeBFunction=1,$mordn,EUtranFreqRelation=39275
+  ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=39275
+  6
+ fi 
+done
+endfunc
+
+func EURel_240
+for $mo in $Par[$i]
+ $mordn = rdn($mo)
+ pr $mordn,EUtranFreqRelation=240$
+ if $nr_of_mos = 0
+  cr ENodeBFunction=1,$mordn,EUtranFreqRelation=240
+  ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=240
+  4
+ fi 
+done
+endfunc
+
+func EURel_1301
+for $mo in $Par[$i]
+ $mordn = rdn($mo)
+ pr $mordn,EUtranFreqRelation=1301
+ if $nr_of_mos = 0
+  cr ENodeBFunction=1,$mordn,EUtranFreqRelation=1301 
+  ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=1301
+  5
+ fi 
+done
+endfunc
+
+func EURel_3672
+for $mo in $Par[$i]
+ $mordn = rdn($mo)
+ pr $mordn,EUtranFreqRelation=3672
+ if $nr_of_mos = 0
+  cr ENodeBFunction=1,$mordn,EUtranFreqRelation=3672 
+  ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=3672
+  3
+ fi 
+done
+endfunc
+
+func EURel_39150
+for $mo in $Par[$i]
+ $mordn = rdn($mo)
+ pr $mordn,EUtranFreqRelation=39150
+ if $nr_of_mos = 0
+  cr ENodeBFunction=1,$mordn,EUtranFreqRelation=39150 
+  ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=39150
+  6
+ fi 
+done
+endfunc
+
+func EURel_39300
+for $mo in $Par[$i]
+ $mordn = rdn($mo)
+ pr $mordn,EUtranFreqRelation=39300
+ if $nr_of_mos = 0
+  cr ENodeBFunction=1,$mordn,EUtranFreqRelation=39300 
+  ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=39300
+  6
+ fi 
+done
+endfunc
+
+func EURel_39126
+for $mo in $Par[$i]
+ $mordn = rdn($mo)
+ pr $mordn,EUtranFreqRelation=39126
+ if $nr_of_mos = 0
+  cr ENodeBFunction=1,$mordn,EUtranFreqRelation=39126 
+  ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=39126
+  6
+ fi 
+done
+endfunc
+
+func EURel_39276
+for $mo in $Par[$i]
+ $mordn = rdn($mo)
+ pr $mordn,EUtranFreqRelation=39276
+ if $nr_of_mos = 0
+  cr ENodeBFunction=1,$mordn,EUtranFreqRelation=39276
+  ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=39276
+  6
+ fi 
+done
+endfunc
+ 
+for $i = 1 to 3
+EURel_39125
+EURel_39275
+EURel_1301
+EURel_240
+EURel_39150
+EURel_39300
+EURel_3672
+EURel_39126
+EURel_39276
+Gran_Rel
+done
+"""
+
+KK_SSB_FREQ_RELATION_AMOS = """
+############################################GUtranSyncSignalFrequency,GUtranFreqRelation##################################################
+
+
+lt all
+
+
+pr ENodeBFunction=1,GUtraNetwork=1$
+if $nr_of_mos = 0
+crn ENodeBFunction=1,GUtraNetwork=1
+userLabel
+end
+fi
+
+crn GUtraNetwork=1,GUtranSyncSignalFrequency=627936-30
+arfcn 627936
+band 78
+smtcDuration 1
+smtcScs 30
+end
+
+mr L21_12_21 ^EUtranCell.DD
+
+ma L21_12_21 ^EUtranCell.DD
+for $mo in L21_12_21
+$mordn = rdn($mo)
+pr ENodeBFunction=1,$mordn,GUtranFreqRelation=627936
+if $nr_of_mos = 0
+cr ENodeBFunction=1,$mordn,GUtranFreqRelation=627936
+GUtraNetwork=1,GUtranSyncSignalFrequency=627936-30
+fi
+done
+
+
+lt all
+get lgutran res
+
+confbd+
+
+set GUtranFreqRelation=627936    endcB1MeasPriority 7
+set EUtranCell.DD=.*,GUtranFreqRelation=627936 b1ThrRsrpFreqOffset 0  
+set EUtranCell.DD=.*,GUtranFreqRelation=627936 b1ThrRsrqFreqOffset 0
+set EUtranCell.DD=.*,GUtranFreqRelation=627936 qOffsetFreq 0
+set EUtranCellFDD=.*,GUtranFreqRelation=627936 qQualMin -34
+
+confbd-
 """

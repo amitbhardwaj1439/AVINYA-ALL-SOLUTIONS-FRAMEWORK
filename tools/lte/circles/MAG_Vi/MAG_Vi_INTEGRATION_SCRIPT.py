@@ -2762,103 +2762,12 @@ gs-
 
 gs+
 
-crn Transport=1,Router=LTE_CP,InterfaceIPv4=LTE_CP
-aclEgress
-aclIngress
-arpTimeout 300
-bfdProfile
-bfdStaticRoutes 0
-egressQosMarking QosProfiles=1,DscpPcpMap=1
-encapsulation VlanPort=LTE_CP
-ingressQosMarking
-ipOptionsDisabled false
-loopback false
-mtu 1500
-pcpArp 6
-routesHoldDownTimer
-routingPolicyIngress
-trackedInterface
-userLabel LTE_CP
-end
-
-crn Transport=1,Router=LTE_CP,InterfaceIPv4=LTE_CP,AddressIPv4=LTE_CP
-address {CP_IP_IPV4}
-configurationMode 0
-dhcpClientIdentifier
-dhcpClientIdentifierType 0
-primaryAddress true
-userLabel
-end
+# IPv4 CP/UP (InterfaceIPv4, AddressIPv4, RouteTableIPv4Static 3/2) are created by the 01 SiteBasic
+lset Transport=1,Router=LTE_CP,InterfaceIPv4=LTE_CP$ egressQosMarking Transport=1,QosProfiles=1,DscpPcpMap=1
+lset Transport=1,Router=LTE_UP,InterfaceIPv4=LTE_UP$ egressQosMarking Transport=1,QosProfiles=1,DscpPcpMap=1
 gs-
 
-gs+
-
-crn Transport=1,Router=LTE_CP,RouteTableIPv4Static=3
-end
-
-crn Transport=1,Router=LTE_CP,RouteTableIPv4Static=3,Dst=LTE_CP
-dst 0.0.0.0/0
-end
-
-crn Transport=1,Router=LTE_CP,RouteTableIPv4Static=3,Dst=LTE_CP,NextHop=8
-address {CP_GW_IPV4}
-adminDistance 1
-bfdMonitoring true
-discard false
-reference
-end
-gs-
-
-gs+
-
-crn Transport=1,Router=LTE_UP,InterfaceIPv4=LTE_UP
-aclEgress
-aclIngress
-arpTimeout 300
-bfdProfile
-bfdStaticRoutes 0
-egressQosMarking QosProfiles=1,DscpPcpMap=1
-encapsulation VlanPort=LTE_UP
-ingressQosMarking
-ipOptionsDisabled false
-loopback false
-mtu 1500
-pcpArp 6
-routesHoldDownTimer
-routingPolicyIngress
-trackedInterface
-userLabel LTE_UP
-end
-
-crn Transport=1,Router=LTE_UP,InterfaceIPv4=LTE_UP,AddressIPv4=LTE_UP
-address {UP_IP_IPV4}
-configurationMode 0
-dhcpClientIdentifier
-dhcpClientIdentifierType 0
-primaryAddress true
-userLabel
-end
-gs-
-
-
-crn Transport=1,Router=LTE_UP,RouteTableIPv4Static=5
-end
-
-crn Transport=1,Router=LTE_UP,RouteTableIPv4Static=5,Dst=LTE_UP
-dst 0.0.0.0/0
-end
-
-crn Transport=1,Router=LTE_UP,RouteTableIPv4Static=5,Dst=LTE_UP,NextHop=2
-address {UP_GW_IPV4}
-adminDistance 1
-bfdMonitoring true
-discard false
-reference
-end
-gs-
-
-set SctpEndpoint=1                                          localIpAddress  Transport=1,Router=LTE_CP,InterfaceIPv6=LTE_CP,AddressIPv6=LTE_CP Transport=1,Router=LTE_CP,InterfaceIPv4=LTE_CP,AddressIPv4=LTE_CP
-y
+{DUAL_STACK_SCTP}
 
 
 

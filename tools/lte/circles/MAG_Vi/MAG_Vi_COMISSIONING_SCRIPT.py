@@ -303,6 +303,66 @@ MAG_Vi_SiteBasic_ipv6_6631 = """
               </Dst>
             </RouteTableIPv4Static>
           </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTE_CP</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>LTE_CP</interfaceIPv4Id>
+              <encapsulation>ManagedElement=1,Transport=1,VlanPort=LTE_CP</encapsulation>
+              <mtu>1500</mtu>
+              <pcpArp>6</pcpArp>
+              <userLabel>LTE_CP</userLabel>
+              <AddressIPv4>
+                <addressIPv4Id>LTE_CP</addressIPv4Id>
+                <address>{LTE_S1_IP_V4}</address>
+              </AddressIPv4>
+            </InterfaceIPv4>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTE_CP</routerId>
+            <RouteTableIPv4Static xmlns="urn:com:ericsson:ecim:RtnRoutesStaticRouteIPv4">
+              <routeTableIPv4StaticId>3</routeTableIPv4StaticId>
+              <Dst>
+                <dstId>LTE_CP</dstId>
+                <dst>0.0.0.0/0</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_S1_GW_V4}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+            </RouteTableIPv4Static>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTE_UP</routerId>
+            <InterfaceIPv4 xmlns="urn:com:ericsson:ecim:RtnL3InterfaceIPv4">
+              <interfaceIPv4Id>LTE_UP</interfaceIPv4Id>
+              <encapsulation>ManagedElement=1,Transport=1,VlanPort=LTE_UP</encapsulation>
+              <mtu>1500</mtu>
+              <pcpArp>6</pcpArp>
+              <userLabel>LTE_UP</userLabel>
+              <AddressIPv4>
+                <addressIPv4Id>LTE_UP</addressIPv4Id>
+                <address>{LTE_UP_IP_V4}</address>
+              </AddressIPv4>
+            </InterfaceIPv4>
+          </Router>
+          <Router xmlns="urn:com:ericsson:ecim:RtnL3Router">
+            <routerId>LTE_UP</routerId>
+            <RouteTableIPv4Static xmlns="urn:com:ericsson:ecim:RtnRoutesStaticRouteIPv4">
+              <routeTableIPv4StaticId>2</routeTableIPv4StaticId>
+              <Dst>
+                <dstId>LTE_UP</dstId>
+                <dst>0.0.0.0/0</dst>
+                <NextHop>
+                  <nextHopId>1</nextHopId>
+                  <address>{LTE_UP_GW_V4}</address>
+                  <adminDistance>1</adminDistance>
+                  <bfdMonitoring>true</bfdMonitoring>
+                </NextHop>
+              </Dst>
+            </RouteTableIPv4Static>
+          </Router>
         </Transport>
       </ManagedElement>
     </config>

@@ -33,7 +33,7 @@ from .widgets import (ACCENT, BLUE_BRIGHT, SELECT, TEXT_DIM, FilePanel,
 
 # The LTE generator's circles are the branches its runner actually implements.
 LTE_CIRCLES = ["KK", "TN", "CHN", "AP", "RJ", "NE", "AS", "DEL", "DEL_Vi",
-               "MAG_Vi", "MP_Vi", "UPW", "HR", "JK"]
+               "MAG_Vi", "MP_Vi", "RJ_Vi", "UPW", "HR", "JK"]
 
 KGET_PATTERNS = [("kget logs", "*.log *.txt"), ("All files", "*.*")]
 EXCEL_PATTERNS = [("Excel files", "*.xlsx *.xlsb *.xlsm *.xls"), ("All files", "*.*")]

@@ -25,7 +25,7 @@ from .writer import write_workbook
 # tall SSIS exports with two 4G nodes per site.
 MAPPINGS = {"AP": ".mapping_ap", "HR": ".mapping_hr", "DEL": ".mapping_del",
             "DEL_VI": ".mapping_del_vi", "MAG_VI": ".mapping_mag_vi",
-            "MP_VI": ".mapping_mp_vi"}
+            "MP_VI": ".mapping_mp_vi", "RJ_VI": ".mapping_rj_vi"}
 
 
 def _naming(mapping) -> Naming:
@@ -137,6 +137,29 @@ def _load_mapping(circle: str):
     return importlib.import_module(MAPPINGS[circle], package=__package__)
 
 
+#: Columns of the LTE tool's RF_Data_Scripting_Template that the reference copy here (gitignored, not in the repo) does
+#: not have yet, as (column, the column it follows): Site_Basic Broker_IP, the BSC broker address of the GSM AbisIp,
+#: after ABIS_GW as in the Airtel KK / AS / NE / RJ RF data. Empty unless the circle's mapping fills it.
+TEMPLATE_ADDITIONS = {
+    "Site_Basic": (("Broker_IP", "ABIS_GW"),),
+}
+
+
+def with_extra_columns(columns: list[str], extra) -> list[str]:
+    """`columns` plus `extra` - names (appended) or (name, after) pairs (inserted after that column, appended when
+    it is missing); names already there are kept where they are."""
+    out = list(columns)
+    for item in extra:
+        name, after = (item, None) if isinstance(item, str) else item
+        if name in out:
+            continue
+        if after in out:
+            out.insert(out.index(after) + 1, name)
+        else:
+            out.append(name)
+    return out
+
+
 def _frame(columns: list[str], rows: list[dict]) -> pd.DataFrame:
     """Rows as a frame with exactly the template's columns, in order."""
     return pd.DataFrame([{c: r.get(c) for c in columns} for r in rows],
@@ -198,6 +221,12 @@ def convert_site(site: str, circle: str, input_folder: Path,
     sheet_rows, sheet_columns, coverage, row_counts = {}, {}, [], {}
     for sheet in tpl.REQUIRED_SHEETS:
         columns = schema.columns(sheet)
+        # Columns the reference template lacks: the LTE tool's own (TEMPLATE_ADDITIONS, every circle) and a circle's
+        # (mapping EXTRA_COLUMNS, RJ_Vi: BSC, GSM sector names)
+        # a circle may name an added column its own way (RJ_Vi: Broker_IP -> BSC_Broker_IP)
+        renames = getattr(mapping, "TEMPLATE_RENAMES", {}).get(sheet, {})
+        additions = tuple((renames.get(name, name), after) for name, after in TEMPLATE_ADDITIONS.get(sheet, ()))
+        columns = with_extra_columns(columns, additions + tuple(getattr(mapping, "EXTRA_COLUMNS", {}).get(sheet, ())))
         rows = mapping.BUILDERS[sheet](data)
         sheet_rows[sheet] = rows
         sheet_columns[sheet] = columns

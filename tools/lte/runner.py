@@ -15,6 +15,7 @@ from datetime import datetime
 import shutil
 import numpy as np
 import socket
+import ipaddress
 import os
 import json
 import re
@@ -34,6 +35,10 @@ from tools.lte.circles.KK.KK_INTEGRATION_SCRIPT import (
     KK_GNBCUCPFUNCTION_ELEMENT,
     KK_GNBDUFUNCTION_ELEMENT,
     TREMPOINT_GUTRANCELL_FREQ_RELATION,
+    KK_LTE_FREQ_RELATION_AMOS,
+    KK_SSB_FREQ_RELATION_AMOS,
+    KK_EXTERNAL_ALARMS,
+    KK_ANCHOR_4G_ONLY_AMOS,
     KK_LTE_CONFIG_XML_SITE,
     KK_LTE_CONFIG_XML_FDD_CELL,
     KK_LTE_CONFIG_XML_TDD_CELL,
@@ -73,6 +78,7 @@ from tools.lte.universal_SCRIPTS.UNIVERSAL_SCRIPTS import (
     RRUS_2271_B1_2X2,
     RRU_2279_B1_B3_2X2,
     RRU_4412_4418_4427_4428_4471_4X4,
+    RRU_4490_4X4,
     RRU_6626_6X6,
     RRU_8863_8X8,
     RBSSummary_script,
@@ -127,7 +133,9 @@ from tools.lte.circles.RJ.RJ_INTEGRATION_SCRIPT import (
     RJ_GNBCUCPFunction_text,
     RJ_GNBDUFunction_text,
     RJ_Route_5G_GPL_LMS,
-    RJ_Termpoint_GUtranFreqRelation
+    RJ_Termpoint_GUtranFreqRelation,
+    RJ_LTE_FREQ_RELATION_AMOS,
+    RJ_SSB_FREQ_RELATION_AMOS,
 )
 from tools.lte.circles.RJ.RJ_COMISSION_SCRIPT import (
     RJ_SiteBasic_ipv4_6303,
@@ -187,6 +195,8 @@ from tools.lte.circles.NE.NE_INTEGRATION_SCRIPT import (
     NE_GPL_LMS_DST_SCRIPT,
     NE_NR_GPL_LMS_SCRIPT,
     NE_Termpoint_GUtranFreqRelation_script,
+    NE_LTE_FREQ_RELATION_AMOS,
+    NE_SSB_FREQ_RELATION_AMOS,
     NE_TN_RN_GPS_MME_SCRIPT
 )
 from tools.lte.circles.NE.NE_COMISSION_SCRIPT import (
@@ -214,6 +224,8 @@ from tools.lte.circles.AS.AS_INTEGRATION_SCRIPT import (
     AS_TN_RN_GPS_MME_SCRIPT,
     AS_5G_Cell_creation_Sctp_Endpoint_Creation,
     AS_Termpoint_GUtranFreqRelation_script,
+    AS_LTE_FREQ_RELATION_AMOS,
+    AS_SSB_FREQ_RELATION_AMOS,
     AS_GNBCUCPFunction,
     AS_GNBDUFunction,
     AS_NR_GPL_LMS_SCRIPT,
@@ -349,6 +361,24 @@ from tools.lte.circles.MP_Vi.MP_Vi_COMISSIONING_SCRIPT import (
     MP_Vi_SiteBasic_ipv6_6651,
     MP_Vi_SiteBasic_5216_IPV4,
     MP_Vi_SiteBasic_5216_IPV6,
+)
+
+from tools.lte.circles.RJ_Vi.RJ_Vi_INTEGRATION_SCRIPT import (
+    RJ_Vi_GPL_LMS_DST_SCRIPT,
+    RJ_Vi_TN_RN_GPS_MME_SCRIPT,
+    RJ_VI_BSC_BROKER,
+    RJ_Vi_EUTRAN_FREQUENCY_AMOS,
+    RJ_VI_GSM_FEATURES,
+    RJ_VI_GSM_TRX_PER_SECTOR,
+    RJ_VI_GSM_ABIS_IP,
+    RJ_VI_GSM_TRX,
+)
+
+from tools.lte.circles.RJ_Vi.RJ_Vi_COMISSIONING_SCRIPT import (
+    RJ_Vi_SiteBasic_ipv6_6631,
+    RJ_Vi_RBSSummary_script,
+    RJ_Vi_RRU_2271_B0C_2X2,
+    RJ_Vi_RRU_4490_B1B3_4X4,
 )
 
 from tools.lte.circles.UPW.UPW_INTEGRATION_SCRIPT import (
@@ -575,6 +605,256 @@ def _xml_value(value):
     return int(value) if isinstance(value, float) and value.is_integer() else value
 
 
+def vi_dual_stack_values(row, warn=True):
+    """IPv4 side of the Vi dual-stack CP/UP for the 6631 IPv6 SiteBasic (Site_Basic *_V4 columns).
+    A plane is kept only when its address carries a prefix ('10.86.75.202/30') and its gateway is an IPv4 address
+    inside that subnet; otherwise both values are '' and the plane stays IPv6 only - a wrong value would make the
+    SiteBasic commit or the IPv4 route fail on the node."""
+    def clean(v):
+        return "" if v is None or pd.isna(v) or str(v).strip().upper() in ("", "NA", "N/A", "NAN") else str(v).strip()
+
+    node = row.get("eNodeBName", "")
+    out = {}
+    for plane, ip_col, gw_col in (("LTE_CP", "LTE_S1_IP_V4", "LTE_S1_GW_V4"), ("LTE_UP", "LTE_UP_IP_V4", "LTE_UP_GW_V4")):
+        ip, gw = clean(row.get(ip_col)), clean(row.get(gw_col))
+        out[ip_col] = out[gw_col] = ""
+        if not ip and not gw:
+            if warn:
+                print(f"{node}: Site_Basic has no {ip_col}/{gw_col} - {plane} IPv6 only (no dual stack)")
+            continue
+        try:
+            iface, hop = ipaddress.ip_interface(ip), ipaddress.ip_address(gw)
+            ok = ("/" in ip and iface.version == 4 and hop.version == 4
+                  and hop in iface.network and hop != iface.ip)
+        except ValueError:
+            ok = False
+        if ok:
+            out[ip_col], out[gw_col] = ip, gw
+        elif warn:
+            print(f"{node}: {ip_col}={ip!r} / {gw_col}={gw!r} is not an IPv4 address/prefix with a gateway in its "
+                  f"subnet - {plane} IPv6 only (no dual stack)")
+    return out
+
+
+def drop_dual_stack_ipv4(site_basic_text, node=""):
+    """Vi SiteBasic without the IPv4 InterfaceIPv4 / RouteTableIPv4Static of LTE_CP or LTE_UP when that plane got
+    no valid *_V4 value (empty <address>). No-op for templates without dual stack."""
+    router = r"\s*<Router xmlns=\"urn:com:ericsson:ecim:RtnL3Router\">\s*<routerId>{plane}</routerId>\s*<(?:InterfaceIPv4|RouteTableIPv4Static)\b.*?</Router>"
+    for plane in ("LTE_CP", "LTE_UP"):
+        pattern = router.format(plane=plane)
+        blocks = [m.group(0) for m in re.finditer(pattern, site_basic_text, flags=re.S)]
+        if any("<address></address>" in b for b in blocks):
+            site_basic_text = re.sub(pattern, "", site_basic_text, flags=re.S)
+    return site_basic_text
+
+
+def vi_dual_stack_sctp(row):
+    """01 TN script line adding the IPv4 CP address to SctpEndpoint=1 - only when the 6631 IPv6 SiteBasic creates
+    that address (BB 6631, IPv6 OAM, valid LTE_S1_IP_V4/GW_V4). Anything else would make the set fail."""
+    oam_ip = str(row.get("OAM_IP", "")).split("/")[0].strip()
+    try:
+        oam_v6 = ipaddress.ip_address(oam_ip).version == 6
+    except ValueError:
+        oam_v6 = False
+    values = vi_dual_stack_values(row, warn=False)
+    if "6631" in str(row.get("BB_Type", "")) and oam_v6 and values["LTE_S1_IP_V4"]:
+        return ("set SctpEndpoint=1                                          localIpAddress  "
+                "Transport=1,Router=LTE_CP,InterfaceIPv6=LTE_CP,AddressIPv6=LTE_CP "
+                "Transport=1,Router=LTE_CP,InterfaceIPv4=LTE_CP,AddressIPv4=LTE_CP\ny")
+    return "# SctpEndpoint=1 stays IPv6 only: the SiteBasic creates no IPv4 LTE_CP address on this node (needs BB 6631, IPv6 OAM, LTE_S1_IP_V4/GW_V4)"
+
+
+# RJ_Vi 04 LTE_Complete_Configuration: MOs other MOs depend on - after their creation the script checks they exist
+# and stops the run when one does not (full match on the crn / cr MO)
+RJ_VI_STOP_MOS = [
+    r"Transport=1,QosProfiles=1,DscpPcpMap=1",
+    r"Transport=1,SctpProfile=[^,]+",
+    r"Transport=1,SctpEndpoint=[^,]+",
+    r"Transport=1,Synchronization=1,RadioEquipmentClock=1",
+    r"ENodeBFunction=1",
+    r"ENodeBFunction=1,TermPointToMme=[^,]+",
+    r"ENodeBFunction=1,SectorCarrier=[^,]+",
+    r"ENodeBFunction=1,EUtranCell(FDD|TDD)=[^,]+",
+    r"ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=\d+",
+    r"BtsFunction=1",
+    r"BtsFunction=1,GsmSector=[^,]+",
+    r"BtsFunction=1,GsmSector=[^,]+,(AbisIp|Trx)=[^,]+",
+]
+
+
+def amos_stop_check(mo, why="was not created"):
+    """AMOS: stop the run when `mo` does not exist - 'return' ends the run file, 'q' right after it quits AMOS in
+    case 'return' did not end the whole run (it is never reached when 'return' works)"""
+    return [f"pr {mo}$", "if $nr_of_mos = 0",
+            f'l echo "STOP: {mo} {why} - 04 LTE_Complete_Configuration stopped here, fix it and re-run"',
+            "return", "q", "fi"]
+
+
+def add_stop_checks(text):
+    """`text` with amos_stop_check after each key MO (RJ_VI_STOP_MOS): after the 'end' of its crn block, after the
+    positional arguments of a 'cr', and never inside if / for / while / func (deferred until the block closes)"""
+    keys = [re.compile(p + r"$") for p in RJ_VI_STOP_MOS]
+    out, pending, depth, crn_mo, cr_mo, count = [], [], 0, None, None, 0
+    for line in text.split("\n"):
+        s = line.strip()
+        if cr_mo and not re.match(r"^-?\d+(\s+#.*)?$", s):       # end of the cr's positional arguments
+            pending.append(cr_mo)
+            cr_mo = None
+            if depth == 0:
+                for mo in pending:
+                    out += amos_stop_check(mo)
+                count += len(pending)
+                pending = []
+        out.append(line)
+        tok = s.split()[0] if s else ""
+        if tok in ("if", "for", "while", "func"):
+            depth += 1
+        elif tok in ("fi", "done", "endfunc"):
+            depth = max(depth - 1, 0)
+        m = re.match(r"^(crn|cr)\s+(\S+)$", s)
+        if m and any(k.match(m.group(2)) for k in keys):
+            if m.group(1) == "crn":
+                crn_mo = m.group(2)
+            else:
+                cr_mo = m.group(2)
+            continue
+        if s == "end" and crn_mo:
+            pending.append(crn_mo)
+            crn_mo = None
+        if pending and depth == 0 and not crn_mo and not cr_mo:
+            for mo in pending:
+                out += amos_stop_check(mo)
+            count += len(pending)
+            pending = []
+    if cr_mo:
+        pending.append(cr_mo)
+    for mo in pending:
+        out += amos_stop_check(mo)
+    return "\n".join(out), count + len(pending)
+
+
+def rj_vi_complete_configuration(node, lte_dir, current_time):
+    """04_<node>_LTE_Complete_Configuration: the node's 01 TN_RN_GPS_MME, 02 Cell_Def and 03 GPL_LMS in that order, in
+    one run, stopping at the first key MO that does not exist (add_stop_checks); first checks the SiteBasic /
+    SiteEquipment MOs they depend on (the addresses the 01 refers to, the 02's SectorEquipmentFunctions)"""
+    parts = [("01", _newest(lte_dir, "01_", "TN_RN_GPS_MME")), ("02", _newest(lte_dir, "02_", "Cell_Def")),
+             ("03", _newest(lte_dir, "03_", "GPL_LMS"))]
+    texts = {}
+    for tag, path in parts:
+        if not path:
+            print(f"RJ_Vi: {node} has no {tag} script - no 04 LTE_Complete_Configuration")
+            return None
+        with open(path, encoding="utf-8", errors="surrogateescape") as file:
+            texts[tag] = file.read()
+    created = set(re.findall(r"^crn\s+(\S+)$", texts["01"], flags=re.M))
+    addresses = [a for a in dict.fromkeys(re.findall(
+        r"Transport=1,Router=[^,\s]+,InterfaceIPv[46]=[^,\s]+,AddressIPv[46]=[^,\s]+", texts["01"])) if a not in created]
+    sefs = list(dict.fromkeys(re.findall(r"NodeSupport=1,SectorEquipmentFunction=[^,\s]+", texts["02"])))
+    lines = ["#" * 110, f"# 04 LTE Complete Configuration - {node}: 01 TN_RN_GPS_MME + 02 Cell_Def + 03 GPL_LMS in one run",
+             "# Stops at the first key MO (ENodeBFunction, SctpProfile / SctpEndpoint, TermPointToMme, SectorCarrier,",
+             "# EUtranCell, EUtranFrequency, GSM sector ...) that does not exist after its creation: it prints STOP and",
+             "# 'return' ends the run ('q' after it quits AMOS if 'return' did not end the whole run).",
+             "#" * 110, "", "lt all", "",
+             "####################### Pre-check: MOs of the 01 SiteBasic / 02 SiteEquipment this script needs #######################", ""]
+    for mo in addresses:
+        lines += amos_stop_check(mo, "does not exist (01 SiteBasic)")
+    for mo in sefs:
+        lines += amos_stop_check(mo, "does not exist (02 SiteEquipment)")
+    total = 0
+    for tag, path in parts:
+        body, n = add_stop_checks(texts[tag])
+        total += n
+        lines += ["", "", "#" * 110, f"# {tag}: {os.path.basename(path)}", "#" * 110, "", body.rstrip("\n")]
+    lines += ["", f'l echo "04 LTE_Complete_Configuration of {node} completed"', ""]
+    path = os.path.join(lte_dir, f"04_{node}_LTE_Complete_Configuration_{current_time}.txt")
+    with open(path, "w", encoding="utf-8", errors="surrogateescape") as file:
+        file.write("\n".join(lines))
+    print(f"RJ_Vi: {node} 04 LTE_Complete_Configuration - {len(addresses) + len(sefs)} pre-checks, {total} stop checks")
+    return path
+
+
+def rj_vi_cell_def_frequencies(cell_def_path):
+    """RJ_Vi 02 Cell_Def: the EUtranFrequency creation of the RJ_Vi GPL at the top (before the cells), and without
+    the shared Vi cell template's EUtranFreqRelations - those are the other Vi circles' EARFCNs (1421 / 3601 / 415 /
+    40940); the 03 GPL creates RJ's own relations (EURel_<earfcn>) for every cell"""
+    with open(cell_def_path, encoding="utf-8", errors="surrogateescape") as file:
+        text = file.read()
+    text = re.sub(r"\n?######EUtranFreqRelation#+\n", "\n", text)
+    text, n = re.subn(r"\ncrn ENodeBFunction=1,EUtranCell(?:FDD|TDD)=[^,\n]+,EUtranFreqRelation=\d+\n.*?"
+                      r"\n#END ENodeBFunction=1,EUtranCell(?:FDD|TDD)=[^,\n]+,EUtranFreqRelation=\d+ -+", "", text, flags=re.S)
+    with open(cell_def_path, "w", encoding="utf-8", errors="surrogateescape") as file:
+        file.write(RJ_Vi_EUTRAN_FREQUENCY_AMOS + text)
+    return n
+
+
+def rj_vi_gsm_amos(node, site_row, node_cells_df):
+    """RJ_Vi 02 Cell_Def: GSM on the L900 radios as on LO01INRJ207062 - GSM features, BtsFunction=1, per L900 cell
+    (F1n) GsmSector=n with AbisIp=1 (GSM_Sector_Name, broker of the site's BSC, Abis address of the SiteBasic's
+    Router=GSM_ABIS) and RJ_VI_GSM_TRX_PER_SECTOR Trx on the cell's SectorEquipmentFunction, then unlocked.
+    '' when the site has no IPv4 ABIS_IP (no GSM_ABIS router) or no L900 cell with a GSM_Sector_Name."""
+    abis_ip = _site_value(site_row, "ABIS_IP")
+    if not abis_ip:
+        return ""
+    if ":" in abis_ip:
+        print(f"{node}: ABIS_IP {abis_ip} is IPv6 - the RJ_Vi SiteBasic makes an IPv4 GSM_ABIS only, no GSM part")
+        return ""
+    sectors = []
+    for _, c in node_cells_df.iterrows():
+        cell = str(c.get("eUtranCellFDDId", ""))
+        m = re.search(r"F1(\d)$", cell)
+        try:
+            l900 = 3450 <= int(float(c.get("earfcndl"))) <= 3799
+        except (TypeError, ValueError):
+            l900 = bool(m)
+        if not (m and l900):
+            continue
+        name = _site_value(c, "GSM_Sector_Name")
+        if name:
+            sectors.append((m.group(1), name, _site_value(c, "sectorEquipmentFunctionId") or f"S1{m.group(1)}"))
+        else:
+            print(f"{node}: {cell} has no GSM_Sector_Name - no GSM sector on it")
+    if not sectors:
+        print(f"{node}: ABIS_IP given but no L900 cell with a GSM_Sector_Name - no GSM part in the 02 Cell_Def")
+        return ""
+    bsc = (_site_value(site_row, "BSC") or "").upper()
+    broker = _site_value(site_row, "BSC_Broker_IP") or _site_value(site_row, "Broker_IP") or RJ_VI_BSC_BROKER.get(bsc)
+    if broker:
+        broker = broker.split("/")[0]
+    else:
+        print(f"{node}: no BSC broker IP for BSC {bsc or '?'} (Site_Basic BSC_Broker_IP / RJ_VI_BSC_BROKER) - AbisIp left locked")
+    lines = ["", "####################### GSM on the L900 radios: BtsFunction / GsmSector / AbisIp / Trx "
+             "(as LO01INRJ207062; Abis transport Router=GSM_ABIS from the 01 SiteBasic) #######################", "",
+             "confbd+", "gs+", ""]
+    lines += [f"set FeatureState={f} featureState 1" for f in RJ_VI_GSM_FEATURES]
+    lines += ["", "pr BtsFunction=1$", "if $nr_of_mos = 0", "crn BtsFunction=1", "end", "fi"]
+    for sector, name, sef in sectors:
+        lines += ["", f"crn BtsFunction=1,GsmSector={sector}", "end",
+                  f"crn BtsFunction=1,GsmSector={sector},AbisIp=1", "administrativeState 0"]
+        lines += [f"bscBrokerIpAddress {broker}"] if broker else []
+        lines += [f"gsmSectorName {name}", "ipv4Address Transport=1,Router=GSM_ABIS,InterfaceIPv4=GSM_ABIS,AddressIPv4=GSM_ABIS"]
+        lines += [f"{k} {v}" for k, v in RJ_VI_GSM_ABIS_IP.items()] + ["end"]
+        for trx in range(RJ_VI_GSM_TRX_PER_SECTOR):
+            lines += [f"crn BtsFunction=1,GsmSector={sector},Trx={trx}", "administrativeState 0"]
+            lines += [f"{k} {v}" for k, v in RJ_VI_GSM_TRX.items()]
+            lines += [f"sectorEquipmentFunctionRef NodeSupport=1,SectorEquipmentFunction={sef}", "end"]
+    lines += [""]
+    if not broker:
+        lines += [f"# BSC {bsc or '?'}: broker IP unknown - set bscBrokerIpAddress on the AbisIp MOs, then deb them"]
+    for sector, _, _ in sectors:
+        if broker:
+            lines += [f"deb BtsFunction=1,GsmSector={sector},AbisIp=1$"]
+        lines += [f"deb BtsFunction=1,GsmSector={sector},Trx={trx}$" for trx in range(RJ_VI_GSM_TRX_PER_SECTOR)]
+    return "\n".join(lines + ["", "gs-", "confbd-", ""])
+
+
+def drop_gsm_abis(site_basic_text):
+    """Vi SiteBasic without its inline GSM_ABIS router / VLAN, for a node with no ABIS_IP (no GSM on the site)"""
+    site_basic_text = re.sub(r"\s*<Router xmlns=\"urn:com:ericsson:ecim:RtnL3Router\">\s*<routerId>GSM_ABIS</routerId>.*?</Router>",
+                             "", site_basic_text, flags=re.S)
+    return re.sub(r"\s*<VlanPort xmlns=\"urn:com:ericsson:ecim:RtnL2VlanPort\">\s*<vlanPortId>GSM_ABIS</vlanPortId>.*?</VlanPort>",
+                  "", site_basic_text, flags=re.S)
+
+
 def kk_site_basic_piu_bridge(row):
     """
     KK Site_Basic PIU + bridge parts (pattern from KK-NLBGR583-1 kget), returned as the template placeholders
@@ -682,42 +962,27 @@ def _site_value(row, col):
 
 
 def kk_lte_config_xml_gsm(node, site_row, node_cells_df, sef_branches=None):
-    """
-    2G+4G BBU part of 04 LTE_Config (Site_Basic ABIS_IP filled + LTE cells), RPCs GSM_* at the bottom of the file,
-    modelled on KK-LMYE883-1:
-    - GSM features (Mixed Mode Baseband / Radio GSM, + GSM IPv6 for an IPv6 Abis), one RPC each
-    - Abis transport: Router=ABIS with InterfaceIPv4/IPv6=ABIS (by the ABIS_IP address type), default route to ABIS_GW,
-      on Bridge=ABIS_N when the SiteBasic made it (Bridge_tnPortId + Bridge_ABIS_vlan), else on a new
-      VlanPort {tnPortId}_ABIS (ABIS_vlan)
-    - BtsFunction=1 + one GsmSector per L900 (F8) cell: name = site ID of the node + sector letter (KK-LMYE883-1 + _A ->
-      MYE883A), AbisIp=1 to the BSC broker (Site_Basic Broker_IP, else KK_BSC_BROKER_IPV4/IPV6), KK_GSM_TRX_PER_SECTOR Trx on the cell's SectorEquipmentFunction
-      (Rx on its first two RfBranches from SiteEquipment, Tx on the first); created LOCKED, unlocked in the last RPC
-    """
-    abis_ip = _site_value(site_row, "ABIS_IP")
-    if not abis_ip or node_cells_df.empty:
+    """2G+4G BBU part of 04 LTE_Config (kk_gsm_plan), RPCs GSM_* at the bottom of the file: features one RPC each, Abis
+    transport, BtsFunction=1, per GSM sector one create RPC (GsmSector + AbisIp + Trx LOCKED) and one unlock RPC"""
+    plan = kk_gsm_plan(node, site_row, node_cells_df, sef_branches)
+    if not plan:
         return []
-    ipv6 = ":" in abis_ip
-    ip = "IPv6" if ipv6 else "IPv4"
-    abis_gw = _site_value(site_row, "ABIS_GW")
-    tn_port = _site_value(site_row, "tnPortId")
+    ip, ipv6 = plan["ip"], plan["ipv6"]
     me = f"ManagedElement={node}"
     rpc = lambda mid, body: KK_LTE_CONFIG_XML_RPC.format(mid=mid, node=node, body=body)
     rpcs = []
 
-    for cxc in KK_GSM_FEATURES + (KK_GSM_FEATURES_IPV6 if ipv6 else []):
+    for cxc in plan["features"]:
         rpcs.append(rpc(f"GSM_Feature_{cxc}", (
             "<SystemFunctions>\n<systemFunctionsId>1</systemFunctionsId>\n<Lm>\n<lmId>1</lmId>\n<FeatureState>\n"
             f"<featureStateId>{cxc}</featureStateId>\n<featureState>ACTIVATED</featureState>\n"
             "</FeatureState>\n</Lm>\n</SystemFunctions>\n")))
 
     qos = f"<egressQosMarking>{me},Transport=1,QosProfiles=1,DscpPcpMap=1</egressQosMarking>\n"
-    if _site_value(site_row, "Bridge_tnPortId") and _site_value(site_row, "Bridge_ABIS_vlan"):
+    tn_port, abis_vlan = plan["tn_port"], plan["abis_vlan"]
+    if not abis_vlan:
         encapsulation, vlan_port = f"{me},Transport=1,Bridge=ABIS_N", ""
     else:
-        abis_vlan = _site_value(site_row, "ABIS_vlan")
-        if not abis_vlan or not tn_port:
-            print(f"{node}: ABIS_IP without ABIS_vlan / tnPortId - no Abis / GSM part in 04 LTE_Config")
-            return []
         encapsulation = f"{me},Transport=1,VlanPort={tn_port}_ABIS"
         vlan_port = (f'<VlanPort xc:operation="create">\n<vlanPortId>{tn_port}_ABIS</vlanPortId>\n'
                      f"<encapsulation>{me},Transport=1,EthernetPort={tn_port}</encapsulation>\n{qos}"
@@ -725,6 +990,7 @@ def kk_lte_config_xml_gsm(node, site_row, node_cells_df, sef_branches=None):
     address_ref = f"{me},Transport=1,Router=ABIS,Interface{ip}=ABIS,Address{ip}=ABIS"
     route_table, default_dst = ("RouteTableIPv6Static", "::/0") if ipv6 else ("RouteTableIPv4Static", "0.0.0.0/0")
     route_table_id = "r" + route_table[1:] + "Id"
+    abis_gw = plan["abis_gw"]
     route = (f"<{route_table}>\n<{route_table_id}>2</{route_table_id}>\n"
              f"<Dst>\n<dstId>ABIS</dstId>\n<dst>{default_dst}</dst>\n<NextHop>\n<nextHopId>1</nextHopId>\n"
              f"<address>{abis_gw}</address>\n<adminDistance>1</adminDistance>\n<bfdMonitoring>true</bfdMonitoring>\n"
@@ -734,24 +1000,13 @@ def kk_lte_config_xml_gsm(node, site_row, node_cells_df, sef_branches=None):
         f'<Router xc:operation="create">\n<routerId>ABIS</routerId>\n'
         f"<Interface{ip}>\n<interface{ip}Id>ABIS</interface{ip}Id>\n<encapsulation>{encapsulation}</encapsulation>\n"
         f"{'<dscpNdp>48</dscpNdp>' + chr(10) if ipv6 else ''}{qos}<mtu>1500</mtu>\n"
-        f"<Address{ip}>\n<address{ip}Id>ABIS</address{ip}Id>\n<address>{abis_ip}</address>\n</Address{ip}>\n"
+        f"<Address{ip}>\n<address{ip}Id>ABIS</address{ip}Id>\n<address>{plan['abis_ip']}</address>\n</Address{ip}>\n"
         f"</Interface{ip}>\n{route}</Router>\n</Transport>\n")))
 
-    # GSM sector name = site ID of the node + sector letter of the cell (KK-LMYE757-2 + KK_E_F8_OM_MYE460A_A -> MYE757A):
-    # the L900 cells can keep an old site's name (MYE757 node run 2026-10-25), the GSM sector must not
-    site = re.match(r"^[A-Z]+-(?:NL|L)?([A-Z0-9]+)-\d+$", node)
-    sectors = []
-    for _, row in node_cells_df.iterrows():
-        cell = str(row["eUtranCellFDDId"])
-        sef = str(row["sectorEquipmentFunctionId"]).strip()
-        if "_F8_" in cell and len(cell.split("_")) > 2:
-            name = site.group(1) + cell.split("_")[-1] if site else cell.split("_")[-2]
-            sectors.append((name, sef, re.sub(r"\D", "", sef)))
+    sectors = plan["sectors"]
     if not sectors:
-        print(f"{node}: ABIS_IP given but no L900 (F8) cell - Abis transport only, no GsmSector / Trx")
         return rpcs
-    # BSC broker: Site_Basic Broker_IP, else the common KK broker of the Abis IP version
-    broker = (_site_value(site_row, "Broker_IP") or (KK_BSC_BROKER_IPV6 if ipv6 else KK_BSC_BROKER_IPV4)).split("/")[0]
+    broker = plan["broker"]
     broker_tag = "bscBrokerIpv6Address" if ":" in broker else "bscBrokerIpAddress"
     abis_settings = "".join(f"<{k}>{v}</{k}>\n" for k, v in KK_GSM_ABIS_IP.items())
     trx_settings = "".join(f"<{k}>{v}</{k}>\n" for k, v in KK_GSM_TRX.items())
@@ -759,11 +1014,7 @@ def kk_lte_config_xml_gsm(node, site_row, node_cells_df, sef_branches=None):
     rpcs.append(rpc("GSM_BtsFunction", bts + "<userLabel>GSM</userLabel>\n</BtsFunction>\n"))
     # one RPC per GSM sector: with all AbisIp in one transaction the node checks the first ones against AbisIp not yet
     # complete and raises "Inconsistent Configuration ... ipv4Address" on them (HSN143-2: A and B, not C), cleared only by a restart
-    for sector, sef, aug in sectors:
-        # Rx on the first two RfBranches of the SEF, Tx on the 1st (Trx 0-1) / 2nd (Trx 2+) as in RfbranchRxTxRef_Settings
-        branches = [re.sub(r"^ManagedElement=[^,]+", me, b) for b in (sef_branches or {}).get(sef, [])][:2]
-        if len(branches) < 2:
-            branches = [f"{me},Equipment=1,AntennaUnitGroup={aug},RfBranch={n}" for n in (1, 2)]
+    for sector, sef, branches in sectors:
         body = (f'<GsmSector xc:operation="create">\n<gsmSectorId>{sector}</gsmSectorId>\n<userLabel>{sector}</userLabel>\n'
                  f"<AbisIp>\n<abisIpId>1</abisIpId>\n<administrativeState>LOCKED</administrativeState>\n"
                  f"{f'<{broker_tag}>{broker}</{broker_tag}>' + chr(10) if broker else ''}"
@@ -812,37 +1063,11 @@ def kk_site_basic_has_dns_client(commissioning_dir):
 
 
 def kk_sector_carrier_rf_branches(node, node_cells_df, sef_branches):
-    """
-    rfBranchRxRef / rfBranchTxRef of the sector carriers on a radio shared by several sectors (RfbranchRxTxRef_Settings,
-    KK-NLMYE883-2 / KK-LMYE883-1 kgets): per SectorEquipmentFunction the sectors (last part of the cell name: A, B, C, M ...)
-    in order take consecutive branches of the SEF's RfBranch list, as many as their antennas (2T2R -> 2, 4T4R -> 4);
-    every carrier of a sector (all bands) gets the same branches for Rx and Tx. A SEF with one sector using all its
-    branches (2219 / 2271 on S40) gets none, as on the nodes.
-    """
-    body = ""
-    for sef, cells in node_cells_df.groupby(node_cells_df["sectorEquipmentFunctionId"].astype(str).str.strip(), sort=False):
-        branches = sef_branches.get(sef, [])
-        sectors = {}
-        for _, row in cells.iterrows():
-            antennas = max(int(_xml_value(row["noOfTxAntennas"])), int(_xml_value(row["noOfRxAntennas"])))
-            sector = sectors.setdefault(str(row["eUtranCellFDDId"]).split("_")[-1], {"antennas": 0, "carriers": []})
-            sector["antennas"] = max(sector["antennas"], antennas)
-            sector["carriers"].append(_xml_value(row["sectorCarrierId"]))
-        needed = sum(s["antennas"] for s in sectors.values())
-        if not branches or (len(sectors) == 1 and needed == len(branches)):
-            continue
-        if needed > len(branches):
-            print(f"{node}: {sef} has {len(branches)} RfBranches but its sectors need {needed} - no rfBranch refs written")
-            continue
-        start = 0
-        for _, sector in sorted(sectors.items()):
-            refs = [re.sub(r"^ManagedElement=[^,]+", f"ManagedElement={node}", b) for b in branches[start:start + sector["antennas"]]]
-            start += sector["antennas"]
-            for carrier in sector["carriers"]:
-                body += (f"<SectorCarrier>\n<sectorCarrierId>{carrier}</sectorCarrierId>\n"
-                         + "".join(f"<rfBranchRxRef>{r}</rfBranchRxRef>\n" for r in refs)
-                         + "".join(f"<rfBranchTxRef>{r}</rfBranchTxRef>\n" for r in refs)
-                         + "</SectorCarrier>\n")
+    """RPC SectorCarrier_RfBranch_para of 04 LTE_Config: rfBranchRxRef / rfBranchTxRef (kk_sector_rf_branch_refs)"""
+    body = "".join(f"<SectorCarrier>\n<sectorCarrierId>{carrier}</sectorCarrierId>\n"
+                   + "".join(f"<rfBranchRxRef>{r}</rfBranchRxRef>\n" for r in refs)
+                   + "".join(f"<rfBranchTxRef>{r}</rfBranchTxRef>\n" for r in refs)
+                   + "</SectorCarrier>\n" for carrier, refs in kk_sector_rf_branch_refs(node, node_cells_df, sef_branches))
     return KK_LTE_CONFIG_XML_RPC.format(mid="SectorCarrier_RfBranch_para", node=node,
                                         body=f"<ENodeBFunction>\n<eNodeBFunctionId>1</eNodeBFunctionId>\n{body}</ENodeBFunction>\n") if body else ""
 
@@ -997,6 +1222,17 @@ def write_kk_5g_config_xml(base_path_url, node, current_time, system="KK"):
             steps += [(number, kind, text[:cut]), ("06RIM", kind, text[cut:])]
         else:
             steps.append((number, kind, text))
+    # RimRSGlobal timeDomainPara / frequencyDomainPara have release dependent members (26.Q2 timeDomainPara
+    # dlUlSwitchingPeriod2 / symbolOffsetOfReferencePoint2), one XML cannot write them on 25.Q2 and 26.Q2 nodes alike:
+    # the RIM block's struct sets also go with NR 02 into 04 5G_Config (KK NR 02 has them already, AS / NE / RJ only the
+    # RIM block), where their 25.Q2 / 26.Q2 RPCs stand alone; the RIM file then leaves the unchanged structs out and
+    # does not fail on either release (user 2026-11-12, KK-NLHUB622-1 NR06RIM_001)
+    rim_step = next((s for s in steps if s[0] == "06RIM"), None)
+    rim_structs = re.findall(r"(?m)^set\s+(?:GNBDUFunction=1,)?RimRSGlobal=1\s+(?:frequency|sequence|time)DomainPara\s+\S.*$",
+                             rim_step[2]) if rim_step else []
+    if rim_structs:
+        steps = [(n, k, s.rstrip("\n") + "\n" + "\n".join(x.strip() for x in rim_structs) + "\n") if n == "02" else (n, k, s)
+                 for n, k, s in steps]
     nr01 = script(paths["nr"], "01_")
     stamp = re.search(r"(\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2})", os.path.basename(nr01)) if nr01 else None
     current_time = stamp.group(1) if stamp else current_time
@@ -1009,11 +1245,11 @@ def write_kk_5g_config_xml(base_path_url, node, current_time, system="KK"):
     outputs = (
         (f"04_{node}_5G_Config_{current_time}.xml", ("NR01_", "NR02_", "NR03_")),
         (f"05_{node}_5G_SA_Config_{current_time}.xml", ("NR04_", "NR05_", "NR06_")),
-        # KK: VoNR activation at the bottom of 06, own section -> 06_{node}_RIM_&_VONR_Activation
-        (f"06_{node}_RIM_&_VONR_Activation_{current_time}.xml" if system == "KK" else
+        # KK / RJ / AS / NE: VoNR activation at the bottom of 06, own section -> 06_{node}_RIM_&_VONR_Activation
+        (f"06_{node}_RIM_&_VONR_Activation_{current_time}.xml" if system in VONR_CIRCLES else
          f"06_{node}_5G_RIM_Activation_{current_time}.xml", ("NR06RIM_",)),
     )
-    rim = kk_rim_vonr_parts(node, [read(p) for p in initial], steps) if system == "KK" and steps else None
+    rim = kk_rim_vonr_parts(node, [read(p) for p in initial], steps, system) if system in VONR_CIRCLES and steps else None
     for path in sa_inputs:
         os.remove(path)
     for name, prefixes in outputs:
@@ -1029,15 +1265,15 @@ def write_kk_5g_config_xml(base_path_url, node, current_time, system="KK"):
                 file.write(head + lock + part + unlock + extra + closing)
 
 
-def kk_rim_vonr_parts(node, initial, steps):
-    """KK 06_{node}_RIM_&_VONR_Activation: NR 01..06 replayed again with KK_VONR_ACTIVATION after them (04 / 05 come
+def kk_rim_vonr_parts(node, initial, steps, system="KK"):
+    """06_{node}_RIM_&_VONR_Activation (VONR_CIRCLES): NR 01..06 replayed again with vonr_activation(system) after them (04 / 05 come
     from the replay without it and stay as they are) -> (RIM RPCs, VONR_ACTIVATION section, model).
     The VoNR part must not fail on a node where 04/05/06 ran: MOs they created are not created again (crn/cr on an
     existing MO is skipped, as AMOS fails it), values they already set are not written again; cells are locked only
     where a change needs it. A parameter the RIM part sets too is written in the RIM part with the VoNR value
     (user: values from VoNR), not a second time in the VoNR section."""
-    xml_text, _, _, model = amos_to_netconf_model(node, initial, steps + [("06VONR", "amos", KK_VONR_ACTIVATION)],
-                                                  "KK", only_changes={"06VONR"}, pull_back={"06VONR": "06RIM"})
+    xml_text, _, _, model = amos_to_netconf_model(node, initial, steps + [("06VONR", "amos", vonr_activation(system))],
+                                                  system, only_changes={"06VONR"}, pull_back={"06VONR": "06RIM"})
     blocks = re.findall(r'<rpc message-id="([^"]+)".*?</rpc>\n\]\]>\]\]>\n', xml_text, re.S)
     bodies = re.findall(r'<rpc message-id="[^"]+".*?</rpc>\n\]\]>\]\]>\n', xml_text, re.S)
     rim = "".join(b for m, b in zip(blocks, bodies) if m.startswith("NR06RIM_"))
@@ -1324,109 +1560,50 @@ def circle_external_alarm_rpc(node, fru, circle):
 
 
 def circle_gsm_rpcs(node, row, cells, sef_branches, site_basic_text, circle):
-    """GSM part of a 2G/4G site (RF ABIS_IP) as on the circle's 2G/4G nodes: the Abis transport is in the 01 SiteBasic
-    (Router=ABIS); here the GSM features, BtsFunction=1 (userLabel = site), one GsmSector per sector with an L900 (F8)
-    cell, id and gsmSectorName = site + sector (RJ_E_F8_OM_JPR608A_A -> JPR608A), AbisIp=1 to the BSC broker of
-    Site_Basic Broker_IP, and Trx G900-1.. on the F8 cell's SEF (RJ also G1800-1 on the sector's F3 SEF); Rx on the first
-    two RfBranches of the SEF, Tx on the first (RJ: the 2nd Trx on the 2nd). Created LOCKED, one RPC per sector,
-    unlocked at the end."""
-    abis_ip = _site_value(row, "ABIS_IP")
-    if not abis_ip or cells is None or cells.empty:
+    """GSM part of a 2G/4G site (circle_gsm_plan): features, BtsFunction=1, per GSM sector one create RPC (GsmSector +
+    AbisIp + Trx LOCKED) and one unlock RPC"""
+    plan = circle_gsm_plan(node, row, cells, sef_branches, site_basic_text, circle)
+    if not plan:
         return []
-    m = re.search(r"<routerId>ABIS</routerId>\s*<Interface(IPv[46])[^>]*>\s*<interface\1Id>([^<]+)</interface\1Id>.*?"
-                  r"<address\1Id>([^<]+)</address\1Id>", site_basic_text, re.S)
-    if not m:
-        print(f"{node}: ABIS_IP given but no Router=ABIS interface in the 01 SiteBasic - no GSM part in 04 LTE_Config")
-        return []
-    ip = m.group(1)
     me = f"ManagedElement={node}"
-    address_ref = f"{me},Transport=1,Router=ABIS,Interface{ip}={m.group(2)},Address{ip}={m.group(3)}"
-    bands = CIRCLE_GSM_BANDS.get(circle, CIRCLE_GSM_BANDS["AS"])
-    sef_of = {}                                       # (sector name, band key) -> SEF
-    for _, c in cells.iterrows():
-        cell, sef = str(c["eUtranCellFDDId"]), str(c["sectorEquipmentFunctionId"]).strip()
-        parts = cell.split("_")
-        for key in bands:
-            if key in cell and len(parts) > 2:
-                sef_of.setdefault((parts[-2], key), sef)
-    sectors = sorted({name for name, key in sef_of if key == "_F8_"})
-    if not sectors:
-        print(f"{node}: ABIS_IP given but no L900 (F8) cell - no GsmSector / Trx")
-        return []
-    rpcs = [_feature_rpc(node, f"GSM_Feature_{cxc}", cxc) for cxc in KK_GSM_FEATURES + (KK_GSM_FEATURES_IPV6 if ip == "IPv6" else [])]
-    broker = (_site_value(row, "Broker_IP") or "").split("/")[0]
-    if not broker:
-        print(f"{node}: Site_Basic Broker_IP empty - AbisIp without BSC broker address (the node rejects it)")
-    elif broker == abis_ip.split("/")[0]:
-        print(f"{node}: Site_Basic Broker_IP {broker} is the node's own ABIS_IP - the BSC broker address is expected")
+    ip, broker = plan["ip"], plan["broker"]
+    rpcs = [_feature_rpc(node, f"GSM_Feature_{cxc}", cxc) for cxc in plan["features"]]
     broker_tag = "bscBrokerIpv6Address" if ":" in broker else "bscBrokerIpAddress"
     abis_settings = "".join(f"<{k}>{v}</{k}>\n" for k, v in KK_GSM_ABIS_IP.items())
     bts = "<BtsFunction>\n<btsFunctionId>1</btsFunctionId>\n"
     rpcs.append(KK_LTE_CONFIG_XML_RPC.format(mid="GSM_BtsFunction", node=node,
-                                             body=bts + f"<userLabel>{sectors[0][:-1]}</userLabel>\n</BtsFunction>\n"))
-    trx_ids = {}
-    for name in sectors:
+                                             body=bts + f"<userLabel>{plan['bts_label']}</userLabel>\n</BtsFunction>\n"))
+    for name, trxs in plan["sectors"]:
         body = (f'<GsmSector xc:operation="create">\n<gsmSectorId>{name}</gsmSectorId>\n'
                 f"<AbisIp>\n<abisIpId>1</abisIpId>\n<administrativeState>LOCKED</administrativeState>\n"
                 f"{f'<{broker_tag}>{broker}</{broker_tag}>' + chr(10) if broker else ''}"
-                f"<gsmSectorName>{name}</gsmSectorName>\n<{ip.lower()}Address>{address_ref}</{ip.lower()}Address>\n"
+                f"<gsmSectorName>{name}</gsmSectorName>\n<{ip.lower()}Address>{plan['address_ref']}</{ip.lower()}Address>\n"
                 f"{abis_settings}</AbisIp>\n")     # AbisIp userLabel empty on all 2G/4G kgets
-        for key, (prefix, band, arfcn_min, arfcn_max, count) in bands.items():
-            sef = sef_of.get((name, key))
-            if not sef:
-                continue
-            branches = [re.sub(r"^ManagedElement=[^,]+", me, b) for b in (sef_branches or {}).get(sef, [])][:2]
-            if len(branches) < 2:
-                aug = re.sub(r"\D", "", sef)
-                branches = [f"{me},Equipment=1,AntennaUnitGroup={aug},RfBranch={n}" for n in (1, 2)]
-            for n in range(1, count + 1):
-                trx = f"{prefix}-{n}"
-                trx_ids.setdefault(name, []).append(trx)
-                tx = branches[1] if CIRCLE_GSM_TX_ALTERNATE.get(circle) and n % 2 == 0 else branches[0]
-                body += (f"<Trx>\n<trxId>{trx}</trxId>\n<administrativeState>LOCKED</administrativeState>\n"
-                         f"<arfcnMin>{arfcn_min}</arfcnMin>\n<arfcnMax>{arfcn_max}</arfcnMax>\n<frequencyBand>{band}</frequencyBand>\n"
-                         + "".join(f"<{k}>{v}</{k}>\n" for k, v in CIRCLE_GSM_TRX.items())
-                         + f"<rfBranchRxRef>{branches[0]}</rfBranchRxRef>\n<rfBranchRxRef>{branches[1]}</rfBranchRxRef>\n"
-                         f"<rfBranchTxRef>{tx}</rfBranchTxRef>\n"
-                         f"<sectorEquipmentFunctionRef>{me},NodeSupport=1,SectorEquipmentFunction={sef}</sectorEquipmentFunctionRef>\n"
-                         f"</Trx>\n")
+        for trx in trxs:
+            body += (f"<Trx>\n<trxId>{trx['id']}</trxId>\n<administrativeState>LOCKED</administrativeState>\n"
+                     f"<arfcnMin>{trx['arfcnMin']}</arfcnMin>\n<arfcnMax>{trx['arfcnMax']}</arfcnMax>\n<frequencyBand>{trx['frequencyBand']}</frequencyBand>\n"
+                     + "".join(f"<{k}>{v}</{k}>\n" for k, v in CIRCLE_GSM_TRX.items())
+                     + f"<rfBranchRxRef>{trx['rx'][0]}</rfBranchRxRef>\n<rfBranchRxRef>{trx['rx'][1]}</rfBranchRxRef>\n"
+                     f"<rfBranchTxRef>{trx['tx']}</rfBranchTxRef>\n"
+                     f"<sectorEquipmentFunctionRef>{me},NodeSupport=1,SectorEquipmentFunction={trx['sef']}</sectorEquipmentFunctionRef>\n"
+                     f"</Trx>\n")
         rpcs.append(KK_LTE_CONFIG_XML_RPC.format(mid=f"GSM_{name}_create", node=node, body=bts + body + "</GsmSector>\n</BtsFunction>\n"))
-    for name in sectors:
+    for name, trxs in plan["sectors"]:
         unlock = (f"<GsmSector>\n<gsmSectorId>{name}</gsmSectorId>\n<AbisIp>\n<abisIpId>1</abisIpId>\n"
                   f"<administrativeState>UNLOCKED</administrativeState>\n</AbisIp>\n"
-                  + "".join(f"<Trx>\n<trxId>{t}</trxId>\n<administrativeState>UNLOCKED</administrativeState>\n</Trx>\n"
-                            for t in trx_ids.get(name, [])) + "</GsmSector>\n")
+                  + "".join(f"<Trx>\n<trxId>{trx['id']}</trxId>\n<administrativeState>UNLOCKED</administrativeState>\n</Trx>\n"
+                            for trx in trxs) + "</GsmSector>\n")
         rpcs.append(KK_LTE_CONFIG_XML_RPC.format(mid=f"GSM_{name}_unlock", node=node, body=bts + unlock + "</BtsFunction>\n"))
     return rpcs
 
 
 def circle_sector_carrier_rf_branches(node, cells, sef_branches):
-    """rfBranchRxRef / rfBranchTxRef as KK (kk_sector_carrier_rf_branches), for every circle only where a radio (SEF)
-    is shared by cells of two or more sectors (user 2026-11-02): the sectors in order take consecutive RfBranches of
-    the SEF, as many as their antennas; all carriers of a sector get the same branches for Rx and Tx."""
-    body = ""
-    for sef, grp in cells.groupby(cells["sectorEquipmentFunctionId"].astype(str).str.strip(), sort=False):
-        branches = sef_branches.get(sef, [])
-        sectors = {}
-        for _, c in grp.iterrows():
-            antennas = max(int(_xml_value(c["noOfTxAntennas"])), int(_xml_value(c["noOfRxAntennas"])))
-            sec = sectors.setdefault(str(c["eUtranCellFDDId"]).split("_")[-1], {"antennas": 0, "carriers": []})
-            sec["antennas"] = max(sec["antennas"], antennas)
-            sec["carriers"].append(_xml_value(c["sectorCarrierId"]))
-        needed = sum(x["antennas"] for x in sectors.values())
-        if not branches or len(sectors) < 2:
-            continue
-        if needed > len(branches):
-            print(f"{node}: {sef} has {len(branches)} RfBranches but its sectors need {needed} - no rfBranch refs written")
-            continue
-        start = 0
-        for _, sec in sorted(sectors.items()):
-            refs = [re.sub(r"^ManagedElement=[^,]+", f"ManagedElement={node}", b) for b in branches[start:start + sec["antennas"]]]
-            start += sec["antennas"]
-            for carrier in sec["carriers"]:
-                body += (f"<SectorCarrier>\n<sectorCarrierId>{carrier}</sectorCarrierId>\n"
-                         + "".join(f"<rfBranchRxRef>{r}</rfBranchRxRef>\n" for r in refs)
-                         + "".join(f"<rfBranchTxRef>{r}</rfBranchTxRef>\n" for r in refs) + "</SectorCarrier>\n")
+    """rfBranchRxRef / rfBranchTxRef as KK, for every circle only where a radio (SEF) is shared by cells of two or more
+    sectors (user 2026-11-02; kk_sector_rf_branch_refs shared_only)"""
+    body = "".join(f"<SectorCarrier>\n<sectorCarrierId>{carrier}</sectorCarrierId>\n"
+                   + "".join(f"<rfBranchRxRef>{r}</rfBranchRxRef>\n" for r in refs)
+                   + "".join(f"<rfBranchTxRef>{r}</rfBranchTxRef>\n" for r in refs) + "</SectorCarrier>\n"
+                   for carrier, refs in kk_sector_rf_branch_refs(node, cells, sef_branches, shared_only=True))
     return [KK_LTE_CONFIG_XML_RPC.format(mid="SectorCarrier_RfBranch_para", node=node,
             body=f"<ENodeBFunction>\n<eNodeBFunctionId>1</eNodeBFunctionId>\n{body}</ENodeBFunction>\n")] if body else []
 
@@ -1501,6 +1678,376 @@ def circle_commissioning_bridges(base_path_url, site_basic_df, radio_hw_df=None)
 def _radio_kind(radio_type):
     """Radio_Type without spaces / case ('RRU 2219 B3' -> 'RRU2219B3'), as the SiteEquipment rru_type match"""
     return str(radio_type).replace(" ", "").upper()
+
+
+def kk_sector_rf_branch_refs(node, node_cells_df, sef_branches, shared_only=False):
+    """
+    [(sectorCarrierId, [RfBranch LDNs])] for the sector carriers on a radio shared by several sectors
+    (RfbranchRxTxRef_Settings, KK-NLMYE883-2 / KK-LMYE883-1 kgets): per SectorEquipmentFunction the sectors (last part
+    of the cell name: A, B, C, M ...) in order take consecutive branches of the SEF's RfBranch list, as many as their
+    antennas (2T2R -> 2, 4T4R -> 4); every carrier of a sector (all bands) gets the same branches for Rx and Tx. A SEF
+    with one sector using all its branches (2219 / 2271 on S40) gets none, as on the nodes. shared_only (AS / NE / RJ,
+    user 2026-11-02): only SEFs with cells of two or more sectors.
+    """
+    out = []
+    for sef, cells in node_cells_df.groupby(node_cells_df["sectorEquipmentFunctionId"].astype(str).str.strip(), sort=False):
+        branches = sef_branches.get(sef, [])
+        sectors = {}
+        for _, row in cells.iterrows():
+            antennas = max(int(_xml_value(row["noOfTxAntennas"])), int(_xml_value(row["noOfRxAntennas"])))
+            sector = sectors.setdefault(str(row["eUtranCellFDDId"]).split("_")[-1], {"antennas": 0, "carriers": []})
+            sector["antennas"] = max(sector["antennas"], antennas)
+            sector["carriers"].append(_xml_value(row["sectorCarrierId"]))
+        needed = sum(s["antennas"] for s in sectors.values())
+        if not branches or (len(sectors) < 2 if shared_only else (len(sectors) == 1 and needed == len(branches))):
+            continue
+        if needed > len(branches):
+            print(f"{node}: {sef} has {len(branches)} RfBranches but its sectors need {needed} - no rfBranch refs written")
+            continue
+        start = 0
+        for _, sector in sorted(sectors.items()):
+            refs = [re.sub(r"^ManagedElement=[^,]+", f"ManagedElement={node}", b) for b in branches[start:start + sector["antennas"]]]
+            start += sector["antennas"]
+            out += [(carrier, refs) for carrier in sector["carriers"]]
+    return out
+
+
+def kk_gsm_plan(node, site_row, node_cells_df, sef_branches=None):
+    """
+    2G+4G BBU (Site_Basic ABIS_IP filled + LTE cells), modelled on KK-LMYE883-1 - what 04 LTE_Config (XML) and the
+    AMOS 03 GPL configure: GSM features (Mixed Mode Baseband / Radio GSM, + GSM IPv6 for an IPv6 Abis); Abis transport
+    Router=ABIS with InterfaceIPv4/IPv6=ABIS (by the ABIS_IP address type), default route to ABIS_GW, on Bridge=ABIS_N
+    when the SiteBasic made it (Bridge_tnPortId + Bridge_ABIS_vlan), else on a new VlanPort {tnPortId}_ABIS (ABIS_vlan);
+    BtsFunction=1 + one GsmSector per L900 (F8) cell: name = site ID of the node + sector letter (KK-LMYE883-1 + _A ->
+    MYE883A), AbisIp=1 to the BSC broker (Site_Basic Broker_IP, else KK_BSC_BROKER_IPV4/IPV6), KK_GSM_TRX_PER_SECTOR Trx
+    on the cell's SectorEquipmentFunction (Rx on its first two RfBranches from SiteEquipment, Tx on the first / second).
+    None when the node has no Abis / GSM part.
+    """
+    abis_ip = _site_value(site_row, "ABIS_IP")
+    if not abis_ip or node_cells_df.empty:
+        return None
+    ipv6 = ":" in abis_ip
+    plan = {"ipv6": ipv6, "ip": "IPv6" if ipv6 else "IPv4", "abis_ip": abis_ip, "abis_gw": _site_value(site_row, "ABIS_GW"),
+            "features": KK_GSM_FEATURES + (KK_GSM_FEATURES_IPV6 if ipv6 else []), "tn_port": _site_value(site_row, "tnPortId"),
+            "abis_vlan": None, "sectors": [], "broker": None}
+    if not (_site_value(site_row, "Bridge_tnPortId") and _site_value(site_row, "Bridge_ABIS_vlan")):
+        plan["abis_vlan"] = _site_value(site_row, "ABIS_vlan")
+        if not plan["abis_vlan"] or not plan["tn_port"]:
+            print(f"{node}: ABIS_IP without ABIS_vlan / tnPortId - no Abis / GSM part")
+            return None
+    # GSM sector name = site ID of the node + sector letter of the cell (KK-LMYE757-2 + KK_E_F8_OM_MYE460A_A -> MYE757A):
+    # the L900 cells can keep an old site's name (MYE757 node run 2026-10-25), the GSM sector must not
+    site = re.match(r"^[A-Z]+-(?:NL|L)?([A-Z0-9]+)-\d+$", node)
+    me = f"ManagedElement={node}"
+    for _, row in node_cells_df.iterrows():
+        cell = str(row["eUtranCellFDDId"])
+        sef = str(row["sectorEquipmentFunctionId"]).strip()
+        if "_F8_" in cell and len(cell.split("_")) > 2:
+            name = site.group(1) + cell.split("_")[-1] if site else cell.split("_")[-2]
+            # Rx on the first two RfBranches of the SEF, Tx on the 1st (Trx 0-1) / 2nd (Trx 2+) as in RfbranchRxTxRef_Settings
+            branches = [re.sub(r"^ManagedElement=[^,]+", me, b) for b in (sef_branches or {}).get(sef, [])][:2]
+            if len(branches) < 2:
+                aug = re.sub(r"\D", "", sef)
+                branches = [f"{me},Equipment=1,AntennaUnitGroup={aug},RfBranch={n}" for n in (1, 2)]
+            plan["sectors"].append((name, sef, branches))
+    if not plan["sectors"]:
+        print(f"{node}: ABIS_IP given but no L900 (F8) cell - Abis transport only, no GsmSector / Trx")
+        return plan
+    # BSC broker: Site_Basic Broker_IP, else the common KK broker of the Abis IP version
+    plan["broker"] = (_site_value(site_row, "Broker_IP") or (KK_BSC_BROKER_IPV6 if ipv6 else KK_BSC_BROKER_IPV4)).split("/")[0]
+    return plan
+
+
+# AMOS of 04 LTE_Config parts the KK AMOS 01/02/03 did not have (user 2026-11-12: the AMOS scripts must configure what
+# the XML does): 01 external alarms, 02 SectorCarrier RfBranch refs + SectorEquipmentFunction unlock (cells still
+# locked there, the 03 GPL unlocks them), 03 paging records 7 with a cell narrower than 10 MHz, ENDC anchor of a 4G only
+# site, 2G+4G GSM part. Enumerations as numbers (MOM 25.Q2).
+_AMOS_ENUM = {"NON_COMBINED_CELL": 0}
+AMOS_SEVERITY = {"CRITICAL": 2, "MAJOR": 3, "MINOR": 4, "WARNING": 5}      # AlarmPort perceivedSeverity
+
+
+def _amos_ref(ldn):
+    return re.sub(r"^ManagedElement=[^,]+,", "", ldn)
+
+
+def external_alarm_amos(fru, alarms, settings):
+    """AlarmPort 1-8 of the baseband: alarms [(port, alarmSlogan, perceivedSeverity number)], settings 'attr value ...'"""
+    lines = ["", "####################### External alarms: AlarmPort 1-8 of the baseband (as 04 LTE_Config) #######################", ""]
+    for port, slogan, severity in alarms:
+        mo = f"Equipment=1,FieldReplaceableUnit={fru},AlarmPort={port}"
+        lines += [f"pr {mo}$", "if $nr_of_mos = 0", f"crn {mo}", "end", "fi",
+                  f"setm {mo}$ {settings} perceivedSeverity {severity}", f"set {mo}$ alarmSlogan {slogan}", f"deb {mo}$", ""]
+    return "\n".join(lines)
+
+
+def kk_external_alarm_amos(fru):
+    return external_alarm_amos(fru, KK_EXTERNAL_ALARMS, "alarmInExternalMe false filterAlgorithm 0 filterDelay 60 filterTime 0 normallyOpen true")
+
+
+def rf_branch_amos(refs):
+    """AMOS of kk_sector_rf_branch_refs: SectorCarrier rfBranchRxRef / rfBranchTxRef"""
+    if not refs:
+        return ""
+    lines = ["", "####################### SectorCarrier RfBranch refs (radio shared by several sectors, as 04 LTE_Config) #######################", ""]
+    for carrier, branches in refs:
+        rf = " ".join(_amos_ref(b) for b in branches)
+        lines += [f"set ENodeBFunction=1,SectorCarrier={carrier}$ rfBranchRxRef {rf}",
+                  f"set ENodeBFunction=1,SectorCarrier={carrier}$ rfBranchTxRef {rf}"]
+    return "\n".join(lines + [""])
+
+
+def kk_rf_branch_sef_amos(node, node_cells_df, sef_branches):
+    text = rf_branch_amos(kk_sector_rf_branch_refs(node, node_cells_df, sef_branches))
+    # SiteEquipment creates the SectorEquipmentFunctions LOCKED: unlock the ones of the LTE cells (+ GSM Trx on L900)
+    sefs = list(dict.fromkeys(str(s).strip() for s in node_cells_df.get("sectorEquipmentFunctionId", []) if not pd.isna(s)))
+    if sefs:
+        text += "\n".join(["", "####################### SectorEquipmentFunction unlock (SiteEquipment creates them LOCKED) #######################", ""]
+                          + [f"deb NodeSupport=1,SectorEquipmentFunction={s}$" for s in sefs] + [""])
+    return text
+
+
+def kk_gsm_amos(plan):
+    if not plan:
+        return ""
+    ip = plan["ip"]
+    qos = "egressQosMarking Transport=1,QosProfiles=1,DscpPcpMap=1"
+    lines = ["", "####################### 2G+4G: GSM features, Abis transport, BtsFunction / GsmSector / AbisIp / Trx (as 04 LTE_Config) #######################", "",
+             "confbd+", "gs+", "", "set " + "|".join(plan["features"]) + " featurestate 1", ""]
+    if plan["abis_vlan"]:
+        encapsulation = f"Transport=1,VlanPort={plan['tn_port']}_ABIS"
+        lines += [f"crn {encapsulation}", f"encapsulation Transport=1,EthernetPort={plan['tn_port']}", qos, "isTagged true",
+                  "userLabel ABIS", f"vlanId {plan['abis_vlan']}", "end", ""]
+    else:
+        encapsulation = "Transport=1,Bridge=ABIS_N"
+    lines += ["crn Transport=1,Router=ABIS", "end", f"crn Transport=1,Router=ABIS,Interface{ip}=ABIS",
+              f"encapsulation {encapsulation}"] + (["dscpNdp 48"] if plan["ipv6"] else []) + [qos, "mtu 1500", "end",
+              f"crn Transport=1,Router=ABIS,Interface{ip}=ABIS,Address{ip}=ABIS", f"address {plan['abis_ip']}", "end"]
+    if plan["abis_gw"]:
+        table, dst = ("RouteTableIPv6Static", "::/0") if plan["ipv6"] else ("RouteTableIPv4Static", "0.0.0.0/0")
+        lines += [f"crn Transport=1,Router=ABIS,{table}=2", "end", f"crn Transport=1,Router=ABIS,{table}=2,Dst=ABIS",
+                  f"dst {dst}", "end", f"crn Transport=1,Router=ABIS,{table}=2,Dst=ABIS,NextHop=1", f"address {plan['abis_gw']}",
+                  "adminDistance 1", "bfdMonitoring true", "end"]
+    if plan["sectors"]:
+        broker_attr = "bscBrokerIpv6Address" if ":" in plan["broker"] else "bscBrokerIpAddress"
+        lines += ["", "pr BtsFunction=1$", "if $nr_of_mos = 0", "crn BtsFunction=1", "end", "fi", "set BtsFunction=1$ userLabel GSM"]
+        for sector, sef, branches in plan["sectors"]:
+            lines += ["", f"crn BtsFunction=1,GsmSector={sector}", f"userLabel {sector}", "end",
+                      f"crn BtsFunction=1,GsmSector={sector},AbisIp=1", "administrativeState 0", f"{broker_attr} {plan['broker']}",
+                      f"gsmSectorName {sector}", f"{ip.lower()}Address Transport=1,Router=ABIS,Interface{ip}=ABIS,Address{ip}=ABIS"]
+            lines += [f"{k} {v}" for k, v in KK_GSM_ABIS_IP.items()] + ["end"]
+            rx = " ".join(_amos_ref(b) for b in branches)
+            for trx in range(KK_GSM_TRX_PER_SECTOR):
+                lines += [f"crn BtsFunction=1,GsmSector={sector},Trx={trx}", "administrativeState 0"]
+                lines += [f"{k} {_AMOS_ENUM.get(v, v)}" for k, v in KK_GSM_TRX.items()]
+                lines += [f"rfBranchRxRef {rx}", f"rfBranchTxRef {_amos_ref(branches[0] if trx < 2 else branches[1])}",
+                          f"sectorEquipmentFunctionRef NodeSupport=1,SectorEquipmentFunction={sef}", "end"]
+        lines += [""]
+        for sector, _, _ in plan["sectors"]:
+            lines += [f"deb BtsFunction=1,GsmSector={sector},AbisIp=1$"]
+            lines += [f"deb BtsFunction=1,GsmSector={sector},Trx={trx}$" for trx in range(KK_GSM_TRX_PER_SECTOR)]
+    return "\n".join(lines + ["", "gs-", "confbd-", ""])
+
+
+def kk_lte_amos_extras(base_path_url, site_basic_df, lte_df, nr_cell_df):
+    """Append to each KK node's AMOS LTE 01 the external alarms, to 02 Cell_Def the frequency / SSB relations, the 4G
+    only anchor, RfBranch refs, SEF unlock and GSM / Abis, to 03 the paging records."""
+    nr_nodes = set(nr_cell_df["gNodeBName"].astype(str).str.strip()) if nr_cell_df is not None and not nr_cell_df.empty else set()
+    for _, site_row in site_basic_df.iterrows():
+        node = str(site_row["eNodeBName"]).strip()
+        paths = create_script_paths(base_path_url, node)
+        cells = lte_df[lte_df["eNodeBName"].astype(str).str.strip() == node]
+        if cells.empty:
+            continue
+        sef_branches = kk_site_equipment_rf_branches(paths["commissioning"])
+        fru = _site_value(site_row, "fieldReplaceableUnitId") or "BB-1"
+        lte01, lte02, lte03 = (_newest(paths["lte"], f"0{n}_") for n in (1, 2, 3))
+        if lte01:
+            with open(lte01, "a") as file:
+                file.write(kk_external_alarm_amos(fru))
+        if lte02:
+            # 02 Cell_Def (user 2026-11-13): frequency + frequency relations (own, all technologies), SSB frequency
+            # relation, the ENDC anchor of a 4G only site (4G+5G: NR 03 Termpoint), RfBranch refs, SEF unlock, GSM / Abis
+            with open(lte02, "a") as file:
+                file.write(KK_LTE_FREQ_RELATION_AMOS + KK_SSB_FREQ_RELATION_AMOS
+                           + ("\n" + KK_ANCHOR_4G_ONLY_AMOS if node not in nr_nodes else "")
+                           + kk_rf_branch_sef_amos(node, cells, sef_branches)
+                           + kk_gsm_amos(kk_gsm_plan(node, site_row, cells, sef_branches)))
+        if lte03:
+            with open(lte03) as file:
+                text = file.read()
+            # Paging: the node rejects maxNoOfPagingRecords above 7 while a cell is narrower than 10 MHz (L900 5 MHz)
+            bandwidths = pd.to_numeric(cells.get("dlChannelBandwidth", pd.Series(dtype=float)), errors="coerce").dropna()
+            if not bandwidths.empty and bandwidths.min() < 10000:
+                text = re.sub(r"(?m)^(set ENodeBFunction=1,Paging=1 maxNoOfPagingRecords\s+)16\s*$", r"\g<1>7", text)
+            with open(lte03, "w") as file:
+                file.write(text)
+
+
+def circle_gsm_plan(node, row, cells, sef_branches, site_basic_text, circle):
+    """GSM part of an AS / NE / RJ 2G/4G site (RF ABIS_IP) as on the circle's 2G/4G nodes - what 04 LTE_Config (XML) and
+    the AMOS 03 GPL configure: the Abis transport is in the 01 SiteBasic (Router=ABIS); the GSM features, BtsFunction=1
+    (userLabel = site), one GsmSector per sector with an L900 (F8) cell, id and gsmSectorName = site + sector
+    (RJ_E_F8_OM_JPR608A_A -> JPR608A), AbisIp=1 to the BSC broker of Site_Basic Broker_IP, and Trx G900-1.. on the F8
+    cell's SEF (RJ also G1800-1 on the sector's F3 SEF); Rx on the first two RfBranches of the SEF, Tx on the first
+    (RJ: the 2nd Trx on the 2nd). None when the node has no GSM part."""
+    abis_ip = _site_value(row, "ABIS_IP")
+    if not abis_ip or cells is None or cells.empty:
+        return None
+    m = re.search(r"<routerId>ABIS</routerId>\s*<Interface(IPv[46])[^>]*>\s*<interface\1Id>([^<]+)</interface\1Id>.*?"
+                  r"<address\1Id>([^<]+)</address\1Id>", site_basic_text, re.S)
+    if not m:
+        print(f"{node}: ABIS_IP given but no Router=ABIS interface in the 01 SiteBasic - no GSM part")
+        return None
+    ip = m.group(1)
+    me = f"ManagedElement={node}"
+    bands = CIRCLE_GSM_BANDS.get(circle, CIRCLE_GSM_BANDS["AS"])
+    sef_of = {}                                       # (sector name, band key) -> SEF
+    for _, c in cells.iterrows():
+        cell, sef = str(c["eUtranCellFDDId"]), str(c["sectorEquipmentFunctionId"]).strip()
+        parts = cell.split("_")
+        for key in bands:
+            if key in cell and len(parts) > 2:
+                sef_of.setdefault((parts[-2], key), sef)
+    sectors = sorted({name for name, key in sef_of if key == "_F8_"})
+    if not sectors:
+        print(f"{node}: ABIS_IP given but no L900 (F8) cell - no GsmSector / Trx")
+        return None
+    broker = (_site_value(row, "Broker_IP") or "").split("/")[0]
+    if not broker:
+        print(f"{node}: Site_Basic Broker_IP empty - AbisIp without BSC broker address (the node rejects it)")
+    elif broker == abis_ip.split("/")[0]:
+        print(f"{node}: Site_Basic Broker_IP {broker} is the node's own ABIS_IP - the BSC broker address is expected")
+    plan = {"ip": ip, "features": KK_GSM_FEATURES + (KK_GSM_FEATURES_IPV6 if ip == "IPv6" else []), "broker": broker,
+            "address_ref": f"{me},Transport=1,Router=ABIS,Interface{ip}={m.group(2)},Address{ip}={m.group(3)}",
+            "bts_label": sectors[0][:-1], "sectors": []}
+    for name in sectors:
+        trxs = []
+        for key, (prefix, band, arfcn_min, arfcn_max, count) in bands.items():
+            sef = sef_of.get((name, key))
+            if not sef:
+                continue
+            branches = [re.sub(r"^ManagedElement=[^,]+", me, b) for b in (sef_branches or {}).get(sef, [])][:2]
+            if len(branches) < 2:
+                aug = re.sub(r"\D", "", sef)
+                branches = [f"{me},Equipment=1,AntennaUnitGroup={aug},RfBranch={n}" for n in (1, 2)]
+            for n in range(1, count + 1):
+                tx = branches[1] if CIRCLE_GSM_TX_ALTERNATE.get(circle) and n % 2 == 0 else branches[0]
+                trxs.append({"id": f"{prefix}-{n}", "arfcnMin": arfcn_min, "arfcnMax": arfcn_max, "frequencyBand": band,
+                             "rx": branches, "tx": tx, "sef": sef})
+        plan["sectors"].append((name, trxs))
+    return plan
+
+
+def circle_gsm_amos(plan):
+    if not plan:
+        return ""
+    ip = plan["ip"]
+    lines = ["", "####################### 2G/4G: GSM features, BtsFunction / GsmSector / AbisIp / Trx (as 04 LTE_Config; Abis transport in the SiteBasic) #######################", "",
+             "confbd+", "gs+", "", "set " + "|".join(plan["features"]) + " featurestate 1", "",
+             "pr BtsFunction=1$", "if $nr_of_mos = 0", "crn BtsFunction=1", "end", "fi", f"set BtsFunction=1$ userLabel {plan['bts_label']}"]
+    broker_attr = "bscBrokerIpv6Address" if ":" in plan["broker"] else "bscBrokerIpAddress"
+    for name, trxs in plan["sectors"]:
+        lines += ["", f"crn BtsFunction=1,GsmSector={name}", "end", f"crn BtsFunction=1,GsmSector={name},AbisIp=1", "administrativeState 0"]
+        lines += [f"{broker_attr} {plan['broker']}"] if plan["broker"] else []
+        lines += [f"gsmSectorName {name}", f"{ip.lower()}Address {_amos_ref(plan['address_ref'])}"]
+        lines += [f"{k} {v}" for k, v in KK_GSM_ABIS_IP.items()] + ["end"]
+        for trx in trxs:
+            lines += [f"crn BtsFunction=1,GsmSector={name},Trx={trx['id']}", "administrativeState 0",
+                      f"arfcnMin {trx['arfcnMin']}", f"arfcnMax {trx['arfcnMax']}", f"frequencyBand {trx['frequencyBand']}"]
+            lines += [f"{k} {_AMOS_ENUM.get(v, v)}" for k, v in CIRCLE_GSM_TRX.items()]
+            lines += [f"rfBranchRxRef {' '.join(_amos_ref(b) for b in trx['rx'])}", f"rfBranchTxRef {_amos_ref(trx['tx'])}",
+                      f"sectorEquipmentFunctionRef NodeSupport=1,SectorEquipmentFunction={trx['sef']}", "end"]
+    lines += [""]
+    for name, trxs in plan["sectors"]:
+        lines += [f"deb BtsFunction=1,GsmSector={name},AbisIp=1$"] + [f"deb BtsFunction=1,GsmSector={name},Trx={t['id']}$" for t in trxs]
+    return "\n".join(lines + ["", "gs-", "confbd-", ""])
+
+
+FREQ_RELATION_AMOS = {"KK": (KK_LTE_FREQ_RELATION_AMOS, KK_SSB_FREQ_RELATION_AMOS),
+                      "AS": (AS_LTE_FREQ_RELATION_AMOS, AS_SSB_FREQ_RELATION_AMOS),
+                      "NE": (NE_LTE_FREQ_RELATION_AMOS, NE_SSB_FREQ_RELATION_AMOS),
+                      "RJ": (RJ_LTE_FREQ_RELATION_AMOS, RJ_SSB_FREQ_RELATION_AMOS)}
+
+
+def termpoint_without_gnb(script):
+    """NR 03 Termpoint of a 4G only site (AMOS): without what needs the gNBId - ExternalGNodeBFunction / TermPointToGNB
+    creates, the GUtranCellRelation functions and their calls, gNBId / address gets - as the XML conversion leaves
+    it out; the rest (RJ endcAllowed / endcAllowedPlmnList, EUtranFreqRelation priorities) stays"""
+    out, lines, i = [], script.split("\n"), 0
+    while i < len(lines):
+        s = lines[i].strip()
+        if re.match(r"func\s", s):
+            while i < len(lines) and lines[i].strip() != "endfunc":
+                i += 1
+        elif re.match(r"crn\s.*\$gnbid", s):
+            while i < len(lines) and lines[i].strip() != "end":
+                i += 1
+        elif not ("$gnbid" in s or "$reqip" in s or re.match(r"(Relation_\w+|deb TermPointToGNB|get GNB\w*Function=1\S*\s.*>\s*\$\w+)$", s)):
+            out.append(lines[i])
+        i += 1
+    return "\n".join(out)
+
+
+def circle_lte_amos_relations(base_path_url, site_basic_df, lte_df, circle):
+    """AS / NE / RJ 02 Cell_Def script (user 2026-11-13): the cells' frequency + frequency relation definition (own and
+    all technologies, was in the 03 GPL) and the SSB frequency relation (was in the NR 03 Termpoint, which keeps the
+    ENDC anchor of a 4G+5G site)"""
+    for node in site_basic_df["eNodeBName"].astype(str).str.strip().unique():
+        if lte_df[lte_df["eNodeBName"].astype(str).str.strip() == node].empty:
+            continue
+        lte02 = _newest(create_script_paths(base_path_url, node)["lte"], "02_")
+        if lte02:
+            with open(lte02, "a") as file:
+                file.write("".join(FREQ_RELATION_AMOS[circle]))
+
+
+def circle_lte_amos_extras(base_path_url, site_basic_df, lte_df, nr_cell_df, circle):
+    """AS / NE / RJ: append what their 04 LTE_Config (XML) has beyond the AMOS LTE scripts (user 2026-11-12) - 02 RfBranch
+    refs of shared radios; 2G/4G site (RF ABIS_IP): 01 the circle's external alarms, 02 the GSM part; 4G only site with
+    Anchor_ENDC_IP / _GW: 02 the ENDC anchor part (anchor_4g_only_amos); RJ: 03 the GPL overwrite (sgpl / sgpl-2)"""
+    nr_nodes = set(nr_cell_df["gNodeBName"].astype(str).str.strip()) if nr_cell_df is not None and not nr_cell_df.empty else set()
+    for _, row in site_basic_df.iterrows():
+        node = str(row["eNodeBName"]).strip()
+        if not _site_value(row, "Broker_IP") and "Broker_IP" in site_basic_df and "Site Name" in site_basic_df:
+            # the BSC broker is per site: AS KHUDR2 RF has it on the 4G/5G row, the Abis is on the 2G/4G node LKUDR2
+            same_site = site_basic_df[site_basic_df["Site Name"].astype(str) == str(row["Site Name"])]
+            brokers = [b for b in (_site_value(r, "Broker_IP") for _, r in same_site.iterrows()) if b]
+            if brokers:
+                row = row.copy()
+                row["Broker_IP"] = brokers[0]
+        paths = create_script_paths(base_path_url, node)
+        cells = lte_df[lte_df["eNodeBName"].astype(str).str.strip() == node]
+        if cells.empty:
+            continue
+        sef_branches = kk_site_equipment_rf_branches(paths["commissioning"])
+        sb = _newest(paths["commissioning"], "01_", "SiteBasic")
+        site_basic_text = open(sb, encoding="utf-8", errors="replace").read() if sb else ""
+        lte01, lte02, lte03 = (_newest(paths["lte"], f"0{n}_") for n in (1, 2, 3))
+        if lte02:
+            # 02 Cell_Def (user 2026-11-13): ENDC anchor of a 4G only site (anchor_4g_only_amos with the NR 03 Termpoint
+            # without its gNBId parts; the SSB relation is in 02 already), RfBranch refs, 2G/4G GSM part
+            anchor = anchor_4g_only_amos(row, site_basic_text, termpoint_without_gnb(ANCHOR_TERMPOINT[circle])) \
+                if node not in nr_nodes and circle in ANCHOR_TERMPOINT else ""
+            if anchor:
+                anchor = ("\n####################### 4G only site: ENDC anchor (as 04 LTE_Config) #######################\n\n"
+                          "confbd+\ngs+\n\n" + anchor.rstrip("\n") + "\n\ngs-\nconfbd-\n")
+            with open(lte02, "a") as file:
+                file.write(anchor + rf_branch_amos(kk_sector_rf_branch_refs(node, cells, sef_branches, shared_only=True))
+                           + circle_gsm_amos(circle_gsm_plan(node, row, cells, sef_branches, site_basic_text, circle)))
+        if lte01 and _site_value(row, "ABIS_IP"):
+            with open(lte01, "a") as file:
+                file.write(external_alarm_amos(_site_value(row, "fieldReplaceableUnitId") or "1",
+                                               [(n, slogan, AMOS_SEVERITY[sev]) for n, (slogan, sev) in enumerate(CIRCLE_ALARMS[circle], 1)],
+                                               "filterAlgorithm 0 filterTime 0 normallyOpen true"))
+        if lte03:
+            text = ""
+            if circle in LTE_GPL_OVERWRITE:
+                # sgpl-2 blocks the cells (lbl cell) and leaves them so - unlocked again, as the AMOS 03 ended before
+                text += ("\n####################### GPL overwrite run after the integration (as 04 LTE_Config) #######################\n\n"
+                         + LTE_GPL_OVERWRITE[circle].rstrip("\n") + "\n\nldeb cell\nconfb-\ngs-\n")
+            if text:
+                with open(lte03, "a") as file:
+                    file.write(text)
 
 
 def cascaded_radio_amos(site_basic_df, radio_hw_df, lte_df, nr_cell_df, se_text_of=lambda node: ""):
@@ -1606,34 +2153,147 @@ def _drop_wide_bwp_refs(node, node_nr_df, script):
     return re.sub(r"^set\s+NRCellDU=\S+\s+(bwpref|bWPSetRef)\s+.*\n?", "", script, flags=re.M | re.I)
 
 
-def is_air_3268_b42(node_nr_df, radio_hw_df=None):
-    """the gNodeB's NR radios are AIR 3268 B42 (Radio_HW row of the NR cell's SEF, else NR-CELL Radio_Type)"""
+def _nr_radio_types(node_nr_df, radio_hw_df=None):
+    """Radio_Type of the gNodeB's NR radios (Radio_HW row of the NR cell's SEF, else NR-CELL Radio_Type)"""
     types = []
     if radio_hw_df is not None and "Radio_Type" in radio_hw_df and "sectorEquipmentFunctionId" in node_nr_df:
         sefs = set(node_nr_df["sectorEquipmentFunctionId"].astype(str).str.strip())
         types = list(radio_hw_df[radio_hw_df["sectorEquipmentFunctionId"].astype(str).str.strip().isin(sefs)]["Radio_Type"])
     if not types and "Radio_Type" in node_nr_df:
         types = list(node_nr_df["Radio_Type"])
-    return any(re.search(r"3268", str(t)) and re.search(r"B42", str(t), re.I) for t in types)
+    return [str(t) for t in types]
+
+
+def nr_radio_variant(node_nr_df, radio_hw_df=None):
+    """NR script variant for the gNodeB's radio: '8863' (Radio 8863, 8T8R RRU - RF Radio_Type e.g. AIR8863B78AA),
+    'B42' (AIR 3268 B42) or None (AIR / massive MIMO, the templates as they are)"""
+    types = _nr_radio_types(node_nr_df, radio_hw_df)
+    if any("8863" in t for t in types):
+        return "8863"
+    if any(re.search(r"3268", t) and re.search(r"B42", t, re.I) for t in types):
+        return "B42"
+    return None
+
+
+# Radio 8863 (8T8R, no massive MIMO) - KK-NLEHSKT1-1 / KK-NLBG0120-1 (same radio, NR cell in service), KK-NLHSKT64-1
+# 2026-11-11 (AIR values -> 'Install license key CXC4012510' on NRCellDU, cell DISABLED; 'Massive MIMO Sleep Mode not
+# supported by equipment'): massive MIMO licences not installed, MIMO values as the MOM defaults / NR 01 cell creation
+NR_8863_NO_LICENCE = ("CXC4012272", "CXC4012330", "CXC4012378", "CXC4012406", "CXC4012502", "CXC4012510",
+                      "CXC4012590", "CXC4012790")
+NR_8863_VALUES = {
+    "advanceddlsumimoenabled": "false", "aperiodicsrsenabled": "false", "srscapacityboostenabled": "false",
+    "mixedsrsmodeenabled": "false", "maxnoofadvanceddlmumimolayers": "0", "dlmaxmumimolayers": "0",
+    "csirsconfig32p": "csiRsControl32Ports=0,i11Restriction=,i12Restriction=",
+    "csirsconfig4p": "csiRsControl4Ports=1,i11Restriction=FF", "ssbpowerboost": "4", "massivemimosleepenabled": "0",
+}
+# csiRsActivePortConfig is read-only (PORT_8 from the CSI-RS configs); massive MIMO sleep group not on an 8863
+NR_8863_LEFT_OUT = ("csirsactiveportconfig", "mmimosleeptimegroupref")
+
+
+def nr_script_for_radio(script, variant):
+    """NR AMOS (02 NR GPL, 06 SA_AMF / RIM) for the gNodeB's radio variant (nr_radio_variant); lines taken out stay
+    as '# Radio 8863: ...' comments.
+    B42: RIM without RIM location as RJ_RIM Activation script_B42 (user 2026-11-03, RJ-NLRJNT02-1 kget; all circles
+    2026-11-12) - setIdAllocation 0, rimLocationEnabled false.
+    8863: no massive MIMO (NR_8863_VALUES, no NR_8863_NO_LICENCE activations, NR 01 configuredMaxTxPower from the RF
+    kept), RIM without RIM location as KK-NLBG0120-1 / KK-NLEHSKT1-1 - no RimRSSet / aggressor / victim refs,
+    rimLocationEnabled false, rimPdschSlotBlankMode AUTO_MODE (AUTO_RS1 needs RIM location)."""
+    if variant == "B42":
+        script = re.sub(r"(?im)^(\s*set\s+\S+\s+setIdAllocation\s+)1[ \t]*$", r"\g<1>0", script)
+        return re.sub(r"(?im)^(\s*set\s+\S+\s+rimLocationEnabled\s+)true[ \t]*$", r"\g<1>false", script)
+    if variant != "8863":
+        return script
+    out, prompt = [], False
+    for line in script.split("\n"):
+        s = line.strip()
+        if prompt and re.fullmatch(r"\d+", s):            # answer line of 'cr RimRSGlobal=1,RimRSSet=N'
+            out.append("# Radio 8863: " + s)
+            prompt = False
+            continue
+        prompt = bool(re.match(r"(?i)cr\s+(\S*,)?RimRSGlobal=1,RimRSSet=\d+\s*$", s))
+        if prompt or re.match(r"(?i)l?set\s+\S*RimRSSet=\d+\s", s) or re.search(r"(?i)\srim(Aggressor|Victim)RSSetRef\b", s) \
+                or re.match(r"(?i)get\s+NRCellDU=\S+\s+userlabel\s*>\s*\$[A-C]cell$", s):
+            out.append("# Radio 8863: " + s)
+            continue
+        m = re.match(r"(?i)^(\s*l?set\s+)(\S+)(\s+)(featurestate)(\s+)1\s*$", line)
+        if m and "CXC" in m.group(2).upper():
+            keep = [c for c in m.group(2).split("|")
+                    if (re.findall(r"(?i)CXC\d+", c) or [c])[0].upper() not in NR_8863_NO_LICENCE]
+            if len(keep) == len(m.group(2).split("|")):
+                out.append(line)
+            elif keep:
+                out.append(m.group(1) + "|".join(keep) + m.group(3) + m.group(4) + m.group(5) + "1")
+            else:
+                out.append("# Radio 8863: " + s)
+            continue
+        m = re.match(r"(?i)^(\s*setm\s+\S+\s+)(.*?)\s*$", line)
+        if m:
+            words = m.group(2).split()
+            new = list(words)
+            for i in range(0, len(words) - 1, 2):
+                new[i + 1] = NR_8863_VALUES.get(words[i].lower(), words[i + 1])
+            out.append(m.group(1) + " ".join(new) if new != words else line)
+            continue
+        m = re.match(r"(?i)^(\s*l?set\s+)(\S+)(\s+)(\w+)(\s+)(.*?)\s*$", line)
+        if m:
+            attr, value = m.group(4).lower(), m.group(6)
+            if attr in NR_8863_LEFT_OUT or (attr == "configuredmaxtxpower" and value == "200000"):
+                out.append("# Radio 8863: " + s)
+                continue
+            if attr == "rimlocationenabled" and value.lower() == "true":
+                value = "false"
+            elif attr == "rimpdschslotblankmode" and value == "4":
+                value = "1"
+            elif attr == "dlmaxmumimolayers" and m.group(2) == ".":       # '.' = EUtranCellTDD too: LTE keeps it
+                out.append(m.group(1) + "EUtranCellTDD=.*" + m.group(3) + m.group(4) + m.group(5) + value)
+                line = m.group(1) + "NRCellDU=.*" + m.group(3) + m.group(4) + m.group(5) + NR_8863_VALUES[attr]
+                out.append(line)
+                continue
+            value = NR_8863_VALUES.get(attr, value)
+            if value != m.group(6):
+                line = m.group(1) + m.group(2) + m.group(3) + m.group(4) + m.group(5) + value
+        out.append(line)
+    return "\n".join(out)
+
+
+# VoNR active in these circles, on every NR radio (AIR 3268 B42 too - only its RIM differs, nr_script_for_radio; user
+# 2026-11-13); 06 SA_AMF_RIM_CONFIG epsFallbackOperation 3 + the VoNR activation (AMOS 06 / VONR_ACTIVATION section of
+# the 06 XML)
+VONR_CIRCLES = ("KK", "RJ", "AS", "NE")
+
+
+def vonr_activation(circle):
+    """VoNR activation of the circle: KK_VONR_ACTIVATION; RJ / AS / NE without its KK parts (UeMCEUtranFreqRelProfile
+    L900 / L1800 / L2100 / L2300 with the KK EARFCN mapping, KK voicePrio - theirs are in their SA template)"""
+    if circle == "KK":
+        return KK_VONR_ACTIVATION
+    if circle not in VONR_CIRCLES:
+        return ""
+    a, b = KK_VONR_ACTIVATION.index("## UeMCEUtranFreqRelProfile (KK)"), KK_VONR_ACTIVATION.index("## DrbData - VoNR")
+    return (KK_VONR_ACTIVATION[:a] + KK_VONR_ACTIVATION[b:]).replace("=KK_E_.*,", "=.*,")
 
 
 def write_sa_scripts(nr_dir, node, current_time, node_nr_df, cucp_5qi_xml, du_5qi_xml, amf_rim_config,
-                     rim_no_location=False):
+                     nr_radio=None, vonr=""):
     # 06 = circle's AMF part + only the RIM block matching the gNodeB's sector (NR cell) count: 1, 2, or 3+
     starts = {k: amf_rim_config.rfind("\n", 0, amf_rim_config.index(h)) + 1 for k, h in RIM_SECTION_HEADERS.items()}
     sectors = min(max(len(node_nr_df), 1), 3)
     rim_script = amf_rim_config[starts[sectors]: starts[sectors + 1] if sectors < 3 else len(amf_rim_config)]
-    if rim_no_location:
-        # RJ AIR 3268 B42 (user 2026-11-03, RJ_RIM Activation script_B42 / RJ-NLRJNT02-1 kget): setIdAllocation 0,
-        # rimLocationEnabled false
-        rim_script = re.sub(r"(?im)^(set\s+\S+\s+setIdAllocation\s+)1\s*$", r"\g<1>0", rim_script)
-        rim_script = re.sub(r"(?im)^(set\s+\S+\s+rimLocationEnabled\s+)true\s*$", r"\g<1>false", rim_script)
     for _, row in node_nr_df.iterrows():
         sector = str(row["gUtranCell"]).strip()[-1:].upper()
         set_id = row.get("SetID", row.get("Set ID"))      # AS / NE RF templates still have the old "Set ID" header
         if sector in ("A", "B", "C") and pd.notna(set_id):
             rim_script = rim_script.replace(f"$setID_{sector}", str(int(set_id)))
     amf_script = _drop_wide_bwp_refs(node, node_nr_df, amf_rim_config[: starts[1]])
+    if nr_radio:
+        # Radio 8863 / AIR 3268 B42 (nr_radio_variant)
+        amf_script, rim_script = nr_script_for_radio(amf_script, nr_radio), nr_script_for_radio(rim_script, nr_radio)
+    if vonr:
+        # VoNR activation after the RIM settings, before its cvms + restart (KK 06 AMOS, user 2026-11-12)
+        cut = rim_script.find("\ncvms Post_Rim")
+        cut = cut + 1 if cut >= 0 else len(rim_script)
+        rim_script = rim_script[:cut] + "\n######################################### VoNR Activation #########################################\n" \
+            + vonr.strip("\n") + "\n\n" + rim_script[cut:]
     sa_scripts = {
         f"04_{node}_SA_cUCP5qiTable_{current_time}.xml": cucp_5qi_xml,
         f"05_{node}_SA_dU5qiTable_{current_time}.xml": du_5qi_xml,
@@ -2026,15 +2686,17 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
                 NR_GPL_LMS_path = os.path.join(create_script_paths(base_path_url, node)["nr"], f"02_{node}_NR_GPL_LMS_{current_time}.txt")
                 
+                nr_radio = nr_radio_variant(nr_cell_sub, rru_hw_df)     # Radio 8863 / AIR 3268 B42: own NR 02 + 06
                 with open(NR_GPL_LMS_path, "a") as file:
-                    file.write(NR_GPL_LMS + "\n")
+                    file.write(nr_script_for_radio(NR_GPL_LMS, nr_radio) + "\n")
 
                 Termpoint_GUtranFreqRelation_path = os.path.join(create_script_paths(base_path_url, node)["nr"],f"03_{node}_Termpoint_GUtranFreqRelation_{current_time}.txt")
                 
                 with open(Termpoint_GUtranFreqRelation_path, "a") as file:
                     file.write(TREMPOINT_GUTRANCELL_FREQ_RELATION + "\n")
 
-                write_sa_scripts(create_script_paths(base_path_url, node)["nr"], node, current_time, nr_cell_sub, KK_SA_cUCP5qiTable_XML, KK_SA_dU5qiTable_XML, KK_SA_AMF_RIM_CONFIG)
+                write_sa_scripts(create_script_paths(base_path_url, node)["nr"], node, current_time, nr_cell_sub, KK_SA_cUCP5qiTable_XML, KK_SA_dU5qiTable_XML, KK_SA_AMF_RIM_CONFIG,
+                                 nr_radio=nr_radio)
             # .......................................................................... NRCELL CONFIGRATION FOR CELL CREATION IN 5G ................................................
 
         ############################################################### creating the SiteBasic script for 4G and 5G ###############################################################
@@ -2155,6 +2817,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                             sectorEquipmentFunctionId=row.get("sectorEquipmentFunctionId", ""),
                             riLinkId=row.get("riLinkId", ""),  # optional
                         )
+                        break       # one template per radio: Radio_Type "AIR8863B78AA" = Radio 8863, not AIR
 
             with open(rru_hw_path, "a", encoding="utf-8") as file:
                 file.write(
@@ -2171,6 +2834,10 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                         siteBasicFilePath=siteBasicFilePath,
                     )
                 )
+
+        # AMOS LTE 01/02/03 get the 04 LTE_Config parts (external alarms, RfBranch refs, SEF unlock, paging, 4G only
+        # anchor, GSM) - needs the 02 SiteEquipment above
+        kk_lte_amos_extras(base_path_url, site_basic_df, lte_df, nr_cell_df)
 
         ################################ LTE Config XML (TN_RN_GPS_MME + cell creation; needs 02 SiteEquipment for the RfBranch refs) ################################
         kk_cascade = cascaded_radio_amos(site_basic_df, rru_hw_df, lte_df, nr_cell_df, lambda n: open(
@@ -2288,10 +2955,12 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                     file.write(TN_Termpoint_GUtranFreqRelation + "\n")
                 
                 gpl_5g_path = os.path.join(node_dir_5g, f"02_{node}_NR_GPL_LMS_{current_time}.txt")
+                nr_radio = nr_radio_variant(nr_cell_sub, rru_hw_df)     # Radio 8863 / AIR 3268 B42: own NR 02 + 06
                 with open(gpl_5g_path, "w") as file:
-                    file.write(TN_05_5G_LMS_GPL_ROTN + "\n")
+                    file.write(nr_script_for_radio(TN_05_5G_LMS_GPL_ROTN, nr_radio) + "\n")
 
-                write_sa_scripts(node_dir_5g, node, current_time, nr_cell_df[nr_cell_df["gNodeBName"] == node], TN_SA_cUCP5qiTable_XML, TN_SA_dU5qiTable_XML, TN_SA_AMF_RIM_CONFIG)
+                write_sa_scripts(node_dir_5g, node, current_time, nr_cell_df[nr_cell_df["gNodeBName"] == node], TN_SA_cUCP5qiTable_XML, TN_SA_dU5qiTable_XML, TN_SA_AMF_RIM_CONFIG,
+                                 nr_radio=nr_radio)
         
         # --------------------------------------------------------- TN Commissioning Scripts -----------------------------------------#
         for node in site_basic_df["eNodeBName"].unique():
@@ -2526,10 +3195,12 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                     file.write(CHN_Termpoint_GUtranFreqRelation + "\n")
                 
                 gpl_5g_path = os.path.join(node_dir_5g, f"02_{node}_NR_GPL_LMS_{current_time}.txt")
+                nr_radio = nr_radio_variant(nr_cell_sub, rru_hw_df)     # Radio 8863 / AIR 3268 B42: own NR 02 + 06
                 with open(gpl_5g_path, "w") as file:
-                    file.write(CHN_05_5G_LMS_GPL_CHN + "\n")
+                    file.write(nr_script_for_radio(CHN_05_5G_LMS_GPL_CHN, nr_radio) + "\n")
 
-                write_sa_scripts(node_dir_5g, node, current_time, nr_cell_df[nr_cell_df["gNodeBName"] == node], CHN_SA_cUCP5qiTable_XML, CHN_SA_dU5qiTable_XML, CHN_SA_AMF_RIM_CONFIG)
+                write_sa_scripts(node_dir_5g, node, current_time, nr_cell_df[nr_cell_df["gNodeBName"] == node], CHN_SA_cUCP5qiTable_XML, CHN_SA_dU5qiTable_XML, CHN_SA_AMF_RIM_CONFIG,
+                                 nr_radio=nr_radio)
                 
         
         # --------------------------------------------------------- CHN Commissioning Scripts -----------------------------------------#
@@ -2775,15 +3446,17 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
                 NR_GPL_LMS_path = os.path.join(create_script_paths(base_path_url, node)["nr"],f"02_{node}_NR_GPL_LMS_{current_time}.txt")
                 
+                nr_radio = nr_radio_variant(nr_cell_sub, rru_hw_df)     # Radio 8863 / AIR 3268 B42: own NR 02 + 06
                 with open(NR_GPL_LMS_path, "a") as file:
-                    file.write(AP_Route_5G_GPL_LMS + "\n")
+                    file.write(nr_script_for_radio(AP_Route_5G_GPL_LMS, nr_radio) + "\n")
 
                 Termpoint_GUtranFreqRelation_path = os.path.join(create_script_paths(base_path_url, node)["nr"],f"03_{node}_Termpoint_GUtranFreqRelation_{current_time}.txt")
                 
                 with open(Termpoint_GUtranFreqRelation_path, "a") as file:
                     file.write(AP_Termpoint_GUtranFreqRelation + "\n")
 
-                write_sa_scripts(create_script_paths(base_path_url, node)["nr"], node, current_time, nr_cell_sub, AP_SA_cUCP5qiTable_XML, AP_SA_dU5qiTable_XML, AP_SA_AMF_RIM_CONFIG)
+                write_sa_scripts(create_script_paths(base_path_url, node)["nr"], node, current_time, nr_cell_sub, AP_SA_cUCP5qiTable_XML, AP_SA_dU5qiTable_XML, AP_SA_AMF_RIM_CONFIG,
+                                 nr_radio=nr_radio)
         # ________________________________________________________________________________________________________________________________________________________________________#
 
         ########################################## AP Commissioning Scripts Generation Logic ###############################################################
@@ -3090,8 +3763,9 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
                 NR_GPL_LMS_path = os.path.join(create_script_paths(base_path_url, node)["nr"],f"02_{node}_NR_GPL_LMS_{current_time}.txt")
                 
+                nr_radio = nr_radio_variant(nr_cell_sub, rru_hw_df)     # Radio 8863 / AIR 3268 B42: own NR 02 + 06
                 with open(NR_GPL_LMS_path, "a") as file:
-                    file.write(RJ_Route_5G_GPL_LMS + "\n")
+                    file.write(nr_script_for_radio(RJ_Route_5G_GPL_LMS, nr_radio) + "\n")
 
                 Termpoint_GUtranFreqRelation_path = os.path.join(create_script_paths(base_path_url, node)["nr"],f"03_{node}_Termpoint_GUtranFreqRelation_{current_time}.txt")
                 
@@ -3099,7 +3773,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                     file.write(RJ_Termpoint_GUtranFreqRelation + "\n")
 
                 write_sa_scripts(create_script_paths(base_path_url, node)["nr"], node, current_time, nr_cell_sub, RJ_SA_cUCP5qiTable_XML, RJ_SA_dU5qiTable_XML, RJ_SA_AMF_RIM_CONFIG,
-                                 rim_no_location=is_air_3268_b42(nr_cell_sub, rru_hw_df))
+                                 nr_radio=nr_radio)
         # ________________________________________________________________________________________________________________________________________________________________________#
 
         ########################################## RJ Commissioning Scripts Generation Logic ###############################################################
@@ -3299,9 +3973,11 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 )
         circle_commissioning_bridges(base_path_url, site_basic_df, rru_hw_df)      # Bridge / PIU (as KK)
         cascaded_radio_sync(base_path_url, site_basic_df, rru_hw_df, lte_df, nr_cell_df)
+        circle_lte_amos_relations(base_path_url, site_basic_df, lte_df, "RJ")     # 02: frequency + SSB relations
         if XML_TESTING:     # 04 LTE_Config + 04/05/06 5G NETCONF XMLs (testing)
             write_circle_config_xmls(base_path_url, site_basic_df["eNodeBName"].unique(), current_time, "RJ", site_basic_df, lte_df,
                                      rru_hw_df)
+        circle_lte_amos_extras(base_path_url, site_basic_df, lte_df, nr_cell_df, "RJ")     # AMOS = 04 LTE_Config parts
     # --------------------------------------------------------------- RJ Circle-specific Script Generation ---------------------------------------------------------------------
     
     # ---------------------------------------------------------------- NE Circle-specific Script Generation ----------------------------------------------------------------
@@ -3416,8 +4092,9 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
                 NR_GPL_LMS_path = os.path.join(create_script_paths(base_path_url, node)["nr"],f"02_{node}_NR_GPL_LMS_{current_time}.txt")
                 
+                nr_radio = nr_radio_variant(nr_cell_sub, rru_hw_df)     # Radio 8863 / AIR 3268 B42: own NR 02 + 06
                 with open(NR_GPL_LMS_path, "a") as file:
-                    file.write(NE_NR_GPL_LMS_SCRIPT + "\n")
+                    file.write(nr_script_for_radio(NE_NR_GPL_LMS_SCRIPT, nr_radio) + "\n")
 
                 Termpoint_GUtranFreqRelation_path = os.path.join(create_script_paths(base_path_url, node)["nr"],f"03_{node}_Termpoint_GUtranFreqRelation_{current_time}.txt")
                 
@@ -3425,7 +4102,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                     file.write(NE_Termpoint_GUtranFreqRelation_script + "\n")
 
                 write_sa_scripts(create_script_paths(base_path_url, node)["nr"], node, current_time, nr_cell_sub, NE_SA_cUCP5qiTable_XML, NE_SA_dU5qiTable_XML, NE_SA_AMF_RIM_CONFIG,
-                                 rim_no_location=is_air_3268_b42(nr_cell_sub, rru_hw_df))
+                                 nr_radio=nr_radio)
         # ________________________________________________________________________________________________________________________________________________________________________#
 
         ########################################## NE Commissioning Scripts Generation Logic ###############################################################
@@ -3627,8 +4304,10 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 )
         circle_commissioning_bridges(base_path_url, site_basic_df)      # Bridge / PIU (as KK)
         cascaded_radio_sync(base_path_url, site_basic_df, rru_hw_df, lte_df, nr_cell_df)
+        circle_lte_amos_relations(base_path_url, site_basic_df, lte_df, "NE")     # 02: frequency + SSB relations
         if XML_TESTING:     # 04 LTE_Config + 04/05/06 5G NETCONF XMLs (testing)
             write_circle_config_xmls(base_path_url, site_basic_df["eNodeBName"].unique(), current_time, "NE", site_basic_df, lte_df)
+        circle_lte_amos_extras(base_path_url, site_basic_df, lte_df, nr_cell_df, "NE")     # AMOS = 04 LTE_Config parts
     # ---------------------------------------------------------------- NE Circle-specific Script Generation ---------------------------------------------------------------------
     
     # ---------------------------------------------------------------- AS Circle-specific Script Generation ----------------------------------------------------------------
@@ -3760,8 +4439,9 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                     create_script_paths(base_path_url, node)["nr"],
                     f"02_{node}_NR_GPL_LMS_{current_time}.txt",
                 )
+                nr_radio = nr_radio_variant(nr_cell_sub, rru_hw_df)     # Radio 8863 / AIR 3268 B42: own NR 02 + 06
                 with open(NR_GPL_LMS_path, "a") as file:
-                    file.write(AS_NR_GPL_LMS_SCRIPT + "\n")
+                    file.write(nr_script_for_radio(AS_NR_GPL_LMS_SCRIPT, nr_radio) + "\n")
 
                 Termpoint_GUtranFreqRelation_path = os.path.join(
                     create_script_paths(base_path_url, node)["nr"],
@@ -3771,7 +4451,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                     file.write(AS_Termpoint_GUtranFreqRelation_script + "\n")
 
                 write_sa_scripts(create_script_paths(base_path_url, node)["nr"], node, current_time, nr_cell_sub, AS_SA_cUCP5qiTable_XML, AS_SA_dU5qiTable_XML, AS_SA_AMF_RIM_CONFIG,
-                                 rim_no_location=is_air_3268_b42(nr_cell_sub, rru_hw_df))
+                                 nr_radio=nr_radio)
         # .......................................................................... NRCELL CONFIGRATION FOR CELL CREATION IN 5G ................................................
         ########################################## AS Commissioning Scripts Generation Logic ###############################################################
         for node in site_basic_df["eNodeBName"].unique():
@@ -3956,8 +4636,10 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 file.write(rbs_summary_script(circle).format(siteEquipmentFilePath=siteEquipmentFilePath,siteBasicFilePath=siteBasicFilePath))
         circle_commissioning_bridges(base_path_url, site_basic_df)      # Bridge / PIU (as KK)
         cascaded_radio_sync(base_path_url, site_basic_df, rru_hw_df, lte_df, nr_cell_df)
+        circle_lte_amos_relations(base_path_url, site_basic_df, lte_df, "AS")     # 02: frequency + SSB relations
         if XML_TESTING:     # 04 LTE_Config + 04/05/06 5G NETCONF XMLs (testing)
             write_circle_config_xmls(base_path_url, site_basic_df["eNodeBName"].unique(), current_time, "AS", site_basic_df, lte_df)
+        circle_lte_amos_extras(base_path_url, site_basic_df, lte_df, nr_cell_df, "AS")     # AMOS = 04 LTE_Config parts
     # ---------------------------------------------------------------- AS Circle-specific Script Generation ----------------------------------------------------------------
     
     # ---------------------------------------------------------------- DEL Circle-specific Script Generation ----------------------------------------------------------------
@@ -4089,8 +4771,9 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                     create_script_paths(base_path_url, node)["nr"],
                     f"02_{node}_NR_GPL_LMS_{current_time}.txt",
                 )
+                nr_radio = nr_radio_variant(nr_cell_sub, rru_hw_df)     # Radio 8863 / AIR 3268 B42: own NR 02 + 06
                 with open(NR_GPL_LMS_path, "a") as file:
-                    file.write(DEL_NR_GPL_LMS_SCRIPT + "\n")
+                    file.write(nr_script_for_radio(DEL_NR_GPL_LMS_SCRIPT, nr_radio) + "\n")
 
                 Termpoint_GUtranFreqRelation_path = os.path.join(
                     create_script_paths(base_path_url, node)["nr"],
@@ -4099,7 +4782,8 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 with open(Termpoint_GUtranFreqRelation_path, "a") as file:
                     file.write(DEL_Termpoint_GUtranFreqRelation_script + "\n")
 
-                write_sa_scripts(create_script_paths(base_path_url, node)["nr"], node, current_time, nr_cell_sub, DEL_SA_cUCP5qiTable_XML, DEL_SA_dU5qiTable_XML, DEL_SA_AMF_RIM_CONFIG)
+                write_sa_scripts(create_script_paths(base_path_url, node)["nr"], node, current_time, nr_cell_sub, DEL_SA_cUCP5qiTable_XML, DEL_SA_dU5qiTable_XML, DEL_SA_AMF_RIM_CONFIG,
+                                 nr_radio=nr_radio)
         # .......................................................................... NRCELL CONFIGRATION FOR CELL CREATION IN 5G ................................................
         ########################################## DEL Commissioning Scripts Generation Logic ###############################################################
         for node in site_basic_df["eNodeBName"].unique():
@@ -4656,6 +5340,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                     # passing the superset keeps this working whether or not
                     # the Vi template uses a given placeholder.
                     formatted_text = MAG_Vi_TN_RN_GPS_MME_SCRIPT.format(
+                        DUAL_STACK_SCTP=vi_dual_stack_sctp(row),
                         LTE_UP_GW=row["LTE_UP_GW"],
                         eNBId=row["eNBId"],
                         Phy_SiteID_Userlabel=row["Phy SiteID/Userlabel"],
@@ -4674,6 +5359,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
                 elif any(tech in joined for tech in ["_T1_", "_T2_"]) or vi_tdd:
                     formatted_text = MAG_Vi_TN_RN_GPS_MME_SCRIPT.format(
+                        DUAL_STACK_SCTP=vi_dual_stack_sctp(row),
                         LTE_UP_GW=row["LTE_UP_GW"],
                         Phy_SiteID_Userlabel=row["Phy SiteID/Userlabel"],
                         eNBId=row["eNBId"],
@@ -4878,7 +5564,10 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                             ABIS_vlan=row["ABIS_vlan"],
                             ABIS_IP=row["ABIS_IP"],
                             ABIS_GW=row["ABIS_GW"],
+                            # IPv4 side of the dual-stack CP/UP (only the 6631 IPv6 template has these placeholders)
+                            **vi_dual_stack_values(row),
                         )
+                        formatted_text = drop_dual_stack_ipv4(formatted_text, row["eNodeBName"])
 
                         # Some SiteBasic templates already configure Abis inline (the
                         # 6631 IPv6 variant does, under routerId GSM_ABIS). Appending
@@ -5019,6 +5708,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                     # passing the superset keeps this working whether or not
                     # the Vi template uses a given placeholder.
                     formatted_text = MP_Vi_TN_RN_GPS_MME_SCRIPT.format(
+                        DUAL_STACK_SCTP=vi_dual_stack_sctp(row),
                         LTE_UP_GW=row["LTE_UP_GW"],
                         eNBId=row["eNBId"],
                         Phy_SiteID_Userlabel=row["Phy SiteID/Userlabel"],
@@ -5037,6 +5727,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
                 elif any(tech in joined for tech in ["_T1_", "_T2_"]) or vi_tdd:
                     formatted_text = MP_Vi_TN_RN_GPS_MME_SCRIPT.format(
+                        DUAL_STACK_SCTP=vi_dual_stack_sctp(row),
                         LTE_UP_GW=row["LTE_UP_GW"],
                         Phy_SiteID_Userlabel=row["Phy SiteID/Userlabel"],
                         eNBId=row["eNBId"],
@@ -5241,7 +5932,10 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                             ABIS_vlan=row["ABIS_vlan"],
                             ABIS_IP=row["ABIS_IP"],
                             ABIS_GW=row["ABIS_GW"],
+                            # IPv4 side of the dual-stack CP/UP (only the 6631 IPv6 template has these placeholders)
+                            **vi_dual_stack_values(row),
                         )
+                        formatted_text = drop_dual_stack_ipv4(formatted_text, row["eNodeBName"])
 
                         # Some SiteBasic templates already configure Abis inline (the
                         # 6631 IPv6 variant does, under routerId GSM_ABIS). Appending
@@ -5351,6 +6045,191 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
             with open(site_equipment_script_path, "a", encoding="utf-8") as file:
                 file.write(rbs_summary_script(circle).format(siteEquipmentFilePath=siteEquipmentFilePath,siteBasicFilePath=siteBasicFilePath))
     # ---------------------------------------------------------------- MP_Vi Circle-specific Script Generation ----------------------------------------------------------------  
+
+    # ---------------------------------------------------------------- RJ_Vi Circle-specific Script Generation ----------------------------------------------------------------
+    # Vi Rajasthan. Reference node LO01INRJ207062 (Baseband 6631, 25.Q2, L900/L1800/L2100 FDD + GSM): the 01 TN_RN_GPS_MME
+    # (MP_Vi layout, RJ MMEs / PLMN 404-60 / GERAN / alarms), the 03 GPL and the IPv6 6631 SiteBasic carry its values.
+    elif circle == "RJ_Vi":
+        current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        for idx, row in site_basic_df.iterrows():
+            node_name = row.get("eNodeBName", "UnknownNode")
+
+            node_dir = create_script_paths(base_path_url, node_name)["lte"]
+            os.makedirs(node_dir, exist_ok=True)
+
+            if node_name in cell_mapped_node:
+                cell_ids = cell_mapped_node[node_name]
+                joined = "".join(cell_ids)
+                # same FDD / TDD detection as MP_Vi ('LO01INRJ207062F21' carries the layer as a bare F/T)
+                tails = [str(c)[-4:].upper() for c in cell_ids]
+                vi_fdd = any("F" in tail for tail in tails)
+                vi_tdd = any("T" in tail and "F" not in tail for tail in tails)
+
+                if any(tech in joined for tech in ["_F1_", "_F8_", "_F3_", "_F5_", "_T1_", "_T2_"]) or vi_fdd or vi_tdd:
+                    # dual-stack CP/UP: the IPv4 side (Site_Basic *_V4 columns) is created by the 01 SiteBasic;
+                    # this script only marks it (egressQosMarking) and adds it to the SctpEndpoint
+                    formatted_text = RJ_Vi_TN_RN_GPS_MME_SCRIPT.format(
+                        DUAL_STACK_SCTP=vi_dual_stack_sctp(row),
+                        eNBId=row["eNBId"],
+                        Phy_SiteID_Userlabel=row["Phy SiteID/Userlabel"],
+                    )
+                    script_path = os.path.join(node_dir, f"01_{node_name}_TN_RN_GPS_MME_{current_time}.txt")
+                    with open(script_path, "a") as file:
+                        file.write(formatted_text + "\n")
+
+                # 02 Cell_Def: GSM on the L900 radios (BtsFunction / GsmSector / AbisIp / Trx)
+                gsm = rj_vi_gsm_amos(node_name, row, lte_df[lte_df["eNodeBName"] == node_name])
+                cell_def = _newest(node_dir, "02_", "Cell_Def")
+                # 02 Cell_Def: EUtranFrequency creation first (moved from the 03 GPL), template freq relations out
+                if cell_def:
+                    rj_vi_cell_def_frequencies(cell_def)
+                if gsm and cell_def:
+                    with open(cell_def, "a") as file:
+                        file.write(gsm)
+
+        ########################################################################## GPL/LMS Script ###########################################################################
+        for node in unique_nodes:
+            script_path = os.path.join(create_script_paths(base_path_url, node)["lte"], f"03_{node}_GPL_LMS_script_{current_time}.txt")
+            with open(script_path, "a") as file:
+                file.write(RJ_Vi_GPL_LMS_DST_SCRIPT + "\n")
+            # 04: 01 + 02 + 03 in one run, stopping at the first key MO that was not created
+            rj_vi_complete_configuration(node, create_script_paths(base_path_url, node)["lte"], current_time)
+
+        ############################################################################### 5G Cell Scripts ##########################################################################
+        # no Vi RJ 5G reference node yet: no NR scripts for RJ_Vi
+        if not nr_cell_df.empty:
+            print("RJ_Vi: NR-CELL rows ignored - no RJ_Vi 5G scripts yet")
+
+        ########################################## RJ_Vi Commissioning Scripts Generation Logic ###############################################################
+        for node in site_basic_df["eNodeBName"].unique():
+            commissioning_scripts_dir = create_script_paths(base_path_url, node)["commissioning"]
+            current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            os.makedirs(commissioning_scripts_dir, exist_ok=True)
+
+            sitebasic_df: pd.DataFrame = site_basic_df[site_basic_df["eNodeBName"] == node].copy()
+            if sitebasic_df.empty:
+                print(f"Warning: No basic site data found for {node}")
+                continue
+
+            sitebasic_df_path = os.path.join(commissioning_scripts_dir, f"01_{node}_SiteBasic_{current_time}.xml")
+            siteBasicFilePath = os.path.relpath(sitebasic_df_path, os.path.join(base_path_url, f"{node}_Integration_Sripts")).replace("\\", "/")
+
+            # Vi RJ OAM is IPv6, CP/UP dual stack (IPv4 from the *_V4 columns); only the 6631 SiteBasic is built from a Vi RJ node so far
+            bbu_script_mapping_ipv6 = {
+                "6631": RJ_Vi_SiteBasic_ipv6_6631,
+            }
+            for idx, row in sitebasic_df.iterrows():
+                bbu_type = row.get("BB_Type", "UnknownType")
+                bbu_type = "" if pd.isna(bbu_type) else str(bbu_type)
+                oam_ip = str(row.get("OAM_IP", "")).split("/")[0]
+                try:
+                    socket.inet_pton(socket.AF_INET6, oam_ip)
+                except (socket.error, OSError):
+                    print(f"RJ_Vi: {node} OAM_IP {oam_ip} is not IPv6 - no SiteBasic (Vi RJ template is IPv6 only)")
+                    continue
+                abis_ip = row.get("ABIS_IP", "NA")
+                no_abis = pd.isna(abis_ip) or str(abis_ip).strip() in ("", "NA", "nan")
+
+                for bbu_prefix, template in bbu_script_mapping_ipv6.items():
+                    if bbu_prefix in bbu_type:
+                        formatted_text = template.format(
+                            eNodeBName=row["eNodeBName"],
+                            fieldReplaceableUnitId=row["fieldReplaceableUnitId"],
+                            tnPortId=row["tnPortId"],
+                            OAM_vlan=_xml_value(row["OAM_vlan"]),
+                            OAM_IP=row["OAM_IP"],
+                            OAM_GW=row["OAM_GW"],
+                            LTE_S1_vlan=_xml_value(row["LTE_S1_vlan"]),
+                            LTE_S1_IP=row["LTE_S1_IP"],
+                            LTE_S1_GW=row["LTE_S1_GW"],
+                            LTE_UP_vlan=_xml_value(row["LTE_UP_vlan"]),
+                            LTE_UP_IP=row["LTE_UP_IP"],
+                            LTE_UP_GW=row["LTE_UP_GW"],
+                            ABIS_vlan="" if no_abis else _xml_value(row["ABIS_vlan"]),
+                            ABIS_IP="" if no_abis else row["ABIS_IP"],
+                            ABIS_GW="" if no_abis else row["ABIS_GW"],
+                            **vi_dual_stack_values(row),
+                        )
+                        formatted_text = drop_dual_stack_ipv4(formatted_text, node)
+                        if no_abis:
+                            formatted_text = drop_gsm_abis(formatted_text)
+                        with open(sitebasic_df_path, "a", encoding="utf-8") as file:
+                            file.write(formatted_text.lstrip() + "\n")
+                        break
+                else:
+                    print(f"RJ_Vi: {node} BB_Type {bbu_type!r} has no RJ_Vi SiteBasic (6631 only)")
+
+            site_specific_rru_df = rru_hw_df[rru_hw_df["eNodeBName"] == node]
+            rru_hw_path = os.path.join(commissioning_scripts_dir, f"02_{node}_SiteEquipment_{current_time}.xml")
+            siteEquipmentFilePath = os.path.relpath(rru_hw_path, os.path.join(base_path_url, f"{node}_Integration_Sripts")).replace("\\", "/")
+
+            sitebasic_df.rename(columns={"Phy SiteID/Userlabel": "Phy_SiteID_Userlabel"}, inplace=True)
+
+            bbu_mapped_script = {
+                "6630": SiteEquipment_6630,
+                "6631": SiteEquipment_6631,
+                "6651": SiteEquipment_6651,
+                "6655": SiteEquipment_6655,
+                "6303": SiteEquipment_6303,
+                "6353": SiteEquipment_6353,
+                "6339": SiteEquipment_6339,
+                "5216": SiteEquipment_5216,
+                "6648": SiteEquipment_6648,
+                "R503": SiteEquipment_R503,
+            }
+            rru_type = {
+                "2271B0C": RJ_Vi_RRU_2271_B0C_2X2,      # Radio 2271 B0C (LO01INRJ207062 RRU-11..13), before '2271B0'
+                "2219": RRU_2219_B0_B1_B3_2X2,
+                "RUS12": RRU_2219_B0_B1_B3_2X2,      # RUS12 B1 = same as 2219 B1 (user 2026-11-02)
+                "2271B0": RRU_2219_B0_B1_B3_2X2,      # RRU 2271 B0C = same as 2219 B0 (user 2026-11-04)
+                "RRUS02B0": RRU_2219_B0_B1_B3_2X2,      # RRUS 02 B0A = same as 2219 B0A (user 2026-11-05)
+                "2271": RRUS_2271_B1_2X2,
+                "2279": RRU_2279_B1_B3_2X2,
+                "4412": RRU_4412_4418_4427_4428_4471_4X4,
+                "4490": RJ_Vi_RRU_4490_B1B3_4X4,      # Radio 4490 44B1 44B3 C (LO01INRJ207062 RRU-21/22)
+                "6626": RRU_6626_6X6,
+                "8863": RRU_8863_8X8,
+                "4418": RRU_4412_4418_4427_4428_4471_4X4,
+                "4427": RRU_4412_4418_4427_4428_4471_4X4,
+                "4428": RRU_4412_4418_4427_4428_4471_4X4,
+                "4471": RRU_4412_4418_4427_4428_4471_4X4,
+                "AIR": AIR_5G_GENERATION_SCRIPT,
+            }
+
+            site_equipment_script_text = ""
+            for _, row in sitebasic_df.iterrows():
+                for bbu_prefix, template in bbu_mapped_script.items():
+                    if bbu_prefix in str(row["BB_Type"]):
+                        site_equipment_script_text += template.format(
+                            fieldReplaceableUnitId=row["fieldReplaceableUnitId"],
+                            Phy_SiteID_Userlabel=row["Phy_SiteID_Userlabel"],
+                        )
+                        break
+
+            site_equipment_text = ""
+            for idx, row in site_specific_rru_df.iterrows():
+                for rru, rru_template in rru_type.items():
+                    if rru in str(row["Radio_Type"]).replace(" ", "").upper():
+                        site_equipment_text += rru_template.format(
+                            eNodeBName=row["eNodeBName"],
+                            Radio_UnitId=row["Radio_UnitId"],
+                            fieldReplaceableUnitId=sitebasic_df["fieldReplaceableUnitId"].values[0],
+                            RiPort_BB=row["RiPort_BB"],
+                            RiPort_Radio=row["RiPort_Radio"],
+                            sectorEquipmentFunctionId=row["sectorEquipmentFunctionId"],
+                            riLinkId=row.get("riLinkId", ""),
+                        )
+                        break
+                else:
+                    print(f"RJ_Vi: {node} Radio_Type {row['Radio_Type']!r} has no SiteEquipment template")
+
+            with open(rru_hw_path, "a", encoding="utf-8") as file:
+                file.write((site_equipment_script_text + "\n" + site_equipment_text).lstrip() + "\n")
+
+            site_equipment_script_path = os.path.join(commissioning_scripts_dir, f"RBSSummary_{node}_{current_time}.xml")
+            with open(site_equipment_script_path, "a", encoding="utf-8") as file:
+                file.write(RJ_Vi_RBSSummary_script.format(siteEquipmentFilePath=siteEquipmentFilePath, siteBasicFilePath=siteBasicFilePath).lstrip())
+    # ---------------------------------------------------------------- RJ_Vi Circle-specific Script Generation ----------------------------------------------------------------
 
     # ---------------------------------------------------------------- UPW Circle-specific Script Generation ----------------------------------------------------------------
     elif circle == "UPW":
@@ -5481,8 +6360,9 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                     create_script_paths(base_path_url, node)["nr"],
                     f"02_{node}_NR_GPL_LMS_{current_time}.txt",
                 )
+                nr_radio = nr_radio_variant(nr_cell_sub, rru_hw_df)     # Radio 8863 / AIR 3268 B42: own NR 02 + 06
                 with open(NR_GPL_LMS_path, "a") as file:
-                    file.write(UPW_NR_GPL_LMS_SCRIPT + "\n")
+                    file.write(nr_script_for_radio(UPW_NR_GPL_LMS_SCRIPT, nr_radio) + "\n")
 
                 Termpoint_GUtranFreqRelation_path = os.path.join(
                     create_script_paths(base_path_url, node)["nr"],
@@ -5491,7 +6371,8 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 with open(Termpoint_GUtranFreqRelation_path, "a") as file:
                     file.write(UPW_Termpoint_GUtranFreqRelation_script + "\n")
 
-                write_sa_scripts(create_script_paths(base_path_url, node)["nr"], node, current_time, nr_cell_sub, UPW_SA_cUCP5qiTable_XML, UPW_SA_dU5qiTable_XML, UPW_SA_AMF_RIM_CONFIG)
+                write_sa_scripts(create_script_paths(base_path_url, node)["nr"], node, current_time, nr_cell_sub, UPW_SA_cUCP5qiTable_XML, UPW_SA_dU5qiTable_XML, UPW_SA_AMF_RIM_CONFIG,
+                                 nr_radio=nr_radio)
         # .......................................................................... NRCELL CONFIGRATION FOR CELL CREATION IN 5G ................................................
         ########################################## UPW Commissioning Scripts Generation Logic ###############################################################
         for node in site_basic_df["eNodeBName"].unique():
@@ -5785,15 +6666,17 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
 
                 NR_GPL_LMS_path = os.path.join(create_script_paths(base_path_url, node)["nr"],f"02_{node}_NR_GPL_LMS_{current_time}.txt")
                 
+                nr_radio = nr_radio_variant(nr_cell_sub, rru_hw_df)     # Radio 8863 / AIR 3268 B42: own NR 02 + 06
                 with open(NR_GPL_LMS_path, "a") as file:
-                    file.write(HR_Route_5G_GPL_LMS + "\n")
+                    file.write(nr_script_for_radio(HR_Route_5G_GPL_LMS, nr_radio) + "\n")
 
                 Termpoint_GUtranFreqRelation_path = os.path.join(create_script_paths(base_path_url, node)["nr"],f"03_{node}_Termpoint_GUtranFreqRelation_{current_time}.txt")
                 
                 with open(Termpoint_GUtranFreqRelation_path, "a") as file:
                     file.write(HR_Termpoint_GUtranFreqRelation + "\n")
 
-                write_sa_scripts(create_script_paths(base_path_url, node)["nr"], node, current_time, nr_cell_sub, HR_SA_cUCP5qiTable_XML, HR_SA_dU5qiTable_XML, HR_SA_AMF_RIM_CONFIG)
+                write_sa_scripts(create_script_paths(base_path_url, node)["nr"], node, current_time, nr_cell_sub, HR_SA_cUCP5qiTable_XML, HR_SA_dU5qiTable_XML, HR_SA_AMF_RIM_CONFIG,
+                                 nr_radio=nr_radio)
         # ________________________________________________________________________________________________________________________________________________________________________#
 
         ########################################## HR Commissioning Scripts Generation Logic ###############################################################
@@ -6147,8 +7030,9 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                     create_script_paths(base_path_url, node)["nr"],
                     f"02_{node}_NR_GPL_LMS_{current_time}.txt",
                 )
+                nr_radio = nr_radio_variant(nr_cell_sub, rru_hw_df)     # Radio 8863 / AIR 3268 B42: own NR 02 + 06
                 with open(NR_GPL_LMS_path, "a") as file:
-                    file.write(JK_NR_GPL_LMS_SCRIPT + "\n")
+                    file.write(nr_script_for_radio(JK_NR_GPL_LMS_SCRIPT, nr_radio) + "\n")
 
                 Termpoint_GUtranFreqRelation_path = os.path.join(
                     create_script_paths(base_path_url, node)["nr"],
@@ -6157,7 +7041,8 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
                 with open(Termpoint_GUtranFreqRelation_path, "a") as file:
                     file.write(JK_Termpoint_GUtranFreqRelation_script + "\n")
 
-                write_sa_scripts(create_script_paths(base_path_url, node)["nr"], node, current_time, nr_cell_sub, JK_SA_cUCP5qiTable_XML, JK_SA_dU5qiTable_XML, JK_SA_AMF_RIM_CONFIG)
+                write_sa_scripts(create_script_paths(base_path_url, node)["nr"], node, current_time, nr_cell_sub, JK_SA_cUCP5qiTable_XML, JK_SA_dU5qiTable_XML, JK_SA_AMF_RIM_CONFIG,
+                                 nr_radio=nr_radio)
         # .......................................................................... NRCELL CONFIGRATION FOR CELL CREATION IN 5G ................................................
         ########################################## JK Commissioning Scripts Generation Logic ###############################################################
         for node in site_basic_df["eNodeBName"].unique():

@@ -51,8 +51,9 @@ HEADER_SCAN_ROWS = 10
 # .xlsb costs minutes and the same file is read on every request.
 CACHE_DIR = Path(__file__).resolve().parents[1] / ".cache"
 # Bumped when the parse changes shape: v2 added 'site_id' to KEY_COLUMN_NAMES,
-# so workbooks cached under v1 carry the wrong key column.
-CACHE_VERSION = 2
+# so workbooks cached under v1 carry the wrong key column. v3: a header under
+# a band banner row (RJ_Vi RF Data) is taken instead of the banner.
+CACHE_VERSION = 3
 
 
 def clean(v) -> str | None:
@@ -292,13 +293,15 @@ def _key_index(columns: list[Column]) -> int:
     return 0
 
 
-def _looks_like_header(row: list) -> bool:
+def _looks_like_header(row: list, distinct: bool = True) -> bool:
     """Whether a row reads as column names rather than as data.
 
     The SSIS sheets put their header on a known row, but the HR master
     workbooks lead with a formula/example row ('Formula', 'HR_BB1_Formula', 1.0,
     ...) and only put the real names on the row below. A header row is mostly
     non-numeric and mostly distinct, which separates the two reliably.
+    `distinct=False` drops the second test, for a header whose per-band blocks
+    repeat their column names (RJ_Vi's RF Data).
     """
     values = [v for v in row if v is not None]
     if len(values) < 4:
@@ -312,6 +315,8 @@ def _looks_like_header(row: list) -> bool:
             pass
     if numeric > len(values) * 0.3:
         return False
+    if not distinct:
+        return True
     return len({str(v).strip().lower() for v in values}) >= len(values) * 0.7
 
 
@@ -327,8 +332,20 @@ def _header_row(rows: list[list]) -> int:
         return STRUCTURED_HEADER_ROW
     for i in range(min(3, len(rows))):
         if _looks_like_header(rows[i]):
+            # RJ_Vi's RF Data sheet puts a band banner ('L900', 'L1800', ...,
+            # 'GSM') above the real header. The banner reads as a header too, but
+            # it names only the first column of each band block, so a following
+            # header-like row at least twice as wide is the real one. Its band
+            # blocks repeat their column names, so distinctness is not asked.
+            if (i + 1 < len(rows) and _looks_like_header(rows[i + 1], distinct=False)
+                    and _filled(rows[i + 1]) >= 2 * _filled(rows[i])):
+                return i + 1
             return i
     return 0
+
+
+def _filled(row: list) -> int:
+    return sum(1 for v in row if v is not None)
 
 
 def _read_sheet(workbook_name: str, sheet_name: str, rows: list[list]) -> Sheet | None:

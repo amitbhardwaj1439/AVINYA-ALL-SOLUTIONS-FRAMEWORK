@@ -18,6 +18,7 @@ from copy import copy
 from pathlib import Path
 
 from openpyxl import load_workbook
+from openpyxl.utils import get_column_letter
 
 # Row 1 is the header; the template's first data row supplies the styling for
 # every row written.
@@ -82,8 +83,26 @@ def write_workbook(template_path: Path, out_path: Path,
     for sheet, rows in sheet_rows.items():
         ws = wb[sheet]
         columns = sheet_columns[sheet]
-        styles = _column_styles(ws, len(columns))
         height = ws.row_dimensions[STYLE_ROW].height
+
+        # Columns the template lacks (convert.TEMPLATE_ADDITIONS, mapping EXTRA_COLUMNS) are inserted / appended:
+        # every column takes the header, width and data style of its template column by name, a new one those of
+        # the column before it.
+        names = [ws.cell(row=HEADER_ROW, column=c).value for c in range(1, ws.max_column + 1)]
+        data_styles = _column_styles(ws, len(names))
+        head_styles = {i: copy(ws.cell(row=HEADER_ROW, column=i)._style) for i in range(1, len(names) + 1)}
+        widths = {i: ws.column_dimensions[get_column_letter(i)].width for i in range(1, len(names) + 1)}
+        styles, src = {}, None
+        for ci, name in enumerate(columns, start=1):
+            src = names.index(name) + 1 if name in names else src
+            head = ws.cell(row=HEADER_ROW, column=ci)
+            if head.value != name:
+                head.value = name
+                if src:
+                    head._style = copy(head_styles[src])
+                    ws.column_dimensions[get_column_letter(ci)].width = max(widths[src] or 0, len(name) + 4)
+            if src in data_styles:
+                styles[ci] = copy(data_styles[src])
 
         # Drop the template's sample data, keeping the header and everything
         # sheet-level (widths, freeze panes, tab colour).
