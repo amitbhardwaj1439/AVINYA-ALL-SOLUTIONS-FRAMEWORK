@@ -666,19 +666,19 @@ def vi_dual_stack_sctp(row):
 
 # RJ_Vi 04 LTE_Complete_Configuration: MOs other MOs depend on - after their creation the script checks they exist
 # and stops the run when one does not (full match on the crn / cr MO)
+# 04 LTE_Complete_Configuration stops only when one of these is missing after its creation: the MOs other MOs of the
+# run depend on (SctpEndpoint -> SctpProfile, ENodeBFunction -> SctpEndpoint, cells -> SectorCarrier, GsmSector / Trx
+# -> BtsFunction, sync references -> RadioEquipmentClock). A failed MO nothing depends on (DscpPcpMap, TermPointToMme,
+# EUtranFrequency, AbisIp, Trx, relations, alarms ...) does not stop the run (user 2026-11-15)
 RJ_VI_STOP_MOS = [
-    r"Transport=1,QosProfiles=1,DscpPcpMap=1",
     r"Transport=1,SctpProfile=[^,]+",
     r"Transport=1,SctpEndpoint=[^,]+",
     r"Transport=1,Synchronization=1,RadioEquipmentClock=1",
     r"ENodeBFunction=1",
-    r"ENodeBFunction=1,TermPointToMme=[^,]+",
     r"ENodeBFunction=1,SectorCarrier=[^,]+",
     r"ENodeBFunction=1,EUtranCell(FDD|TDD)=[^,]+",
-    r"ENodeBFunction=1,EUtraNetwork=1,EUtranFrequency=\d+",
     r"BtsFunction=1",
     r"BtsFunction=1,GsmSector=[^,]+",
-    r"BtsFunction=1,GsmSector=[^,]+,(AbisIp|Trx)=[^,]+",
 ]
 
 
@@ -733,6 +733,49 @@ def add_stop_checks(text):
     return "\n".join(out), count + len(pending)
 
 
+def rj_vi_sector_carrier_rf_branches(node, cell_def_path, node_cells_df, sef_branches):
+    """RJ_Vi 02 Cell_Def: rfBranchRxRef / rfBranchTxRef in every SectorCarrier's crn block, as on LO01INRJ207062 (kget):
+    per SectorEquipmentFunction its sectors (sector = last digit of sectorCarrierId: 21 / 31 = sector 1) in order take
+    consecutive RfBranches of the SEF (SiteEquipment rfBranchRef order, RfBranch 1-4 = RfPort A-D), as many as their
+    antennas; every carrier of a sector (L1800 + L2100) gets the same branches for Rx and Tx. One sector on a 4490 at
+    2T2R -> RfBranch 1+2 (A/B); a second sector on the same radio -> 3+4 (C/D); 2271 L900 2T2R -> 1+2."""
+    refs = {}
+    for sef, cells in node_cells_df.groupby(node_cells_df["sectorEquipmentFunctionId"].astype(str).str.strip(), sort=False):
+        branches = sef_branches.get(sef, [])
+        sectors = {}
+        for _, row in cells.iterrows():
+            carrier = str(_xml_value(row["sectorCarrierId"]))
+            antennas = max(int(_xml_value(row["noOfTxAntennas"])), int(_xml_value(row["noOfRxAntennas"])))
+            sector = sectors.setdefault(carrier[-1:], {"antennas": 0, "carriers": []})
+            sector["antennas"] = max(sector["antennas"], antennas)
+            sector["carriers"].append(carrier)
+        needed = sum(s["antennas"] for s in sectors.values())
+        if not branches or needed > len(branches):
+            print(f"RJ_Vi: {node} {sef} has {len(branches)} RfBranches, its sectors need {needed} - no rfBranch refs")
+            continue
+        start = 0
+        for _, sector in sorted(sectors.items()):
+            ldns = " ".join(_amos_ref(b) for b in branches[start:start + sector["antennas"]])
+            start += sector["antennas"]
+            for carrier in sector["carriers"]:
+                refs[carrier] = ldns
+    if not refs or not cell_def_path:
+        return 0
+    with open(cell_def_path, encoding="utf-8", errors="surrogateescape") as file:
+        text = file.read()
+
+    def add(m):
+        ldns = refs.get(m.group(2))
+        if not ldns or "rfBranchRxRef" in m.group(0):
+            return m.group(0)
+        return m.group(1) + f"rfBranchRxRef {ldns}\nrfBranchTxRef {ldns}\n" + m.group(3)
+
+    text, n = re.subn(r"(crn ENodeBFunction=1,SectorCarrier=(\w+)\n(?:(?!end\n).*\n)*?)(end\n)", add, text)
+    with open(cell_def_path, "w", encoding="utf-8", errors="surrogateescape") as file:
+        file.write(text)
+    return len(refs)
+
+
 def rj_vi_complete_configuration(node, lte_dir, current_time):
     """04_<node>_LTE_Complete_Configuration: the node's 01 TN_RN_GPS_MME, 02 Cell_Def and 03 GPL_LMS in that order, in
     one run, stopping at the first key MO that does not exist (add_stop_checks); first checks the SiteBasic /
@@ -747,13 +790,20 @@ def rj_vi_complete_configuration(node, lte_dir, current_time):
         with open(path, encoding="utf-8", errors="surrogateescape") as file:
             texts[tag] = file.read()
     created = set(re.findall(r"^crn\s+(\S+)$", texts["01"], flags=re.M))
+    # SiteBasic addresses the important MOs are created with (SctpEndpoint localIpAddress, ENodeBFunction
+    # upIpAddressRef) - not the ones only a 'set' uses (IPv4 LTE_CP / LTE_UP of a dual stack: an IPv6 only SiteBasic
+    # must not stop the run)
+    keys = [re.compile(k + "$") for k in RJ_VI_STOP_MOS]
+    important = "".join(body for mo, body in re.findall(r"^crn\s+(\S+)\n(.*?)^end$", texts["01"], flags=re.M | re.S)
+                        if any(k.match(mo) for k in keys))
     addresses = [a for a in dict.fromkeys(re.findall(
-        r"Transport=1,Router=[^,\s]+,InterfaceIPv[46]=[^,\s]+,AddressIPv[46]=[^,\s]+", texts["01"])) if a not in created]
+        r"Transport=1,Router=[^,\s]+,InterfaceIPv[46]=[^,\s]+,AddressIPv[46]=[^,\s]+", important)) if a not in created]
     sefs = list(dict.fromkeys(re.findall(r"NodeSupport=1,SectorEquipmentFunction=[^,\s]+", texts["02"])))
     lines = ["#" * 110, f"# 04 LTE Complete Configuration - {node}: 01 TN_RN_GPS_MME + 02 Cell_Def + 03 GPL_LMS in one run",
-             "# Stops at the first key MO (ENodeBFunction, SctpProfile / SctpEndpoint, TermPointToMme, SectorCarrier,",
-             "# EUtranCell, EUtranFrequency, GSM sector ...) that does not exist after its creation: it prints STOP and",
-             "# 'return' ends the run ('q' after it quits AMOS if 'return' did not end the whole run).",
+             "# Stops only at an important MO (SctpProfile / SctpEndpoint, RadioEquipmentClock, ENodeBFunction, SectorCarrier,",
+             "# EUtranCell, BtsFunction / GsmSector) that does not exist after its creation: it prints STOP and 'return'",
+             "# ends the run ('q' after it quits AMOS if 'return' did not end the whole run). Any other MO that fails",
+             "# (MME, frequency, relation, Trx, alarm ...) does not stop it.",
              "#" * 110, "", "lt all", "",
              "####################### Pre-check: MOs of the 01 SiteBasic / 02 SiteEquipment this script needs #######################", ""]
     for mo in addresses:
@@ -6092,8 +6142,7 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
             script_path = os.path.join(create_script_paths(base_path_url, node)["lte"], f"03_{node}_GPL_LMS_script_{current_time}.txt")
             with open(script_path, "a") as file:
                 file.write(RJ_Vi_GPL_LMS_DST_SCRIPT + "\n")
-            # 04: 01 + 02 + 03 in one run, stopping at the first key MO that was not created
-            rj_vi_complete_configuration(node, create_script_paths(base_path_url, node)["lte"], current_time)
+            # 04 LTE_Complete_Configuration: after the SiteEquipment (below), the 02 takes its RfBranch refs first
 
         ############################################################################### 5G Cell Scripts ##########################################################################
         # no Vi RJ 5G reference node yet: no NR scripts for RJ_Vi
@@ -6229,6 +6278,15 @@ def generate_integration_scripts(excel_path, circle, output_root, template_path=
             site_equipment_script_path = os.path.join(commissioning_scripts_dir, f"RBSSummary_{node}_{current_time}.xml")
             with open(site_equipment_script_path, "a", encoding="utf-8") as file:
                 file.write(RJ_Vi_RBSSummary_script.format(siteEquipmentFilePath=siteEquipmentFilePath, siteBasicFilePath=siteBasicFilePath).lstrip())
+
+        # 02 Cell_Def: SectorCarrier RfBranch refs from the SiteEquipment just written; then 04 = 01 + 02 + 03 in one
+        # run, stopping at the first key MO that was not created
+        for node in unique_nodes:
+            paths = create_script_paths(base_path_url, node)
+            rj_vi_sector_carrier_rf_branches(node, _newest(paths["lte"], "02_", "Cell_Def"),
+                                             lte_df[lte_df["eNodeBName"] == node],
+                                             kk_site_equipment_rf_branches(paths["commissioning"]))
+            rj_vi_complete_configuration(node, paths["lte"], current_time)
     # ---------------------------------------------------------------- RJ_Vi Circle-specific Script Generation ----------------------------------------------------------------
 
     # ---------------------------------------------------------------- UPW Circle-specific Script Generation ----------------------------------------------------------------
