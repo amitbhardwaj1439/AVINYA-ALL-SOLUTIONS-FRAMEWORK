@@ -533,6 +533,14 @@ class Replay:
         if bad:
             self.notes.append((script, ln, s, f"reference target {bad} does not exist at this point - fails in AMOS too"))
             return "badref"
+        if not creating and _variant_struct(self.m, mo, name) and mo["key"].split(".")[-1] not in GROUPED_ATTRS \
+                and self.canon(mo["attrs"].get(name)) == self.canon(v):
+            # a struct whose members differ by release (not one of GROUPED_ATTRS, placed at their last write) is not
+            # written again with the value it already has (NR 02 sets RimRSGlobal timeDomainPara twice, 06 RIM a 3rd
+            # time) - its 25.Q2 form is refused on 26.Q2 and the reverse (KK-NLHUB622-1, upgraded to 26.Q2 after 04 5G:
+            # NR06RIM_001 "Multiplicity violation, attribute name: timeDomainPara,dlUlSwitchingPeriod2" took the
+            # RimRSSets and their cell refs with it; AS / NE / RJ: one of the _25Q2 / _26Q2 RPCs failed in 06 too)
+            return True
         if not creating and self.step in self.only_changes:
             if "key" in flags:
                 self.notes.append((script, ln, s, f"{name} is the MO key - AMOS set fails too, ignored"))
@@ -1267,6 +1275,10 @@ def emit(model, node, events, deleted_existing, pull_back=None):
     if getattr(model, "circle", "KK") != "KK":
         groups = _release_variants(groups, mos, model)
         groups = _spread_settling(groups, mos, model, chain, values)
+    else:
+        # KK (25.Q2 MOM): the 06 RIM & VoNR XML must not fail on 25.Q2 or 26.Q2 nodes (user 2026-11-12) - a release
+        # dependent struct it changes goes out once per release, as in the other circles
+        groups = _release_variants(groups, mos, model, families={"RIM"})
 
     # self-check: references must point to MOs existing before the scripts or created in an earlier/same RPC
     rpc_of = {}
@@ -1356,8 +1368,14 @@ _RELEASE_CACHE = {}
 
 
 def _release_extra(model, struct):
-    """{release: {member: default}} for a struct whose members in that release are not all in the model's MOM"""
+    """{release: {member: default}} for a struct whose members in that release are not all in the 25.Q2+26.Q2 MOM.
+    Judged against that MOM for every circle, not the model's own (KK: 25.Q2 only, where RimRSGlobal
+    frequencyDomainPara looked release independent - KK-NLHUB622-1 NR06RIM_001), and cached per struct, so the result
+    does not depend on which circle ran first in the process"""
     if struct not in _RELEASE_CACHE:
+        if ("mom", "base") not in _RELEASE_CACHE:
+            _RELEASE_CACHE[("mom", "base")] = Mom(_load(MOM_DEFAULT[0]))
+        base = _RELEASE_CACHE[("mom", "base")]
         out = {}
         for rel, f in RELEASE_MOMS.items():
             if ("mom", rel) not in _RELEASE_CACHE:
@@ -1366,7 +1384,7 @@ def _release_extra(model, struct):
             members = m.attrs.get(struct)
             if members is None:
                 continue
-            extra = {a: x[2] for a, x in members.items() if a not in model.mom.attrs.get(struct, {})}
+            extra = {a: x[2] for a, x in members.items() if a not in base.attrs.get(struct, {})}
             if extra:
                 out[rel] = extra
         _RELEASE_CACHE[struct] = out
@@ -1401,12 +1419,13 @@ def _release_struct(model, mo, a, v, rel):
     return [one(x) for x in v] if isinstance(v, list) else one(v)
 
 
-def _release_variants(groups, mos, model):
-    """struct attributes whose members differ by release leave their RPC: one RPC per release right after it"""
+def _release_variants(groups, mos, model, families=None):
+    """struct attributes whose members differ by release leave their RPC: one RPC per release right after it
+    (families: only the RPCs of these files, see _file_family)"""
     out = []
     for g in groups:
         out.append(g)
-        if "del" in g:
+        if "del" in g or (families and _file_family(g["step"]) not in families):
             continue
         found = []
         for k in g["keys"]:
